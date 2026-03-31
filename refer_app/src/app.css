@@ -1,0 +1,17 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background-color: #f0f0f0; /* お好みの背景色 */
+}
+
+/* App.svelteに関連するスタイル */
+main {
+  display: flex; /* フレックスボックスを使用 */
+  flex-direction: column; /* 要素を縦に配置 */
+  height: 100vh; /* ビューポートの高さに100%を設定 */
+  font-size: 0;
+}
