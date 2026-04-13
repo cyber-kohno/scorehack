@@ -1,7 +1,7 @@
-<script lang="ts">
-  import type StoreOutline from "../../../../store/props/storeOutline";
+﻿<script lang="ts">
+  import type { OutlineDataTempo } from "../../../../../domain/outline/outline-types";
 
-    export let data!: StoreOutline.DataTempo;
+    export let data!: OutlineDataTempo;
     export let elementSeq!: number;
 </script>
 

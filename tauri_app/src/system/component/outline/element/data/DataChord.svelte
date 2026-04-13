@@ -1,9 +1,9 @@
 ﻿<script lang="ts">
-  import type StoreOutline from "../../../../store/props/storeOutline";
+  import type { OutlineDataChord } from "../../../../../domain/outline/outline-types";
   import store from "../../../../store/store";
   import MusicTheory from "../../../../../domain/theory/music-theory";
 
-  export let data!: StoreOutline.DataChord;
+  export let data!: OutlineDataChord;
   export let elementSeq!: number;
 
   $: chordCaches = $store.cache.chordCaches;
@@ -172,5 +172,6 @@
     margin: 0 0 0 2px;
   }
 </style>
+
 
 

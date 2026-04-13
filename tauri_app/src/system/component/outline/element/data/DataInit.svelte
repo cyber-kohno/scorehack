@@ -1,8 +1,8 @@
 ﻿<script lang="ts">
-  import type StoreOutline from "../../../../store/props/storeOutline";
+  import type { OutlineDataInit } from "../../../../../domain/outline/outline-types";
   import MusicTheory from "../../../../../domain/theory/music-theory";
 
-  export let data!: StoreOutline.DataInit;
+  export let data!: OutlineDataInit;
 
   $: [keyScaleName, tsName, tempo] = (() => {
     const keyScaleName = MusicTheory.getScaleName(data.tonality);
@@ -48,5 +48,6 @@
     }
   }
 </style>
+
 
 

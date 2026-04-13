@@ -1,100 +1,58 @@
-﻿import Layout from "../../../styles/tokens/layout-tokens";
-import type MusicTheory from "../../../domain/theory/music-theory";
-import type StoreArrange from "./arrange/storeArrange";
+﻿import type StoreArrange from "./arrange/storeArrange";
+import type {
+  OutlineDataChord,
+  OutlineDataInit,
+  OutlineDataModulate,
+  OutlineDataSection,
+  OutlineDataTS,
+  OutlineDataTempo,
+  OutlineElement,
+  OutlineElementType,
+  OutlineKeyChord,
+  OutlineModulateMethod,
+  OutlineTempoMethod,
+  OutlineTempoRelation,
+} from "../../../domain/outline/outline-types";
+import {
+  OUTLINE_DOMM_VALUES,
+  OUTLINE_MARGIN_HEAD,
+  OUTLINE_MODULATE_METHODS,
+  OUTLINE_TEMPO_METHODS,
+} from "../../../domain/outline/outline-types";
+import { createInitialOutlineElements } from "../../../domain/outline/create-initial-outline-elements";
 
 namespace StoreOutline {
+  export type Props = {
+    focus: number;
+    focusLock: number;
+    trackIndex: number;
+    arrange: null | StoreArrange.EditorProps;
+  };
 
-    export type Props = {
-        focus: number;
-        focusLock: number;
-        trackIndex: number;
-        arrange: null | StoreArrange.EditorProps;
-    }
+  export const INITIAL: Props = {
+    focus: 1,
+    focusLock: -1,
+    trackIndex: -1,
+    arrange: null,
+  };
 
-    export const INITIAL: Props = {
-        focus: 1,
-        focusLock: -1,
-        trackIndex: -1,
-        arrange: null
-    };
-
-    export type ElementType = 'init' | 'section' | 'chord' | 'change' | 'modulate' | 'tempo' | 'ts';
-
-    export type DataInit = {
-        ts: MusicTheory.TimeSignature;
-        tempo: number;
-        tonality: MusicTheory.Tonality;
-    };
-
-    export type DataSection = {
-        name: string;
-    };
-
-    export interface DataChord {
-        beat: number;
-        eat: number;
-        degree?: MusicTheory.DegreeChord;
-    };
-    export interface KeyChord {
-        beat: number;
-        eat: number;
-        chord?: MusicTheory.KeyChordProps;
-        structs?: MusicTheory.StructProps[];
-    };
-    export type DataModulate = {
-        method: ModulateMedhod;
-        val?: number;
-    };
-
-    export const ModulateMedhods = ['domm', 'parallel', 'relative', 'key'] as const;
-    export type ModulateMedhod = typeof ModulateMedhods[number];
-
-    export const DommVals = ['-3', -'2', '-1', '0', '1', '2', '3'];
-
-    export type TempoRelation = 'diff' | 'rate' | 'abs';
-    export type DataTempo = {
-        method: TempoMedhod;
-        val: number;
-    };
-    export const TempoMedhods = ['rate', 'addition'] as const;
-    export type TempoMedhod = typeof TempoMedhods[number];
-
-    export type DataTS = {
-        newTS: MusicTheory.TimeSignature;
-    };
-
-    export type Element = {
-        type: ElementType;
-        data: any;
-    }
-
-    export const getInitialElements = () => {
-        const list: Element[] = [];
-        const initData: DataInit = {
-            ts: { num: 4, den: 4 },
-            tempo: 100,
-            tonality: {
-                key12: 0,
-                scale: 'major'
-            }
-        };
-        const firstSectionData: DataSection = {
-            name: 'section0'
-        }
-        list.push({ type: 'init', data: initData });
-        list.push({ type: 'section', data: firstSectionData });
-        const dataChord = (): StoreOutline.DataChord => ({
-            beat: 4,
-            eat: 0
-        });
-        for (let i = 0; i < 2; i++) {
-            list.push({ type: 'chord', data: dataChord() });
-        }
-        return list;
-    }
-
-    export const MARGIN_HEAD = 4;
+  export type ElementType = OutlineElementType;
+  export type DataInit = OutlineDataInit;
+  export type DataSection = OutlineDataSection;
+  export interface DataChord extends OutlineDataChord {}
+  export interface KeyChord extends OutlineKeyChord {}
+  export type DataModulate = OutlineDataModulate;
+  export type ModulateMedhod = OutlineModulateMethod;
+  export const ModulateMedhods = OUTLINE_MODULATE_METHODS;
+  export const DommVals = OUTLINE_DOMM_VALUES;
+  export type TempoRelation = OutlineTempoRelation;
+  export type DataTempo = OutlineDataTempo;
+  export const TempoMedhods = OUTLINE_TEMPO_METHODS;
+  export type TempoMedhod = OutlineTempoMethod;
+  export type DataTS = OutlineDataTS;
+  export type Element = OutlineElement;
+  export const getInitialElements = createInitialOutlineElements;
+  export const MARGIN_HEAD = OUTLINE_MARGIN_HEAD;
 }
 
 export default StoreOutline;
-

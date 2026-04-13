@@ -1,8 +1,8 @@
-import PreviewUtil from "../../../../util/preview/previewUtil";
+﻿import PreviewUtil from "../../../../util/preview/previewUtil";
 import StorePianoEditor from "../../../props/arrange/piano/storePianoEditor";
 import StorePreview from "../../../props/storePreview";
+import { createOutlineActions } from "../../../../../app/outline/outline-actions";
 import { createStoreUtil, type StoreProps } from "../../../store";
-import useReducerOutline from "../../reducerOutline";
 import useReducerTermianl from "../../reducerTerminal";
 import CommandRegistUtil from "../commandRegistUtil";
 import useTerminalLogger from "../terminalLogger";
@@ -14,7 +14,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
   const { isLoadSoundFont, loadSoundFont } = PreviewUtil.useReducer(lastStore);
 
   const { changeHarmonizeTrack, getCurrHarmonizeTrack } =
-    useReducerOutline(lastStore);
+    createOutlineActions(lastStore);
 
   const logger = useTerminalLogger(terminal);
   const lsh = () => {
@@ -67,7 +67,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
                     item.method,
                     item.soundFont,
                     item.volume.toString(),
-                    item.isMute ? "●" : "",
+                    item.isMute ? "on" : "",
                   ];
                 }))(),
             },
@@ -120,7 +120,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
           const prev = tracks[outline.focus];
           try {
             changeHarmonizeTrack(nextIndex);
-            logger.outputInfo(`Active track changed. [${prev} → ${arg0}]`);
+            logger.outputInfo(`Active track changed. [${prev} 竊・${arg0}]`);
             // reducer.updateTarget();
             // resetScoreTrackRef();
             lsh();
@@ -185,7 +185,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
           const track = getCurrHarmonizeTrack();
           const prev = track.volume;
           track.volume = arg0Number;
-          logger.outputInfo(`Changed volume. [${prev} → ${arg0}]`);
+          logger.outputInfo(`Changed volume. [${prev} 竊・${arg0}]`);
         },
       },
     ];
@@ -195,3 +195,5 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
   };
 };
 export default useBuilderHarmonize;
+
+

@@ -4,7 +4,7 @@ import StoreMelody from "../store/props/storeMelody";
 import StorePreview from "../store/props/storePreview";
 import useReducerCache from "../store/reducer/reducerCache";
 import useReducerMelody from "../store/reducer/reducerMelody";
-import useReducerOutline from "../store/reducer/reducerOutline";
+import { createOutlineActions } from "../../app/outline/outline-actions";
 import useReducerRef from "../store/reducer/reducerRef";
 import type { StoreUtil } from "../store/store";
 import MusicTheory from "../../domain/theory/music-theory";
@@ -14,7 +14,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
     const { lastStore, commit } = storeUtil;
 
     const { adjustGridScrollYFromCursor, adjustGridScrollXFromNote, adjustOutlineScroll } = useReducerRef(lastStore);
-    const reducerOutline = useReducerOutline(lastStore);
+    const reducerOutline = createOutlineActions(lastStore);
     const reducerCache = useReducerCache(lastStore);
     const reducerMelody = useReducerMelody(lastStore);
     // const { isPreview } = useAccessorPreview(lastStore);

@@ -1,9 +1,9 @@
 ﻿<script lang="ts">
-  import type StoreOutline from "../../../../store/props/storeOutline";
+  import type { OutlineDataModulate } from "../../../../../domain/outline/outline-types";
   import store from "../../../../store/store";
   import MusicTheory from "../../../../../domain/theory/music-theory";
 
-  export let data!: StoreOutline.DataModulate;
+  export let data!: OutlineDataModulate;
   export let elementSeq!: number;
 
   $: [method, val, prev, next] = (() => {
@@ -73,5 +73,6 @@
     color: rgb(247, 239, 147);
   }
 </style>
+
 
 

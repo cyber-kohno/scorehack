@@ -3,8 +3,8 @@
   import type StoreCache from "../../../store/props/storeCache";
   import StoreRef from "../../../store/props/storeRef";
   import useReducerMelody from "../../../store/reducer/reducerMelody";
-  import useReducerRoot from "../../../store/reducer/reducerRoot";
   import store from "../../../store/store";
+  import { getTimelineFocusPos } from "../../../../app/timeline/get-timeline-focus-pos";
   import MusicTheory from "../../../../domain/theory/music-theory";
 
   type PitchType = "tonic" | "other" | "scale";
@@ -12,7 +12,6 @@
   export let baseCache: StoreCache.BaseCache;
   export let scrollLimitProps: StoreRef.ScrollLimitProps;
 
-  $: reducerRoot = useReducerRoot($store);
   $: reducerMelody = useReducerMelody($store);
 
   $: beatDiv16Count = MusicTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
@@ -26,7 +25,7 @@
       width: number;
     }[] = [];
     const cnt = baseCache.lengthBeat * beatDiv16Count;
-    const focusPos = reducerRoot.getTimelineFocusPos();
+    const focusPos = getTimelineFocusPos($store);
     for (let i = 0; i < cnt; i++) {
       const left = (beatWidth / beatDiv16Count) * i;
       const absLeft = baseCache.viewPosLeft + left;

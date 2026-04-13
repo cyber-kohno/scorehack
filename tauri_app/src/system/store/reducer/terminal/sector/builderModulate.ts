@@ -1,7 +1,10 @@
-import StoreOutline from "../../../props/storeOutline";
+﻿import {
+  OUTLINE_DOMM_VALUES,
+  type OutlineDataModulate,
+} from "../../../../../domain/outline/outline-types";
+import { createOutlineActions } from "../../../../../app/outline/outline-actions";
 import { type StoreProps } from "../../../store";
 import useReducerCache from "../../reducerCache";
-import useReducerOutline from "../../reducerOutline";
 import useReducerTermianl from "../../reducerTerminal";
 import CommandRegistUtil from "../commandRegistUtil";
 import useTerminalLogger from "../terminalLogger";
@@ -12,16 +15,16 @@ const useBuilderModulate = (lastStore: StoreProps) => {
   const logger = useTerminalLogger(terminal);
 
   const reducerCache = useReducerCache(lastStore);
-  const reducerOutline = useReducerOutline(lastStore);
+  const reducerOutline = createOutlineActions(lastStore);
 
   const get = (): CommandRegistUtil.FuncProps[] => {
     const defaultProps = CommandRegistUtil.createDefaultProps("modulate");
-    const getCurrDispValue = (data: StoreOutline.DataModulate) =>
+    const getCurrDispValue = (data: OutlineDataModulate) =>
       `[${data.method}${data.val ? " " + data.val : ""}]`;
 
     const outputModLog = (prev: string, next: string) => {
       logger.outputInfo(
-        `Modulate method has been changed. [${prev} → ${next}]`,
+        `Modulate method has been changed. [${prev} 竊・${next}]`,
       );
     };
 
@@ -32,7 +35,7 @@ const useBuilderModulate = (lastStore: StoreProps) => {
         args: [
           {
             name: "value",
-            getCandidate: () => StoreOutline.DommVals.map((v) => v.toString()),
+            getCandidate: () => OUTLINE_DOMM_VALUES.map((v) => v.toString()),
           },
         ],
         callback: (args) => {
@@ -40,8 +43,8 @@ const useBuilderModulate = (lastStore: StoreProps) => {
           const prev = getCurrDispValue(data);
           const value = args[0];
 
-          // 数値の変換チェック
-          if (!StoreOutline.DommVals.includes(value)) {
+          // 謨ｰ蛟､縺ｮ螟画鋤繝√ぉ繝・け
+          if (!OUTLINE_DOMM_VALUES.includes(Number(value) as (typeof OUTLINE_DOMM_VALUES)[number])) {
             logger.outputError(`The specified value[${value}] is invalid.`);
           }
           data.method = "domm";
@@ -58,7 +61,7 @@ const useBuilderModulate = (lastStore: StoreProps) => {
         args: [
           {
             name: "value",
-            getCandidate: () => StoreOutline.DommVals.map((v) => v.toString()),
+            getCandidate: () => OUTLINE_DOMM_VALUES.map((v) => v.toString()),
           },
         ],
         callback: (args) => {
@@ -66,8 +69,8 @@ const useBuilderModulate = (lastStore: StoreProps) => {
           const prev = getCurrDispValue(data);
           const value = args[0];
 
-          // 数値の変換チェック
-          if (!StoreOutline.DommVals.includes(value)) {
+          // 謨ｰ蛟､縺ｮ螟画鋤繝√ぉ繝・け
+          if (!OUTLINE_DOMM_VALUES.includes(Number(value) as (typeof OUTLINE_DOMM_VALUES)[number])) {
             logger.outputError(`The specified value[${value}] is invalid.`);
           }
           data.method = "key";
@@ -117,3 +120,4 @@ const useBuilderModulate = (lastStore: StoreProps) => {
   };
 };
 export default useBuilderModulate;
+

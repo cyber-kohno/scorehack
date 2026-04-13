@@ -1,8 +1,8 @@
 ﻿<script lang="ts">
   import type StoreCache from "../../../store/props/storeCache";
   import type StoreRef from "../../../store/props/storeRef";
-  import useReducerRoot from "../../../store/reducer/reducerRoot";
   import store from "../../../store/store";
+  import { getTimelineFocusPos } from "../../../../app/timeline/get-timeline-focus-pos";
   import MusicTheory from "../../../../domain/theory/music-theory";
 
   export let baseCache!: StoreCache.BaseCache;
@@ -17,7 +17,6 @@
   $: width = baseCache.lengthBeat * beatWidth;
 
   $: memoriList = (() => {
-    const { getTimelineFocusPos } = useReducerRoot($store);
     // console.log(baseCache);
     const list: {
       x: number;
@@ -27,7 +26,7 @@
       bar?: number;
     }[] = [];
     const num = baseCache.lengthBeat * beatDiv16Count;
-    const focusPos = getTimelineFocusPos();
+    const focusPos = getTimelineFocusPos($store);
     for (let i = 0; i < num; i++) {
       let bar: number | undefined = undefined;
       const left = (beatWidth / beatDiv16Count) * i;

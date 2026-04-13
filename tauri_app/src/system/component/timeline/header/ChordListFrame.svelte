@@ -1,8 +1,8 @@
 ﻿<script lang="ts">
   import type StoreCache from "../../../store/props/storeCache";
   import type StoreRef from "../../../store/props/storeRef";
-  import useReducerRoot from "../../../store/reducer/reducerRoot";
   import store from "../../../store/store";
+  import { getTimelineFocusPos } from "../../../../app/timeline/get-timeline-focus-pos";
   import MusicTheory from "../../../../domain/theory/music-theory";
   import TimelineLastMargin from "../TimelineTailMargin.svelte";
 
@@ -11,8 +11,7 @@
   $: focus = $store.control.outline.focus;
 
   $: chordCaches = (() => {
-    const { getTimelineFocusPos } = useReducerRoot($store);
-    const focusPos = getTimelineFocusPos();
+    const focusPos = getTimelineFocusPos($store);
     return $store.cache.chordCaches.filter((c) => {
       const middle = c.viewPosLeft + c.viewPosWidth / 2;
       return (

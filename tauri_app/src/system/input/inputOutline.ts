@@ -2,7 +2,7 @@
 import type StoreInput from "../store/props/storeInput";
 import type StoreOutline from "../store/props/storeOutline";
 import useReducerCache from "../store/reducer/reducerCache";
-import useReducerOutline from "../store/reducer/reducerOutline";
+import { createOutlineActions } from "../../app/outline/outline-actions";
 import useReducerRef from "../store/reducer/reducerRef";
 import type { StoreUtil } from "../store/store";
 import MusicTheory from "../../domain/theory/music-theory";
@@ -13,7 +13,7 @@ import useInputArrange from "./arrange/inputArrange";
 const useInputOutline = (storeUtil: StoreUtil) => {
   const { lastStore, commit } = storeUtil;
 
-  const reducerOutline = useReducerOutline(lastStore);
+  const reducerOutline = createOutlineActions(lastStore);
   const reducerCache = useReducerCache(lastStore);
   const reducerRef = useReducerRef(lastStore);
   const element = reducerOutline.getCurrentElement();

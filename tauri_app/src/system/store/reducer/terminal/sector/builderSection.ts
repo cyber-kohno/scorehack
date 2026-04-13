@@ -1,6 +1,6 @@
+﻿import { createOutlineActions } from "../../../../../app/outline/outline-actions";
 import { type StoreProps } from "../../../store";
 import useReducerCache from "../../reducerCache";
-import useReducerOutline from "../../reducerOutline";
 import useReducerTermianl from "../../reducerTerminal";
 import CommandRegistUtil from "../commandRegistUtil";
 import useTerminalLogger from "../terminalLogger";
@@ -20,7 +20,7 @@ const useBuilderSection = (lastStore: StoreProps) => {
                 usage: 'Change the section name.',
                 args: [],
                 callback: (args) => {
-                    const { getCurrentSectionData, renameSectionData } = useReducerOutline(lastStore);
+                    const { getCurrentSectionData, renameSectionData } = createOutlineActions(lastStore);
                     const { calculate } = useReducerCache(lastStore);
 
                     const prev = getCurrentSectionData().name;

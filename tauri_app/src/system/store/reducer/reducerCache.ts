@@ -1,9 +1,16 @@
 ﻿import type DataChord from "../../component/outline/element/data/DataChord.svelte";
 import type Element from "../../component/outline/element/Element.svelte";
 import Layout from "../../../styles/tokens/layout-tokens";
+import {
+  OUTLINE_MARGIN_HEAD,
+  type OutlineDataChord,
+  type OutlineDataInit,
+  type OutlineDataModulate,
+  type OutlineDataSection,
+  type OutlineDataTempo,
+} from "../../../domain/outline/outline-types";
 import MusicTheory from "../../../domain/theory/music-theory";
 import type StoreCache from "../props/storeCache";
-import StoreOutline from "../props/storeOutline";
 import type { StoreProps } from "../store";
 
 const useReducerCache = (lastStore: StoreProps) => {
@@ -17,7 +24,7 @@ const useReducerCache = (lastStore: StoreProps) => {
         const elementCaches: StoreCache.ElementCache[] = [];
         const chordCaches: StoreCache.ChordCache[] = [];
 
-        const initialScoreBase: StoreOutline.DataInit = elements[0].data;
+        const initialScoreBase: OutlineDataInit = elements[0].data;
 
         let baseCache: StoreCache.BaseCache = {
             startTime: 0,
@@ -42,7 +49,7 @@ const useReducerCache = (lastStore: StoreProps) => {
 
         let viewPos = 0;
 
-        let outlineTailPos = StoreOutline.MARGIN_HEAD;
+        let outlineTailPos = OUTLINE_MARGIN_HEAD;
 
         let sectionStart: string | undefined = undefined;
         let lastModulate: StoreCache.ModulateCahce | undefined = undefined;
@@ -68,7 +75,7 @@ const useReducerCache = (lastStore: StoreProps) => {
 
             switch (el.type) {
                 case 'section': {
-                    const data = el.data as StoreOutline.DataSection;
+                    const data = el.data as OutlineDataSection;
                     curSection = sectionStart = data.name;
                     elementCache.curSection = curSection;
                 } break;
@@ -77,7 +84,7 @@ const useReducerCache = (lastStore: StoreProps) => {
                     lastChordSeq++;
                     elementCache.lastChordSeq = lastChordSeq;
 
-                    const data = el.data as StoreOutline.DataChord;
+                    const data = el.data as OutlineDataChord;
 
                     let compiledChord: StoreCache.CompiledChord | undefined = undefined;
                     if (data.degree != undefined) {
@@ -229,7 +236,7 @@ const useReducerCache = (lastStore: StoreProps) => {
 
                     switch (el.type) {
                         case 'modulate': {
-                            const data = el.data as StoreOutline.DataModulate;
+                            const data = el.data as OutlineDataModulate;
                             const tonality = baseCache.scoreBase.tonality;
                             const prevTonality: MusicTheory.Tonality = JSON.parse(JSON.stringify(tonality));
 
@@ -271,7 +278,7 @@ const useReducerCache = (lastStore: StoreProps) => {
                             elementCache.modulate = lastModulate;
                         } break;
                         case 'tempo': {
-                            const data = el.data as StoreOutline.DataTempo;
+                            const data = el.data as OutlineDataTempo;
                             let tempo = baseCache.scoreBase.tempo;
                             const prev = tempo;
 
@@ -312,7 +319,7 @@ const useReducerCache = (lastStore: StoreProps) => {
             elementCache.viewHeight = getElementViewHeight();
             outlineTailPos += elementCache.viewHeight;
             outlineTailPos += 2; // 荳贋ｸ九・繝懊・繝繝ｼ
-            outlineTailPos += StoreOutline.MARGIN_HEAD;
+            outlineTailPos += OUTLINE_MARGIN_HEAD;
 
             elementCaches.push(elementCache);
         });
@@ -421,4 +428,5 @@ const useReducerCache = (lastStore: StoreProps) => {
 }
 
 export default useReducerCache;
+
 

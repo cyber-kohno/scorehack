@@ -1,13 +1,13 @@
 import SoundFont, { type InstrumentName } from "soundfont-player";
 import StoreMelody from "../props/storeMelody";
-import useReducerOutline from "./reducerOutline";
+import { createOutlineActions } from "../../../app/outline/outline-actions";
 import type { StoreProps, StoreUtil } from "../store";
 import useReducerRef from "./reducerRef";
 import PreviewUtil from "../../util/preview/previewUtil";
 
 const useReducerMelody = (lastStore: StoreProps) => {
 
-    const { syncChordSeqFromNote } = useReducerOutline(lastStore);
+    const { syncChordSeqFromNote } = createOutlineActions(lastStore);
     const { adjustGridScrollXFromNote, adjustGridScrollYFromCursor } = useReducerRef(lastStore);
 
     const syncCursorFromElementSeq = () => {

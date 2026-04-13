@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-  import type StoreOutline from "../../../store/props/storeOutline";
+  import type { OutlineDataChord } from "../../../../domain/outline/outline-types";
   import store from "../../../store/store";
   import MusicTheory from "../../../../domain/theory/music-theory";
 
@@ -35,7 +35,7 @@
 
   $: symbol = (() => {
     const element = $store.data.elements[outline.focus];
-    const chord = element.data as StoreOutline.DataChord;
+    const chord = element.data as OutlineDataChord;
     if (chord.degree == undefined)
       throw new Error("Chord degree must be defined.");
     return chord.degree?.symbol;
@@ -157,5 +157,6 @@
     opacity: 1;
   }
 </style>
+
 
 

@@ -3,7 +3,7 @@
   export let isActive!: boolean;
 </script>
 
-<div class="wrap" data-isActive={isActive}>{name}</div>
+<div class="wrap" data-is-active={isActive}>{name}</div>
 
 <style>
   .wrap {
@@ -22,7 +22,7 @@
     background-color: #aadcdd;
   }
 
-  .wrap[data-isActive="true"] {
+  .wrap[data-is-active="true"] {
     background-color: #58cfc1;
   }
 </style>

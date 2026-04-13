@@ -74,6 +74,11 @@ const useBuilderCommon = (lastStore: StoreProps) => {
               terminal.wait = false;
               commit();
             },
+            error(message) {
+              logger.outputInfo(`Failed to save file. ${message}`);
+              terminal.wait = false;
+              commit();
+            },
           });
         },
       },

@@ -1,8 +1,7 @@
 ﻿import MusicTheory from "../../../../../domain/theory/music-theory";
-import StoreOutline from "../../../props/storeOutline";
+import { createOutlineActions } from "../../../../../app/outline/outline-actions";
 import { type StoreProps } from "../../../store";
 import useReducerCache from "../../reducerCache";
-import useReducerOutline from "../../reducerOutline";
 import useReducerTermianl from "../../reducerTerminal";
 import CommandRegistUtil from "../commandRegistUtil";
 import useTerminalLogger from "../terminalLogger";
@@ -13,7 +12,7 @@ const useBuilderInit = (lastStore: StoreProps) => {
   const logger = useTerminalLogger(terminal);
 
   const reducerCache = useReducerCache(lastStore);
-  const reducerOutline = useReducerOutline(lastStore);
+  const reducerOutline = createOutlineActions(lastStore);
 
   const VALID_SCALES = MusicTheory.KEY12_MAJOR_SCALE_LIST.map(
     (i) => i + "major",
@@ -80,5 +79,6 @@ const useBuilderInit = (lastStore: StoreProps) => {
   };
 };
 export default useBuilderInit;
+
 
 

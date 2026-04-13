@@ -1,5 +1,5 @@
-<script lang="ts">
-  import StoreOutline from "../../store/props/storeOutline";
+﻿<script lang="ts">
+  import type { OutlineDataChord } from "../../../domain/outline/outline-types";
   import StoreRef from "../../store/props/storeRef";
   import store from "../../store/store";
   import Element from "./element/Element.svelte";
@@ -35,7 +35,7 @@
       control.outline.arrange == null &&
       $store.input.holdC &&
       element.type === "chord" &&
-      (element.data as StoreOutline.DataChord).degree != undefined
+      (element.data as OutlineDataChord).degree != undefined
     );
   })();
 </script>
@@ -96,3 +96,4 @@
     /* background-color: rgba(128, 243, 126, 0.482); */
   }
 </style>
+

@@ -1,7 +1,7 @@
-<script lang="ts">
-  import type StoreOutline from "../../../../store/props/storeOutline";
+﻿<script lang="ts">
+  import type { OutlineDataSection } from "../../../../../domain/outline/outline-types";
 
-  export let data!: StoreOutline.DataSection;
+  export let data!: OutlineDataSection;
 </script>
 
 <div class="label">{data.name}</div>
@@ -32,3 +32,4 @@
     border-radius: 4px;
   }
 </style>
+

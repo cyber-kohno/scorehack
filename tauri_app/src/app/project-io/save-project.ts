@@ -9,6 +9,7 @@ export type ProjectIoHandle = ProjectFileStore.Handle;
 export interface ProjectIoCallbacks {
   success: (handle: ProjectIoHandle) => void;
   cancel: () => void;
+  error: (message: string) => void;
 }
 
 const toHandle = (path: string): ProjectIoHandle => ({
@@ -40,7 +41,9 @@ export const saveProject = async (
     await writeUtf8TextFile(path, gzipToBase64(plainData));
     fileHandle.score = toHandle(path);
     callbacks.success(fileHandle.score);
-  } catch {
-    callbacks.cancel();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred.";
+    callbacks.error(message);
   }
 };

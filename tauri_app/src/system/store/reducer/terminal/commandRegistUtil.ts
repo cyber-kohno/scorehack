@@ -1,5 +1,5 @@
-import type StoreArrange from "../../props/arrange/storeArrange";
-import type StoreOutline from "../../props/storeOutline";
+﻿import type StoreArrange from "../../props/arrange/storeArrange";
+import type { OutlineElementType } from "../../../../domain/outline/outline-types";
 import { createStoreUtil, type StoreProps } from "../../store";
 import useReducerTermianl from "../reducerTerminal";
 import useBuilderChord from "./sector/builderChord";
@@ -15,7 +15,7 @@ namespace CommandRegistUtil {
 
     export type FuncArg = {
         name: string;
-        /** ヘルパー利用時の候補リスト */
+        /** 繝倥Ν繝代・蛻ｩ逕ｨ譎ゅ・蛟呵｣懊Μ繧ｹ繝・*/
         getCandidate?: () => string[]
     }
 
@@ -62,7 +62,7 @@ namespace CommandRegistUtil {
 
             switch (sectors[0]) {
                 case 'harmonize': {
-                    const harmonizeSector = sectors[1] as StoreOutline.ElementType | 'arrange';
+                    const harmonizeSector = sectors[1] as OutlineElementType | 'arrange';
                     if (harmonizeSector !== 'arrange') {
                         add(builderHarmonize.get());
                         switch (harmonizeSector) {

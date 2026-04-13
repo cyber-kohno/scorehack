@@ -1,7 +1,7 @@
 ﻿<script lang="ts">
   import type StoreRef from "../../../store/props/storeRef";
-  import useReducerRoot from "../../../store/reducer/reducerRoot";
   import store from "../../../store/store";
+  import { getTimelineFocusPos } from "../../../../app/timeline/get-timeline-focus-pos";
   import MusicTheory from "../../../../domain/theory/music-theory";
 
   export let scrollLimitProps: StoreRef.ScrollLimitProps;
@@ -21,8 +21,7 @@
       modulate?: Diff;
       tempo?: Diff;
     }[] = [];
-    const { getTimelineFocusPos } = useReducerRoot($store);
-    const focusPos = getTimelineFocusPos();
+    const focusPos = getTimelineFocusPos($store);
     $store.cache.chordCaches.forEach((chordCache) => {
       const x = chordCache.viewPosLeft;
       const middle = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;
