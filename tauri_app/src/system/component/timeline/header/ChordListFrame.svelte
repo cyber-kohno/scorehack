@@ -1,32 +1,17 @@
 ﻿<script lang="ts">
-  import type StoreCache from "../../../store/props/storeCache";
   import type StoreRef from "../../../store/props/storeRef";
   import store from "../../../store/store";
-  import { getTimelineFocusPos } from "../../../../app/timeline/get-timeline-focus-pos";
-  import MusicTheory from "../../../../domain/theory/music-theory";
   import TimelineLastMargin from "../TimelineTailMargin.svelte";
+  import {
+    getTimelineChordName,
+    getTimelineOutlineFocus,
+    getVisibleTimelineChordCaches,
+  } from "../../../../state/ui-state/timeline-ui-store";
 
   export let scrollLimitProps: StoreRef.ScrollLimitProps;
 
-  $: focus = $store.control.outline.focus;
-
-  $: chordCaches = (() => {
-    const focusPos = getTimelineFocusPos($store);
-    return $store.cache.chordCaches.filter((c) => {
-      const middle = c.viewPosLeft + c.viewPosWidth / 2;
-      return (
-        Math.abs(scrollLimitProps.scrollMiddleX - middle) <
-          scrollLimitProps.rectWidth ||
-        Math.abs(focusPos - middle) < scrollLimitProps.rectWidth
-      );
-    });
-  })();
-
-  const getChordName = (cache: StoreCache.ChordCache) => {
-    const compiledChord = cache.compiledChord;
-    if (compiledChord == undefined) return "-";
-    return MusicTheory.getKeyChordName(compiledChord.chord);
-  };
+  $: focus = getTimelineOutlineFocus($store);
+  $: chordCaches = getVisibleTimelineChordCaches($store, scrollLimitProps);
 </script>
 
 <div class="wrap">
@@ -37,7 +22,7 @@
       style:width="{chordCache.viewPosWidth}px"
     >
       <div class="inner" data-isFocus={focus === chordCache.elementSeq}>
-        {getChordName(chordCache)}
+        {getTimelineChordName(chordCache)}
       </div>
     </div>
   {/each}

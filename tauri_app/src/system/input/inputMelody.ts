@@ -5,10 +5,10 @@ import StorePreview from "../store/props/storePreview";
 import useReducerCache from "../store/reducer/reducerCache";
 import useReducerMelody from "../store/reducer/reducerMelody";
 import { createOutlineActions } from "../../app/outline/outline-actions";
+import { createPlaybackActions } from "../../app/playback/playback-actions";
 import useReducerRef from "../store/reducer/reducerRef";
 import type { StoreUtil } from "../store/store";
 import MusicTheory from "../../domain/theory/music-theory";
-import PreviewUtil from "../util/preview/previewUtil";
 
 const useInputMelody = (storeUtil: StoreUtil) => {
     const { lastStore, commit } = storeUtil;
@@ -19,7 +19,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
     const reducerMelody = useReducerMelody(lastStore);
     // const { isPreview } = useAccessorPreview(lastStore);
 
-    const { startTest, stopTest } = PreviewUtil.useUpdater(storeUtil);
+    const { startPreview, stopPreview } = createPlaybackActions(storeUtil);
 
     const melody = lastStore.control.melody;
     const playSF = (pitchIndex: number) => {
@@ -83,14 +83,14 @@ const useInputMelody = (storeUtil: StoreUtil) => {
         if (isPreview) {
 
             switch (eventKey) {
-                case ' ': stopTest();
+                case ' ': stopPreview();
             }
 
             return;
         }
 
         switch (eventKey) {
-            case ' ': startTest({ target: 'all' });
+            case ' ': startPreview({ target: 'all' });
         }
         if (isCursor()) {
             const moveCursor = (dir: -1 | 1) => {

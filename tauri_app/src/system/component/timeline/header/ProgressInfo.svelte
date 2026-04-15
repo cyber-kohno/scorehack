@@ -1,8 +1,7 @@
 ﻿<script lang="ts">
   import type StoreRef from "../../../store/props/storeRef";
   import store from "../../../store/store";
-  import { getTimelineFocusPos } from "../../../../app/timeline/get-timeline-focus-pos";
-  import MusicTheory from "../../../../domain/theory/music-theory";
+  import { getTimelineProgressItems } from "../../../../state/ui-state/timeline-ui-store";
 
   export let scrollLimitProps: StoreRef.ScrollLimitProps;
 
@@ -10,64 +9,21 @@
     prev: string;
     next: string;
   };
-  $: [chordList, changeList] = (() => {
-    const chordList: {
+  $: ({ chordList, changeList } = getTimelineProgressItems(
+    $store,
+    scrollLimitProps,
+  ) as {
+    chordList: {
       x: number;
       time: number;
-    }[] = [];
-    const changeList: {
+    }[];
+    changeList: {
       x: number;
       section?: string;
       modulate?: Diff;
       tempo?: Diff;
-    }[] = [];
-    const focusPos = getTimelineFocusPos($store);
-    $store.cache.chordCaches.forEach((chordCache) => {
-      const x = chordCache.viewPosLeft;
-      const middle = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;
-      if (
-        Math.abs(scrollLimitProps.scrollMiddleX - middle) >
-          scrollLimitProps.rectWidth &&
-        Math.abs(focusPos - middle) > scrollLimitProps.rectWidth
-      )
-        return 1;
-      chordList.push({
-        x,
-        time: chordCache.startTime,
-      });
-
-      const section = chordCache.sectionStart;
-      const modulateCache = chordCache.modulate;
-      const tempoCache = chordCache.tempo;
-      if (
-        section != undefined ||
-        modulateCache != undefined ||
-        tempoCache != undefined
-      ) {
-        let modulate: Diff | undefined = undefined;
-        let tempo: Diff | undefined = undefined;
-        if (modulateCache != undefined) {
-          modulate = {
-            prev: MusicTheory.getScaleName(modulateCache.prev),
-            next: MusicTheory.getScaleName(modulateCache.next),
-          };
-        } else if (tempoCache != undefined) {
-          tempo = {
-            prev: tempoCache.prev.toString(),
-            next: tempoCache.next.toString(),
-          };
-        }
-        changeList.push({
-          x,
-          section,
-          modulate,
-          tempo,
-        });
-      }
-    });
-    // console.log(list.length);
-    return [chordList, changeList];
-  })();
+    }[];
+  });
 
   const formatNumber = (num: number) => {
     // toFixed縺ｧ謖・ｮ壹＠縺滓｡∵焚縺ｫ繝輔か繝ｼ繝槭ャ繝・

@@ -1,6 +1,6 @@
-﻿<script lang="ts">
+<script lang="ts">
   import Layout from "../../../../styles/tokens/layout-tokens";
-  import StoreMelody from "../../../store/props/storeMelody";
+  import { calcMelodyBeat, calcMelodyBeatSide, type MelodyNote } from "../../../../domain/melody/melody-types";
   import type StoreRef from "../../../store/props/storeRef";
   import useReducerCache from "../../../store/reducer/reducerCache";
   import store from "../../../store/store";
@@ -8,10 +8,9 @@
   import Factors from "./Factors.svelte";
   import ContextUtil from "../../../store/contextUtil";
   import UnitDisplay from "../UnitDisplay.svelte";
-  import useReducerMelody from "../../../store/reducer/reducerMelody";
-  import { get } from "svelte/store";
+  import { isMelodyFocusRangeIndex } from "../../../../state/ui-state/melody-ui-store";
 
-  export let note: StoreMelody.Note;
+  export let note: MelodyNote;
   export let index: number;
   export let scrollLimitProps: StoreRef.ScrollLimitProps;
   export let cursorMiddle: number;
@@ -19,14 +18,14 @@
   const isPreview = ContextUtil.get('isPreview');
 
   type OperationStatus =
-    | "move" // 遘ｻ蜍・
-    | "len" // 髟ｷ縺・
-    | "scale" // 繧ｹ繧ｱ繝ｼ繝ｫ邵帙ｊ髻ｳ遞狗ｧｻ蜍・
-    | "range" // 遽・峇驕ｸ謚・
-    | "octave" // 繧ｪ繧ｯ繧ｿ繝ｼ繝夜浹遞狗ｧｻ蜍・
-    | "preview" // 繝励Ξ繝薙Η繝ｼ荳ｭ
-    | "focus" // 繝輔か繝ｼ繧ｫ繧ｹ縺ｮ蝓ｺ貅・
-    | "none"; // 縺ｪ縺・
+    | "move"
+    | "len"
+    | "scale"
+    | "range"
+    | "octave"
+    | "preview"
+    | "focus"
+    | "none";
 
   let ref: HTMLElement | null = null;
   $: {
@@ -44,41 +43,24 @@
 
   $: tonality = (() => {
     const { getBaseFromBeat } = useReducerCache($store);
-    return getBaseFromBeat(StoreMelody.calcBeat(note.norm, note.pos)).scoreBase
-      .tonality;
+    return getBaseFromBeat(calcMelodyBeat(note.norm, note.pos)).scoreBase.tonality;
   })();
 
   $: [isDisp, left, scaleIndex, width] = (() => {
-    const beatSide = StoreMelody.calcBeatSide(note);
-    const [left, width] = [beatSide.pos, beatSide.len].map(
-      (v) => v * $store.env.beatWidth
-    );
+    const beatSide = calcMelodyBeatSide(note);
+    const [left, width] = [beatSide.pos, beatSide.len].map((v) => v * $store.env.beatWidth);
     const middle = left + width / 2;
     const isDisp =
-      Math.abs(scrollLimitProps.scrollMiddleX - middle) <=
-        scrollLimitProps.rectWidth ||
+      Math.abs(scrollLimitProps.scrollMiddleX - middle) <= scrollLimitProps.rectWidth ||
       Math.abs(cursorMiddle - middle) <= scrollLimitProps.rectWidth;
     const scaleIndex = (note.pitch - tonality.key12) % 12;
     return [isDisp, left, scaleIndex, width];
   })();
 
-  $: isScale = (() => {
-    return MusicTheory.isScale(note.pitch, tonality);
-  })();
-
+  $: isScale = MusicTheory.isScale(note.pitch, tonality);
   $: melody = $store.control.melody;
-
-  $: isCriteria = (() => {
-    return $store.control.mode === "melody" && melody.focus === index;
-  })();
-  $: isFocus = (() => {
-    const { getFocusRange } = useReducerMelody($store);
-    const istRange = () => {
-      const [start, end] = getFocusRange();
-      return start <= index && end >= index;
-    };
-    return $store.control.mode === "melody" && istRange();
-  })();
+  $: isCriteria = $store.control.mode === "melody" && melody.focus === index;
+  $: isFocus = isMelodyFocusRangeIndex($store, index);
 
   $: getOperationHighlight = (): OperationStatus => {
     if ($isPreview()) return "preview";
@@ -92,7 +74,6 @@
     else if (input.holdShift || melody.focusLock !== -1) return "range";
     return "none";
   };
-
 </script>
 
 {#if isDisp}
@@ -103,16 +84,8 @@
     data-operation={getOperationHighlight()}
     data-disable={true}
   >
-    <div
-      class="effect"
-      style:top="{Layout.getPitchTop(note.pitch) - 2 + 30}px"
-      bind:this={ref}
-    ></div>
-    <div
-      class="frame"
-      style:top="{Layout.getPitchTop(note.pitch) - 2}px"
-      data-isScale={isScale}
-    >
+    <div class="effect" style:top="{Layout.getPitchTop(note.pitch) - 2 + 30}px" bind:this={ref}></div>
+    <div class="frame" style:top="{Layout.getPitchTop(note.pitch) - 2}px" data-isScale={isScale}>
       {#if !$isPreview()}
         {#if !isCriteria}
           <div class="protrusion" style:height="{28 / note.norm.div}px"></div>
@@ -166,7 +139,6 @@
     height: 0;
     z-index: 2;
     background: linear-gradient(to bottom, #ff3429d5, #f129ff00);
-
     transition: height 0.1s;
   }
   .frame {
@@ -189,12 +161,9 @@
     display: inline-block;
     position: absolute;
     left: 0;
-    /* top: -10px; */
     bottom: 100%;
-    /* height: 10px; */
     width: 8px;
     background-color: #ff00007a;
-    /* background-color: ${props => props.isScale ? '#1ccf49d5' : '#eacb1dd5'}; */
     border-radius: 4px 4px 0 0;
   }
 
@@ -209,5 +178,3 @@
     font-weight: 600;
   }
 </style>
-
-

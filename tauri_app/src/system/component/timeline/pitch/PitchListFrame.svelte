@@ -4,6 +4,7 @@
   import MusicTheory from "../../../../domain/theory/music-theory";
   import store from "../../../store/store";
   import PitchFocus from "./PitchFocus.svelte";
+  import { isTimelineMelodyMode } from "../../../../state/ui-state/timeline-ui-store";
 
   // let ref: HTMLElement | undefined = undefined;
   // onMount(() => ($store.ref.pitch = ref));
@@ -13,7 +14,7 @@
     // 髻ｳ遞九・菴弱＞鬆・↓荳九°繧我ｸｦ縺ｹ繧・
     .reverse();
 
-  $: isMelodyMode = $store.control.mode === "melody";
+  $: isMelodyMode = isTimelineMelodyMode($store);
 </script>
 
 <div class="wrap" bind:this={$store.ref.pitch}>

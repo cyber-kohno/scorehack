@@ -3,10 +3,10 @@ import type StoreInput from "../store/props/storeInput";
 import type StoreOutline from "../store/props/storeOutline";
 import useReducerCache from "../store/reducer/reducerCache";
 import { createOutlineActions } from "../../app/outline/outline-actions";
+import { createPlaybackPreviewRouter } from "../../app/playback/playback-preview-router";
 import useReducerRef from "../store/reducer/reducerRef";
 import type { StoreUtil } from "../store/store";
 import MusicTheory from "../../domain/theory/music-theory";
-import PreviewUtil from "../util/preview/previewUtil";
 import useInputFinder from "./arrange/finder/inputFinder";
 import useInputArrange from "./arrange/inputArrange";
 
@@ -20,7 +20,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
   const inputArrange = useInputArrange(storeUtil);
   const inputFinder = useInputFinder(storeUtil);
 
-  const { startTest, stopTest } = PreviewUtil.useUpdater(storeUtil);
+  const { startPreview, stopPreview } = createPlaybackPreviewRouter(storeUtil);
 
   const outline = lastStore.control.outline;
   const arrange = outline.arrange;
@@ -50,7 +50,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
     if (isPreview) {
       switch (eventKey) {
         case " ":
-          stopTest();
+          stopPreview();
       }
       return;
     }
@@ -185,7 +185,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
         }
         break;
       case " ":
-        startTest({ target: "all" });
+        startPreview({ target: "all" });
     }
   };
 

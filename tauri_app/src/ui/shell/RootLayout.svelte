@@ -1,7 +1,7 @@
-<script lang="ts">
+﻿<script lang="ts">
   import ArrangeFrame from "../../system/component/arrange/ArrangeFrame.svelte";
   import ArrangeFinderFrame from "../../system/component/arrange/finder/ArrangeFinderFrame.svelte";
-  import TerminalFrame from "../../system/component/terminal/TerminalFrame.svelte";
+  import TerminalFrame from "../terminal/TerminalFrame.svelte";
   import store from "../../system/store/store";
   import {
     isArrangeEditorVisible,

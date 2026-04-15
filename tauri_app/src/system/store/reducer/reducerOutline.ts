@@ -1,8 +1,15 @@
-import StorePianoEditor from "../props/arrange/piano/storePianoEditor";
+﻿import StorePianoEditor from "../props/arrange/piano/storePianoEditor";
 import type StoreArrange from "../props/arrange/storeArrange";
 import type StoreCache from "../props/storeCache";
 import StoreMelody from "../props/storeMelody";
-import type StoreOutline from "../props/storeOutline";
+import type {
+  OutlineDataChord,
+  OutlineDataInit,
+  OutlineDataModulate,
+  OutlineDataSection,
+  OutlineDataTempo,
+  OutlineElement,
+} from "../../../domain/outline/outline-types";
 import type { StoreProps } from "../store";
 import ArrangeUtil from "./arrangeUtil";
 
@@ -15,46 +22,46 @@ const useReducerOutline = (lastStore: StoreProps) => {
     return lastStore.data.elements[elementIndex];
   };
 
-  const getCurrentInitData = (): StoreOutline.DataInit => {
+  const getCurrentInitData = (): OutlineDataInit => {
     const element = getCurrentElement();
     if (element.type !== "init")
-      throw new Error("element.typeはinitでなければならない。");
+      throw new Error("Current element type does not match the requested outline data.");
     return element.data;
   };
-  const getCurrentSectionData = (): StoreOutline.DataSection => {
+  const getCurrentSectionData = (): OutlineDataSection => {
     const element = getCurrentElement();
     if (element.type !== "section")
-      throw new Error("element.typeはsectionでなければならない。");
+      throw new Error("Current element type does not match the requested outline data.");
     return element.data;
   };
-  const getCurrentChordData = (): StoreOutline.DataChord => {
+  const getCurrentChordData = (): OutlineDataChord => {
     const element = getCurrentElement();
     if (element.type !== "chord")
-      throw new Error("element.typeはchordでなければならない。");
+      throw new Error("Current element type does not match the requested outline data.");
     return element.data;
   };
-  const getCurrentTempoData = (): StoreOutline.DataTempo => {
+  const getCurrentTempoData = (): OutlineDataTempo => {
     const element = getCurrentElement();
     if (element.type !== "tempo")
-      throw new Error("element.typeはtempoでなければならない。");
+      throw new Error("Current element type does not match the requested outline data.");
     return element.data;
   };
-  const getCurrentModulateData = (): StoreOutline.DataModulate => {
+  const getCurrentModulateData = (): OutlineDataModulate => {
     const element = getCurrentElement();
     if (element.type !== "modulate")
-      throw new Error("element.typeはmodulateでなければならない。");
+      throw new Error("Current element type does not match the requested outline data.");
     return element.data;
   };
 
-  const insertElement = (element: StoreOutline.Element) => {
+  const insertElement = (element: OutlineElement) => {
     const elements = lastStore.data.elements;
     const focus = lastStore.control.outline.focus;
     const lastChordSeq = lastStore.cache.elementCaches[focus].lastChordSeq;
-    // コード要素を追加する場合は、それ以降のコード連番を1つ後ろにズラす
+    // 繧ｳ繝ｼ繝芽ｦ∫ｴ繧定ｿｽ蜉縺吶ｋ蝣ｴ蜷医・縲√◎繧御ｻ･髯阪・繧ｳ繝ｼ繝蛾｣逡ｪ繧・縺､蠕後ｍ縺ｫ繧ｺ繝ｩ縺・
     if (element.type === "chord") {
       const tracks = lastStore.data.arrange.tracks;
       tracks.forEach((track) => {
-        // 対象要素以降のコード連番を繰り上げ
+        // 蟇ｾ雎｡隕∫ｴ莉･髯阪・繧ｳ繝ｼ繝蛾｣逡ｪ繧堤ｹｰ繧贋ｸ翫￡
         track.relations.forEach((r) => {
           if (r.chordSeq > lastChordSeq) r.chordSeq++;
         });
@@ -73,15 +80,15 @@ const useReducerOutline = (lastStore: StoreProps) => {
   const renameSectionData = (value: string) => {
     const element = getCurrentElement();
     if (element.type !== "section")
-      throw Error(`section要素でない。[${element.type}]`);
-    const data: StoreOutline.DataSection = element.data;
+      throw Error(`section隕∫ｴ縺ｧ縺ｪ縺・・${element.type}]`);
+    const data: OutlineDataSection = element.data;
     data.name = value;
   };
 
-  const setChordData = (data: StoreOutline.DataChord) => {
+  const setChordData = (data: OutlineDataChord) => {
     const element = getCurrentElement();
     if (element.type !== "chord")
-      throw Error(`chord要素でない。[${element.type}]`);
+      throw Error(`chord隕∫ｴ縺ｧ縺ｪ縺・・${element.type}]`);
     element.data = data;
   };
 
@@ -98,7 +105,7 @@ const useReducerOutline = (lastStore: StoreProps) => {
 
   const moveSectionFocus = (dir: -1 | 1) => {
     // if (isLock) return;
-    // sectionタイプのエレメントが見つかるまで走査
+    // section繧ｿ繧､繝励・繧ｨ繝ｬ繝｡繝ｳ繝医′隕九▽縺九ｋ縺ｾ縺ｧ襍ｰ譟ｻ
     let tempFocus = outline.focus;
     const isIncrement = () =>
       dir === -1 ? tempFocus > 0 : tempFocus < elements.length - 1;
@@ -193,7 +200,7 @@ const useReducerOutline = (lastStore: StoreProps) => {
   };
 
   /**
-   * フォーカス範囲の要素ブロックを削除する
+   * 繝輔か繝ｼ繧ｫ繧ｹ遽・峇縺ｮ隕∫ｴ繝悶Ο繝・け繧貞炎髯､縺吶ｋ
    */
   const removeFocusElement = () => {
     const { focus, focusLock } = lastStore.control.outline;
@@ -207,7 +214,7 @@ const useReducerOutline = (lastStore: StoreProps) => {
 
     const { elementCaches } = lastStore.cache;
 
-    // 一つでもコード要素以外が含まれていたら削除できない
+    // 荳縺､縺ｧ繧ゅさ繝ｼ繝芽ｦ∫ｴ莉･螟悶′蜷ｫ縺ｾ繧後※縺・◆繧牙炎髯､縺ｧ縺阪↑縺・
     if (st !== ed) {
       let canDelete = true;
       for (let i = st; i <= ed; i++) {
@@ -219,7 +226,7 @@ const useReducerOutline = (lastStore: StoreProps) => {
       if (!canDelete) return;
     }
 
-    // 削除時は逆回転する
+    // 蜑企勁譎ゅ・騾・屓霆｢縺吶ｋ
     for (let i = ed; i >= st; i--) {
       removeElementFromIndex(i);
     }
@@ -228,9 +235,9 @@ const useReducerOutline = (lastStore: StoreProps) => {
   };
 
   /**
-   * 指定したインデックスの要素を削除する
-   * コードの場合は、連動してアレンジとの紐づけも解除し、
-   * コードシーケンスの調整も行う
+   * 謖・ｮ壹＠縺溘う繝ｳ繝・ャ繧ｯ繧ｹ縺ｮ隕∫ｴ繧貞炎髯､縺吶ｋ
+   * 繧ｳ繝ｼ繝峨・蝣ｴ蜷医・縲・｣蜍輔＠縺ｦ繧｢繝ｬ繝ｳ繧ｸ縺ｨ縺ｮ邏舌▼縺代ｂ隗｣髯､縺励・
+   * 繧ｳ繝ｼ繝峨す繝ｼ繧ｱ繝ｳ繧ｹ縺ｮ隱ｿ謨ｴ繧り｡後≧
    * @param index
    */
   const removeElementFromIndex = (index: number) => {
@@ -240,20 +247,20 @@ const useReducerOutline = (lastStore: StoreProps) => {
 
     if (chordSeq !== -1) {
       // console.log(`chordSeq: ${chordSeq}`);
-      // コード要素の場合、紐づくユニットの削除
+      // 繧ｳ繝ｼ繝芽ｦ∫ｴ縺ｮ蝣ｴ蜷医∫ｴ舌▼縺上Θ繝九ャ繝医・蜑企勁
       tracks.forEach((track) => {
-        // コード連番に紐づくアレンジの関連を検索
+        // 繧ｳ繝ｼ繝蛾｣逡ｪ縺ｫ邏舌▼縺上い繝ｬ繝ｳ繧ｸ縺ｮ髢｢騾｣繧呈､懃ｴ｢
         const delIndex = track.relations.findIndex(
           (r) => r.chordSeq === chordSeq,
         );
-        // 関連がある場合、関連も合わせて削除する
+        // 髢｢騾｣縺後≠繧句ｴ蜷医・未騾｣繧ょ粋繧上○縺ｦ蜑企勁縺吶ｋ
         if (delIndex !== -1) {
           track.relations.splice(delIndex, 1);
-          // 不要なライブラリユニットの削除
+          // 荳崎ｦ√↑繝ｩ繧､繝悶Λ繝ｪ繝ｦ繝九ャ繝医・蜑企勁
           StorePianoEditor.deleteUnreferUnit(track);
           console.log(track);
         }
-        // 対象要素以降のコード連番を繰り下げ
+        // 蟇ｾ雎｡隕∫ｴ莉･髯阪・繧ｳ繝ｼ繝蛾｣逡ｪ繧堤ｹｰ繧贋ｸ九￡
         track.relations.forEach((r) => {
           if (r.chordSeq > chordSeq) r.chordSeq--;
         });
@@ -285,3 +292,5 @@ const useReducerOutline = (lastStore: StoreProps) => {
 };
 
 export default useReducerOutline;
+
+

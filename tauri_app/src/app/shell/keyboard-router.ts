@@ -1,13 +1,13 @@
-﻿import type StoreInput from "../../system/store/props/storeInput";
-import useInputMelody from "../../system/input/inputMelody";
+import type StoreInput from "../../system/store/props/storeInput";
+import { createMelodyInputRouter } from "../melody/melody-input-router";
 import { createOutlineInputRouter } from "../outline/outline-input-router";
-import useInputTerminal from "../../system/input/inputTerminal";
-import useReducerTermianl from "../../system/store/reducer/reducerTerminal";
 import type { StoreProps, StoreUtil } from "../../system/store/store";
 import {
   getShellMode,
   isArrangeInUse,
 } from "../../state/ui-state/shell-ui-store";
+import { createTerminalActions } from "../terminal/terminal-actions";
+import { createTerminalInputRouter } from "../terminal/terminal-input-router";
 import {
   hasHoldInput,
   setInputHold,
@@ -57,9 +57,9 @@ const getRootHoldCallbacks = (eventKey: string): StoreInput.Callbacks => {
 
 export const createKeyboardRouter = (storeUtil: StoreUtil) => {
   const { lastStore, commit } = storeUtil;
-  const reducerTerminal = useReducerTermianl(lastStore);
+  const terminalActions = createTerminalActions(lastStore);
   const inputOutline = createOutlineInputRouter(storeUtil);
-  const inputMelody = useInputMelody(storeUtil);
+  const inputMelody = createMelodyInputRouter(storeUtil);
 
   const updateHold = (eventKey: string, isDown: boolean) => {
     const holdKey = HOLD_KEY_MAP[eventKey];
@@ -74,8 +74,8 @@ export const createKeyboardRouter = (storeUtil: StoreUtil) => {
     const isUseArrange = isArrangeInUse(lastStore);
 
     if (!hasHoldInput(lastStore)) {
-      if (reducerTerminal.isUse()) {
-        const inputTerminal = useInputTerminal(storeUtil);
+      if (terminalActions.isUse()) {
+        const inputTerminal = createTerminalInputRouter(storeUtil);
         inputTerminal.control(eventKey);
         commit();
         return;
@@ -90,7 +90,7 @@ export const createKeyboardRouter = (storeUtil: StoreUtil) => {
           break;
         }
         case "t": {
-          reducerTerminal.open();
+          terminalActions.open();
           commit();
           break;
         }

@@ -6,6 +6,7 @@
 関連ドキュメント:
 - `ai_context/phase/phase3_outline_inventory.md`
 - `ai_context/phase/phase3_outline_migration_map.md`
+- `ai_context/phase/phase3_outline_tempo_ts_notes.md`
 
 ---
 
@@ -182,6 +183,7 @@
 ### 補足
 - 途中で `reducerMelody.ts` の import パス誤りにより `build` が一度失敗したが、修正後に再実行して成功
 - 途中で `builderHarmonize.ts` の壊れた文字列リテラルが表面化したため、`item.isMute ? "on" : ""` に最小修正して再実行し、成功
+- 途中で `reducerOutline.ts` の壊れた `throw new Error(...)` 文字列が表面化したため、エラーメッセージを最小修正して再実行し、成功
 - `build` 時の既存 warning は継続
 
 ---
@@ -206,6 +208,7 @@
 - `tauri_app/src/system/store/reducer/terminal/commandRegistUtil.ts`
 - `tauri_app/src/system/store/reducer/terminal/sector/builderModulate.ts`
 - `tauri_app/src/system/store/reducer/reducerCache.ts`
+- `tauri_app/src/system/store/reducer/reducerOutline.ts`
 
 #### 実施内容
 - `ui/outline` の element wrapper 群の型参照を `StoreOutline` から `domain/outline/outline-types.ts` へ切り替え
@@ -213,14 +216,23 @@
 - legacy outline component 本体でも、段階的に `domain/outline` の型を使うよう変更
 - terminal command 登録や modulate builder でも、outline element 型や定数の参照を `domain/outline` へ寄せた
 - `reducerCache.ts` でも `StoreOutline` 依存を外し、outline 型と定数を `domain/outline` から参照するよう変更
+- `reducerOutline.ts` でも outline data 型を `domain/outline` から参照するよう変更
 
 #### メモ
 - `StoreOutline` は control state 互換レイヤーとして残しつつ、型本体は `domain/outline` 側へかなり移った
-- 現時点で `StoreOutline` / `reducerOutline` が強く残っている中心は `reducerOutline.ts` 本体
+- 現時点で `StoreOutline` / `reducerOutline` が強く残っている中心は `reducerOutline.ts` 本体そのものではなく、outline control state の互換レイヤー寄りの役割になってきている
+
+---
+
+## `tempo / ts` 現状メモ
+- `ai_context/phase/phase3_outline_tempo_ts_notes.md` を追加
+- `tempo` は型と cache 側の器はあるが UI 未完了
+- `ts` は型はあるが UI / 入力 / cache の実装がほぼ未着手
+- 次段階では `tempo` を先に完成対象にするのが現実的
 
 ---
 
 ## 次の候補
-1. `reducerOutline.ts` 自体の型参照を `domain/outline` へ寄せる
-2. `tempo / ts` を含めた outline element の扱い整理と、未完了要素の方針決め
-3. Phase 3 を一度締めて、次に `terminal` か `melody` のどちらを先に移すか決める
+1. `tempo / ts` を含めた outline element の扱い整理と、未完了要素の方針決め
+2. Phase 3 を一度締めて、次に `terminal` か `melody` のどちらを先に移すか決める
+3. `StoreOutline` の control state 側をどこまで独立させるか検討する

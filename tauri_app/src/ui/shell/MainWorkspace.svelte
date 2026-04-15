@@ -1,6 +1,6 @@
 ﻿<script lang="ts">
   import OutlineFrame from "../outline/OutlineFrame.svelte";
-  import TimelineFrame from "../../system/component/timeline/TimelineFrame.svelte";
+  import TimelineFrame from "../timeline/TimelineFrame.svelte";
 </script>
 
 <div class="main">

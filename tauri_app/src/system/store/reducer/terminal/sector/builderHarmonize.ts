@@ -1,30 +1,34 @@
-﻿import PreviewUtil from "../../../../util/preview/previewUtil";
+import {
+  createTerminalCommandDefault,
+  type TerminalCommand,
+} from "../../../../../app/terminal/terminal-command-registry";
+import { createPlaybackActions } from "../../../../../app/playback/playback-actions";
+import { createTerminalLogger } from "../../../../../app/terminal/terminal-logger";
+import { createOutlineActions } from "../../../../../app/outline/outline-actions";
 import StorePianoEditor from "../../../props/arrange/piano/storePianoEditor";
 import StorePreview from "../../../props/storePreview";
-import { createOutlineActions } from "../../../../../app/outline/outline-actions";
 import { createStoreUtil, type StoreProps } from "../../../store";
 import useReducerTermianl from "../../reducerTerminal";
-import CommandRegistUtil from "../commandRegistUtil";
-import useTerminalLogger from "../terminalLogger";
 
 const useBuilderHarmonize = (lastStore: StoreProps) => {
-  const { commit } = createStoreUtil(lastStore);
+  const storeUtil = createStoreUtil(lastStore);
+  const { commit } = storeUtil;
   const reducer = useReducerTermianl(lastStore);
   const terminal = reducer.getTerminal();
-  const { isLoadSoundFont, loadSoundFont } = PreviewUtil.useReducer(lastStore);
+  const { isLoadSoundFont, loadSoundFont } = createPlaybackActions(storeUtil);
 
   const { changeHarmonizeTrack, getCurrHarmonizeTrack } =
     createOutlineActions(lastStore);
 
-  const logger = useTerminalLogger(terminal);
+  const logger = createTerminalLogger(terminal);
   const lsh = () => {
     const func = terminal.availableFuncs.find((f) => f.funcKey === "lsh");
     if (func == undefined) throw new Error();
     func.callback([]);
   };
 
-  const get = (): CommandRegistUtil.FuncProps[] => {
-    const defaultProps = CommandRegistUtil.createDefaultProps("harmonize");
+  const get = (): TerminalCommand[] => {
+    const defaultProps = createTerminalCommandDefault("harmonize");
     return [
       {
         ...defaultProps,
@@ -58,18 +62,17 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
                 },
                 { headerName: "Mute", width: 80, attr: "sentence" },
               ],
-              table: (() =>
-                tracks.map((item, i) => {
-                  const active = item.isActive ? "*" : "";
-                  return [
-                    i.toString(),
-                    active + item.name,
-                    item.method,
-                    item.soundFont,
-                    item.volume.toString(),
-                    item.isMute ? "on" : "",
-                  ];
-                }))(),
+              table: tracks.map((item, i) => {
+                const active = item.isActive ? "*" : "";
+                return [
+                  i.toString(),
+                  active + item.name,
+                  item.method,
+                  item.soundFont,
+                  item.volume.toString(),
+                  item.isMute ? "on" : "",
+                ];
+              }),
             },
           });
         },
@@ -114,15 +117,13 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
           if (arg0 == null) return;
           const nextIndex = tracks.findIndex((st) => st.name === arg0);
           if (nextIndex === -1) {
-            logger.outputError(``);
+            logger.outputError("");
             return;
           }
           const prev = tracks[outline.focus];
           try {
             changeHarmonizeTrack(nextIndex);
-            logger.outputInfo(`Active track changed. [${prev} 竊・${arg0}]`);
-            // reducer.updateTarget();
-            // resetScoreTrackRef();
+            logger.outputInfo(`Active track changed. [${prev} -> ${arg0}]`);
             lsh();
           } catch {
             logger.outputError(
@@ -157,14 +158,16 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
             };
             if (!isLoadSoundFont(sfName)) {
               logger.outputInfo(`SoundFont not yet loaded. [${sfName}]`);
-              logger.outputInfo(`Loading...`);
+              logger.outputInfo("Loading...");
               terminal.wait = true;
               loadSoundFont(sfName).then(() => {
                 endProc();
                 terminal.wait = false;
                 commit();
               });
-            } else endProc();
+            } else {
+              endProc();
+            }
           } catch {
             logger.outputError(
               `The specified soundfont does not exist. [${arg0}]`,
@@ -185,15 +188,15 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
           const track = getCurrHarmonizeTrack();
           const prev = track.volume;
           track.volume = arg0Number;
-          logger.outputInfo(`Changed volume. [${prev} 竊・${arg0}]`);
+          logger.outputInfo(`Changed volume. [${prev} -> ${arg0}]`);
         },
       },
     ];
   };
+
   return {
     get,
   };
 };
+
 export default useBuilderHarmonize;
-
-

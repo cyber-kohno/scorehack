@@ -1,37 +1,29 @@
-﻿<script lang="ts">
+<script lang="ts">
   import Layout from "../../../../styles/tokens/layout-tokens";
   import type StoreCache from "../../../store/props/storeCache";
-  import StoreRef from "../../../store/props/storeRef";
-  import useReducerMelody from "../../../store/reducer/reducerMelody";
+  import type StoreRef from "../../../store/props/storeRef";
   import store from "../../../store/store";
   import { getTimelineFocusPos } from "../../../../app/timeline/get-timeline-focus-pos";
   import MusicTheory from "../../../../domain/theory/music-theory";
+  import { getCurrentMelodyPitch } from "../../../../state/ui-state/melody-ui-store";
 
   type PitchType = "tonic" | "other" | "scale";
 
   export let baseCache: StoreCache.BaseCache;
   export let scrollLimitProps: StoreRef.ScrollLimitProps;
 
-  $: reducerMelody = useReducerMelody($store);
-
   $: beatDiv16Count = MusicTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
-
   $: beatWidth = $store.env.beatWidth * (beatDiv16Count / 4);
 
   $: measureLines = (() => {
-    // console.log(baseCache.baseSeq);
-    const list: {
-      left: number;
-      width: number;
-    }[] = [];
+    const list: { left: number; width: number }[] = [];
     const cnt = baseCache.lengthBeat * beatDiv16Count;
     const focusPos = getTimelineFocusPos($store);
     for (let i = 0; i < cnt; i++) {
       const left = (beatWidth / beatDiv16Count) * i;
       const absLeft = baseCache.viewPosLeft + left;
       if (
-        Math.abs(scrollLimitProps.scrollMiddleX - absLeft) >
-          scrollLimitProps.rectWidth &&
+        Math.abs(scrollLimitProps.scrollMiddleX - absLeft) > scrollLimitProps.rectWidth &&
         Math.abs(focusPos - absLeft) > scrollLimitProps.rectWidth
       )
         continue;
@@ -51,29 +43,19 @@
       tonality.scale === "major"
         ? MusicTheory.MAJOR_SCALE_INTERVALS
         : MusicTheory.MINOR_SCALE_INTERVALS;
-    const list: {
-      top: number;
-      type: PitchType;
-    }[] = [];
-    const melody = $store.control.melody;
-    const focusPitchIndex =
-      melody.focus === -1
-        ? melody.cursor.pitch
-        : reducerMelody.getCurrScoreTrack().notes[melody.focus].pitch;
-    const focusTop =
-      LP.TOP_MARGIN + (LP.NUM - focusPitchIndex) * LP.ITEM_HEIGHT;
+    const list: { top: number; type: PitchType }[] = [];
+    const focusPitchIndex = getCurrentMelodyPitch($store);
+    const focusTop = LP.TOP_MARGIN + (LP.NUM - focusPitchIndex) * LP.ITEM_HEIGHT;
     for (let i = 0; i < LP.NUM; i++) {
       const top = LP.TOP_MARGIN + i * LP.ITEM_HEIGHT;
       if (
-        Math.abs(scrollLimitProps.scrollMiddleY - top) >
-          scrollLimitProps.rectHeight &&
+        Math.abs(scrollLimitProps.scrollMiddleY - top) > scrollLimitProps.rectHeight &&
         Math.abs(focusTop - top) > scrollLimitProps.rectHeight
       )
         continue;
       let type: PitchType = "other";
 
       const pitchIndex = LP.NUM - 1 - i;
-
       const keyIndex = MusicTheory.getKeyIndex(pitchIndex, tonality.key12);
       if (keyIndex === 0) type = "tonic";
       else if (scaleList.includes(keyIndex)) type = "scale";
@@ -100,16 +82,10 @@
   style:width="{baseCache.viewPosWidth}px"
   data-even={baseCache.baseSeq % 2 === 0}
 >
-  <!-- 16蛻・浹隨ｦ豈弱・陬懷勧繝ｩ繧､繝ｳ -->
   {#each measureLines as line}
-    <div
-      class="line"
-      style:left="{line.left}px"
-      style:width="{line.width}px"
-    ></div>
+    <div class="line" style:left="{line.left}px" style:width="{line.width}px"></div>
   {/each}
 
-  <!-- 髻ｳ遞九・陬懷勧繝ｩ繧､繝ｳ -->
   {#each pitchItems as pitch}
     <div
       class="pitch"
@@ -124,7 +100,6 @@
     display: inline-block;
     position: absolute;
     z-index: 1;
-
     background-color: #3ec9ce70;
     top: 0;
     height: calc(var(--pitch-top-margin) + var(--pitch-frame-height));
@@ -152,5 +127,3 @@
     opacity: 0.2;
   }
 </style>
-
-

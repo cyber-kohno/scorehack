@@ -1,15 +1,17 @@
-﻿import MusicTheory from "../../../../../domain/theory/music-theory";
-import { createStoreUtil, type StoreProps } from "../../../store";
+import {
+  createTerminalCommandDefault,
+  type TerminalCommand,
+} from "../../../../../app/terminal/terminal-command-registry";
+import MusicTheory from "../../../../../domain/theory/music-theory";
+import type { StoreProps } from "../../../store";
 import useReducerTermianl from "../../reducerTerminal";
-import CommandRegistUtil from "../commandRegistUtil";
 
 const useBuilderChord = (lastStore: StoreProps) => {
     const reducer = useReducerTermianl(lastStore);
     const terminal = reducer.getTerminal();
 
-    const get = (): CommandRegistUtil.FuncProps[] => {
-
-        const defaultProps = CommandRegistUtil.createDefaultProps('chord');
+    const get = (): TerminalCommand[] => {
+        const defaultProps = createTerminalCommandDefault('chord');
         return [
             {
                 ...defaultProps,
@@ -26,9 +28,7 @@ const useBuilderChord = (lastStore: StoreProps) => {
                                 { headerName: 'Symbol', width: 100, attr: 'def' },
                                 { headerName: 'Structs', width: 400, attr: 'sentence' }
                             ],
-                            table: (() => symbols.map(item => {
-                                return [`[${item.symbol}]`, item.structs.join(', ')]
-                            }))()
+                            table: symbols.map(item => [`[${item.symbol}]`, item.structs.join(', ')])
                         }
                     });
                 }
@@ -40,4 +40,3 @@ const useBuilderChord = (lastStore: StoreProps) => {
     };
 }
 export default useBuilderChord;
-

@@ -2,7 +2,7 @@
 import useReducerCache from "../../store/reducer/reducerCache";
 import useReducerRef from "../../store/reducer/reducerRef";
 import MusicTheory from "../../../domain/theory/music-theory";
-import SoundFont, { instrument, type InstrumentName } from "soundfont-player";
+import SoundFont, { type InstrumentName } from "soundfont-player";
 import StoreMelody from "../../store/props/storeMelody";
 import StoreCache from "../../store/props/storeCache";
 import { base64ToBlob } from "../../../app/project-io/project-file-codec";
@@ -10,39 +10,46 @@ import type { StoreProps, StoreUtil } from "../../store/store";
 import StorePianoEditor from "../../store/props/arrange/piano/storePianoEditor";
 import PianoArrangePreviewUtil from "./arrange/pianoArrangePreviewUtil";
 import ArrangeUtil from "../../store/reducer/arrangeUtil";
+import {
+  getPlaybackBeatFromTime,
+  getPlaybackTimeFromBeat,
+} from "../../../domain/playback/playback-progress";
+import {
+  type PlaybackOption,
+  type PlaybackSoundNote,
+  type PlaybackSoundTimePlayer,
+  type PlaybackTrackPlayer,
+  type PlaybackTrackTargetMode,
+} from "../../../domain/playback/playback-types";
+import { createSoundFontPlayer } from "../../../infra/audio/soundfont-player";
+import {
+  addLoadedSoundFont,
+  clearPlaybackAudios,
+  pausePlaybackAudios,
+  pushPlaybackAudio,
+  setLoadedSoundFontPlayer,
+  setPlaybackIntervalKeys,
+  setPlaybackLastTime,
+  setPlaybackLinePos,
+  setPlaybackProgressTime,
+  setPlaybackTimerKeys,
+  stopLoadedSoundFonts,
+} from "../../../state/session-state/playback-session";
 
 namespace PreviewUtil {
   /**
    * 繝弱・繝・ｒ魑ｴ繧峨☆譎る俣諠・ｱ繧堤ｮ｡逅・☆繧・
    */
-  export type SoundTimePlayer = {
-    pitchName: string;
-    gain: number;
-    startMs: number;
-    sustainMs: number;
-    target: string;
-  };
+  export type SoundTimePlayer = PlaybackSoundTimePlayer;
   /**
    * 1繝医Λ繝・け蛻・・繝弱・繝・ュ蝣ｱ繧偵し繧ｦ繝ｳ繝峨ヵ繧ｩ繝ｳ繝医→繝壹い縺ｧ邂｡逅・☆繧・
    */
-  export type TrackPlayer = {
-    sf: SoundFont.Player;
-    notes: SoundTimePlayer[];
-  };
+  export type TrackPlayer = PlaybackTrackPlayer;
 
-  export type LayerTargetMode =
-    | "tl-layer-all"
-    | "tl-focus-layer"
-    | "ol-layer-all"
-    | "ol-focus-layer"
-    | "all";
-  export type Option = {
-    target: LayerTargetMode;
-  };
+  export type LayerTargetMode = PlaybackTrackTargetMode;
+  export type Option = PlaybackOption;
 
-  export interface SoundNote extends StoreMelody.Note {
-    velocity: number;
-  }
+  export interface SoundNote extends PlaybackSoundNote {}
   /**
    * 繝弱・繝・ュ蝣ｱ繧貞・逕溘〒縺阪ｋ蠖｢蠑上↓螟画鋤縺励※霑斐☆縲・
    * @param baseCaches
@@ -55,7 +62,7 @@ namespace PreviewUtil {
     currentLeft: number,
     note: StoreMelody.Note,
     velocity: number,
-  ): PreviewUtil.SoundTimePlayer | null => {
+  ): PlaybackSoundTimePlayer | null => {
     const side = StoreMelody.calcBeatSide(note);
     const [left, right] = [side.pos, side.pos + side.len];
     // 1諡搾ｼ亥・髻ｳ隨ｦ竊・蛻・浹隨ｦ・峨↓蝓ｺ貅悶↓蜷医ｏ縺帙ｋ
@@ -140,12 +147,9 @@ namespace PreviewUtil {
       return items.find((c) => c.instrumentName === sfName) != undefined;
     };
     const loadSoundFont = async (sfName: InstrumentName) => {
-      const items = lastStore.preview.sfItems;
-      items.push({ instrumentName: sfName });
-      const player = await SoundFont.instrument(new AudioContext(), sfName);
-      const item = items.find((sf) => sf.instrumentName === sfName);
-      if (item == undefined) throw new Error();
-      item.player = player;
+      addLoadedSoundFont(lastStore, sfName);
+      const player = await createSoundFontPlayer(sfName);
+      setLoadedSoundFontPlayer(lastStore, sfName, player);
     };
     return {
       isLoadSoundFont,
@@ -205,7 +209,7 @@ namespace PreviewUtil {
         }
       })();
 
-      const trackPlayList: TrackPlayer[] = [];
+      const trackPlayList: PlaybackTrackPlayer[] = [];
 
       // 繝｡繝ｭ繝・ぅ縺ｮ繝弱・繝医ｒ蜿朱寔
       if (!containsLayer("ol-focus-layer", "ol-layer-all")) {
@@ -223,7 +227,7 @@ namespace PreviewUtil {
           );
           if (sf == undefined || sf.player == undefined) throw new Error();
 
-          const notes: SoundTimePlayer[] = [];
+          const notes: PlaybackSoundTimePlayer[] = [];
           trackPlayList.push({
             sf: sf.player,
             notes,
@@ -260,10 +264,7 @@ namespace PreviewUtil {
           const url = URL.createObjectURL(blob);
           const audio = new Audio(url);
 
-          preview.audios.push({
-            element: audio,
-            referIndex: i,
-          });
+          pushPlaybackAudio(lastStore, audio, i);
         });
       }
 
@@ -283,7 +284,7 @@ namespace PreviewUtil {
           );
           if (sf == undefined || sf.player == undefined) throw new Error();
 
-          const notePlayers: SoundTimePlayer[] = [];
+          const notePlayers: PlaybackSoundTimePlayer[] = [];
           trackPlayList.push({
             sf: sf.player,
             notes: notePlayers,
@@ -346,14 +347,14 @@ namespace PreviewUtil {
         });
       }
 
-      preview.timerKeys = [];
-      preview.intervalKeys = [];
+      setPlaybackTimerKeys(lastStore, []);
+      setPlaybackIntervalKeys(lastStore, []);
 
       const getTimerKeys = () => preview.timerKeys as number[];
       const getIntervalKeys = () => preview.intervalKeys as number[];
 
       // 髢句ｧ九・諡阪°繧画凾髢薙ｒ蜿門ｾ・
-      const startTime = getTimeFromPosBeat(baseCaches, timelineStart);
+      const startTime = getPlaybackTimeFromBeat(baseCaches, timelineStart);
 
       const endTime = (() => {
         const tailChordCache = chordCaches[chordCaches.length - 1];
@@ -415,20 +416,22 @@ namespace PreviewUtil {
       // 繝励Ξ繝薙Η繝ｼ繧定・蜍募●豁｢縺吶ｋ邨らｫｯ縺ｮ譎る俣・医Α繝ｪ遘抵ｼ・
       const autoStopTime = endTime - startTime;
 
-      preview.progressTime = startTime;
-
-      preview.lastTime = Date.now();
+      setPlaybackProgressTime(lastStore, startTime);
+      setPlaybackLastTime(lastStore, Date.now());
 
       const intervalKey = setInterval(() => {
         const nowTime = Date.now();
         // console.log(nowTime);
-        preview.progressTime += nowTime - preview.lastTime;
+        setPlaybackProgressTime(
+          lastStore,
+          preview.progressTime + (nowTime - preview.lastTime),
+        );
         // console.log(cache.progressTime);
-        preview.lastTime = nowTime;
+        setPlaybackLastTime(lastStore, nowTime);
 
-        const posBeat = getPosBeatFromTime(baseCaches, preview.progressTime);
+        const posBeat = getPlaybackBeatFromTime(baseCaches, preview.progressTime);
         // console.log(`posBeat: ${posBeat}`);
-        preview.linePos = posBeat;
+        setPlaybackLinePos(lastStore, posBeat);
 
         const chord = getChordFromBeat(posBeat);
 
@@ -450,58 +453,6 @@ namespace PreviewUtil {
       preview.timerKeys.push(endKey);
     };
 
-    const getTimeFromPosBeat = (
-      baseCaches: StoreCache.BaseCache[],
-      left: number,
-    ) => {
-      let time = 0;
-      baseCaches.some((base) => {
-        const beatDiv16Cnt = MusicTheory.getBeatDiv16Count(base.scoreBase.ts);
-        const beatRate = beatDiv16Cnt / 4;
-        let tempo = base.scoreBase.tempo * beatRate;
-
-        const start = base.startBeatNote;
-        const end = start + base.lengthBeatNote;
-        if (left < end) {
-          time += (60000 / tempo) * (left - start);
-          return 1;
-        }
-        time += (60000 / tempo) * base.lengthBeatNote;
-      });
-      return time;
-    };
-
-    /**
-     * 邨碁℃譎る俣縺九ｉ諡阪・繧ｸ繧ｷ繝ｧ繝ｳ繧貞叙蠕励＠縺ｦ霑斐☆縲・
-     * @param baseCaches
-     * @param time 邨碁℃譎る俣
-     * @returns 諡阪・繧ｸ繧ｷ繝ｧ繝ｳ
-     */
-    const getPosBeatFromTime = (
-      baseCaches: StoreCache.BaseCache[],
-      time: number,
-    ) => {
-      let beat = 0;
-      baseCaches.some((base) => {
-        const beatDiv16Cnt = MusicTheory.getBeatDiv16Count(base.scoreBase.ts);
-        const beatRate = beatDiv16Cnt / 4;
-        let tempo = base.scoreBase.tempo * beatRate;
-
-        const start = base.startTime;
-        const end = start + base.sustainTime;
-        // console.log(`start:${Math.floor(start)}, end:${Math.floor(end)}`);
-        // 繝悶Ο繝・け蜀・↓蜿弱∪縺｣縺ｦ縺・ｌ縺ｰ縲√ヶ繝ｭ繝・け蜀・・邨碁℃譎る俣・翫ユ繝ｳ繝昴ｒ蜉邂・
-        if (time < end) {
-          beat += ((time - start) / 60000) * tempo;
-          return 1;
-        }
-        // 繝悶Ο繝・け繧定ｶ・∴縺ｦ縺・◆蝣ｴ蜷医√ヶ繝ｭ繝・け遽・峇縺ｮ譎る俣・翫ユ繝ｳ繝昴ｒ蜉邂励＠縺ｦ谺｡縺ｮ繝悶Ο繝・け縺ｸ
-        beat += (base.sustainTime / 60000) * tempo;
-      });
-      // console.log(`----------------time:${Math.floor(time)}`);
-      return beat;
-    };
-
     const stopTest = () => {
       const { syncCursorFromElementSeq } = useReducerMelody(lastStore);
 
@@ -512,21 +463,18 @@ namespace PreviewUtil {
         // console.log(`clear timerKeys: [${key}]`);
         clearTimeout(key);
       });
-      preview.timerKeys = null;
+      setPlaybackTimerKeys(lastStore, null);
       if (preview.intervalKeys != null) {
         preview.intervalKeys.forEach((key) => {
           // console.log(`clear intervalKeys: [${key}]`);
           clearInterval(key);
         });
-        preview.intervalKeys = null;
+        setPlaybackIntervalKeys(lastStore, null);
       }
-      preview.linePos = -1;
-      preview.sfItems.forEach((sf) => {
-        if (sf.player) sf.player.stop();
-      });
-
-      preview.audios.forEach((audio) => audio.element.pause());
-      preview.audios.length = 0;
+      setPlaybackLinePos(lastStore, -1);
+      stopLoadedSoundFonts(lastStore);
+      pausePlaybackAudios(lastStore);
+      clearPlaybackAudios(lastStore);
 
       // 繝｡繝ｭ繝・ぅ繝｢繝ｼ繝画凾縺ｯ繧ｫ繝ｼ繧ｽ繝ｫ繧貞酔譛・
       if (lastStore.control.mode === "melody") {

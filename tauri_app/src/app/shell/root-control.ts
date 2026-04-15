@@ -1,4 +1,4 @@
-import useReducerMelody from "../../system/store/reducer/reducerMelody";
+import { createMelodyActions } from "../melody/melody-actions";
 import type { StoreProps } from "../../system/store/store";
 import {
   hasAnyInputHold,
@@ -8,9 +8,9 @@ import {
 import { getShellMode } from "../../state/ui-state/shell-ui-store";
 
 export const switchMode = (lastStore: StoreProps) => {
-  const reducerMelody = useReducerMelody(lastStore);
+  const melodyActions = createMelodyActions(lastStore);
   const mode = getShellMode(lastStore);
-  if (mode === "harmonize") reducerMelody.syncCursorFromElementSeq();
+  if (mode === "harmonize") melodyActions.syncCursorFromElementSeq();
   lastStore.control.mode = mode === "harmonize" ? "melody" : "harmonize";
   lastStore.ref.trackArr.forEach((track) => (track.length = 0));
 };

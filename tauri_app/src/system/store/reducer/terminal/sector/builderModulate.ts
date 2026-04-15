@@ -1,31 +1,32 @@
-﻿import {
+import {
+  createTerminalCommandDefault,
+  type TerminalCommand,
+} from "../../../../../app/terminal/terminal-command-registry";
+import { createTerminalLogger } from "../../../../../app/terminal/terminal-logger";
+import { createOutlineActions } from "../../../../../app/outline/outline-actions";
+import {
   OUTLINE_DOMM_VALUES,
   type OutlineDataModulate,
 } from "../../../../../domain/outline/outline-types";
-import { createOutlineActions } from "../../../../../app/outline/outline-actions";
-import { type StoreProps } from "../../../store";
+import type { StoreProps } from "../../../store";
 import useReducerCache from "../../reducerCache";
 import useReducerTermianl from "../../reducerTerminal";
-import CommandRegistUtil from "../commandRegistUtil";
-import useTerminalLogger from "../terminalLogger";
 
 const useBuilderModulate = (lastStore: StoreProps) => {
   const reducer = useReducerTermianl(lastStore);
   const terminal = reducer.getTerminal();
-  const logger = useTerminalLogger(terminal);
+  const logger = createTerminalLogger(terminal);
 
   const reducerCache = useReducerCache(lastStore);
   const reducerOutline = createOutlineActions(lastStore);
 
-  const get = (): CommandRegistUtil.FuncProps[] => {
-    const defaultProps = CommandRegistUtil.createDefaultProps("modulate");
+  const get = (): TerminalCommand[] => {
+    const defaultProps = createTerminalCommandDefault("modulate");
     const getCurrDispValue = (data: OutlineDataModulate) =>
       `[${data.method}${data.val ? " " + data.val : ""}]`;
 
     const outputModLog = (prev: string, next: string) => {
-      logger.outputInfo(
-        `Modulate method has been changed. [${prev} 竊・${next}]`,
-      );
+      logger.outputInfo(`Modulate method has been changed. [${prev} -> ${next}]`);
     };
 
     return [
@@ -43,16 +44,13 @@ const useBuilderModulate = (lastStore: StoreProps) => {
           const prev = getCurrDispValue(data);
           const value = args[0];
 
-          // 謨ｰ蛟､縺ｮ螟画鋤繝√ぉ繝・け
           if (!OUTLINE_DOMM_VALUES.includes(Number(value) as (typeof OUTLINE_DOMM_VALUES)[number])) {
             logger.outputError(`The specified value[${value}] is invalid.`);
           }
           data.method = "domm";
           data.val = Number(value);
           reducerCache.calculate();
-          const next = `domm ${value}`;
-
-          outputModLog(prev, next);
+          outputModLog(prev, `domm ${value}`);
         },
       },
       {
@@ -69,16 +67,13 @@ const useBuilderModulate = (lastStore: StoreProps) => {
           const prev = getCurrDispValue(data);
           const value = args[0];
 
-          // 謨ｰ蛟､縺ｮ螟画鋤繝√ぉ繝・け
           if (!OUTLINE_DOMM_VALUES.includes(Number(value) as (typeof OUTLINE_DOMM_VALUES)[number])) {
             logger.outputError(`The specified value[${value}] is invalid.`);
           }
           data.method = "key";
           data.val = Number(value);
           reducerCache.calculate();
-          const next = `key ${value}`;
-
-          outputModLog(prev, next);
+          outputModLog(prev, `key ${value}`);
         },
       },
       {
@@ -92,9 +87,7 @@ const useBuilderModulate = (lastStore: StoreProps) => {
           data.method = "parallel";
           data.val = undefined;
           reducerCache.calculate();
-          const next = `parallel`;
-
-          outputModLog(prev, next);
+          outputModLog(prev, "parallel");
         },
       },
       {
@@ -108,16 +101,15 @@ const useBuilderModulate = (lastStore: StoreProps) => {
           data.method = "relative";
           data.val = undefined;
           reducerCache.calculate();
-          const next = `relative`;
-
-          outputModLog(prev, next);
+          outputModLog(prev, "relative");
         },
       },
     ];
   };
+
   return {
     get,
   };
 };
-export default useBuilderModulate;
 
+export default useBuilderModulate;

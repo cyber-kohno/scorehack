@@ -3,10 +3,10 @@ import type { StoreProps } from "../../../store";
 import useReducerTermianl from "../../reducerTerminal";
 
 const useCommandHelper = (lastStore: StoreProps) => {
-
-    const terminal = useReducerTermianl(lastStore).getTerminal();
+    const terminalReducer = useReducerTermianl(lastStore);
 
     const build = () => {
+        const terminal = terminalReducer.getTerminal();
         terminal.helper = null;
 
         const orderItems = terminal.command.split(' ');

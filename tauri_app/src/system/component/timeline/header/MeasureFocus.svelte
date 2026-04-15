@@ -1,23 +1,17 @@
 <script lang="ts">
   import ContextUtil from "../../../store/contextUtil";
-  import StoreMelody from "../../../store/props/storeMelody";
   import useReducerCache from "../../../store/reducer/reducerCache";
-  import useReducerMelody from "../../../store/reducer/reducerMelody";
   import store from "../../../store/store";
+  import {
+    getMelodyCurrentBeatRect,
+    isMelodyMode,
+  } from "../../../../state/ui-state/melody-ui-store";
 
   $: reduerCache = useReducerCache($store);
-  $: reducerMelody = useReducerMelody($store);
-
   $: focusInfo = reduerCache.getFocusInfo();
+  $: melodyRect = getMelodyCurrentBeatRect($store);
+  $: isMelody = isMelodyMode($store);
 
-  $: [noteLeft, noteWidth] = (() => {
-    const notes = reducerMelody.getCurrScoreTrack().notes;
-    const melody = $store.control.melody;
-    const note = melody.focus === -1 ? melody.cursor : notes[melody.focus];
-    const side = StoreMelody.calcBeatSide(note);
-    return [side.pos, side.len].map((v) => v * $store.env.beatWidth);
-  })();
-  $: isMelodyMode = $store.control.mode === "melody";
   const isPreview = ContextUtil.get('isPreview');
 </script>
 
@@ -29,8 +23,8 @@
     data-isChord={focusInfo.isChord}
   ></div>
 {/if}
-{#if isMelodyMode && !$isPreview()}
-  <div class="note" style:left="{noteLeft}px" style:width="{noteWidth}px"></div>
+{#if isMelody && !$isPreview()}
+  <div class="note" style:left="{melodyRect.left}px" style:width="{melodyRect.width}px"></div>
 {/if}
 
 <style>
