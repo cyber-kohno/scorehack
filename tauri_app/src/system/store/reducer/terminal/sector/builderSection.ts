@@ -5,7 +5,7 @@ import {
 import { createTerminalLogger } from "../../../../../app/terminal/terminal-logger";
 import { createOutlineActions } from "../../../../../app/outline/outline-actions";
 import type { StoreProps } from "../../../store";
-import useReducerCache from "../../reducerCache";
+import { createCacheActions } from "../../../../../app/cache/cache-actions";
 import useReducerTermianl from "../../reducerTerminal";
 
 const useBuilderSection = (lastStore: StoreProps) => {
@@ -23,12 +23,12 @@ const useBuilderSection = (lastStore: StoreProps) => {
         args: [],
         callback: (args) => {
           const { getCurrentSectionData, renameSectionData } = createOutlineActions(lastStore);
-          const { calculate } = useReducerCache(lastStore);
+          const { recalculate } = createCacheActions(lastStore);
 
           const prev = getCurrentSectionData().name;
           const next = args[0];
           renameSectionData(next);
-          calculate();
+          recalculate();
 
           logger.outputInfo(`The section name has been changed. [${prev} to ${next}]`);
         },
@@ -40,3 +40,6 @@ const useBuilderSection = (lastStore: StoreProps) => {
   };
 };
 export default useBuilderSection;
+
+
+

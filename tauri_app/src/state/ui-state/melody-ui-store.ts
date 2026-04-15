@@ -2,6 +2,11 @@ import type { MelodyNote } from "../../domain/melody/melody-types";
 import { calcMelodyBeatSide } from "../../domain/melody/melody-types";
 import StoreRef from "../../system/store/props/storeRef";
 import type { StoreProps } from "../../system/store/store";
+import { getBaseCacheFromBeat } from "../cache-state/cache-store";
+import {
+  getScoreTrack,
+  getScoreTracks,
+} from "../project-data/melody-project-data";
 
 export const isMelodyMode = (lastStore: StoreProps) => {
   return lastStore.control.mode === "melody";
@@ -29,11 +34,11 @@ export const getCurrentMelodyTrackIndex = (lastStore: StoreProps) => {
 
 export const getCurrentMelodyScoreTrack = (lastStore: StoreProps) => {
   const trackIndex = getCurrentMelodyTrackIndex(lastStore);
-  return lastStore.data.scoreTracks[trackIndex];
+  return getScoreTrack(lastStore, trackIndex);
 };
 
 export const getCurrentMelodyNotes = (lastStore: StoreProps) => {
-  return getCurrentMelodyScoreTrack(lastStore).notes;
+  return getCurrentMelodyScoreTrack(lastStore)?.notes ?? [];
 };
 
 export const getCurrentMelodyTargetNote = (lastStore: StoreProps): MelodyNote => {
@@ -74,6 +79,11 @@ export const getMelodyCursorMiddle = (lastStore: StoreProps) => {
   return left + width / 2;
 };
 
+export const getMelodyNoteTonality = (lastStore: StoreProps, note: MelodyNote) => {
+  const beatSide = calcMelodyBeatSide(note);
+  return getBaseCacheFromBeat(lastStore, beatSide.pos)?.scoreBase.tonality;
+};
+
 export const isMelodyCursorVisible = (lastStore: StoreProps, isPreview: boolean) => {
   return isMelodyMode(lastStore) && !isPreview && getMelodyFocusIndex(lastStore) === -1;
 };
@@ -82,7 +92,19 @@ export const getShadeMelodyTracks = (lastStore: StoreProps) => {
   const currentTrackIndex = getCurrentMelodyTrackIndex(lastStore);
   const isHarmonizeMode = lastStore.control.mode === "harmonize";
 
-  return lastStore.data.scoreTracks
+  return getScoreTracks(lastStore)
     .map((track, trackIndex) => ({ track, trackIndex }))
     .filter(({ trackIndex }) => trackIndex !== currentTrackIndex || isHarmonizeMode);
+};
+
+export const getShadeMelodyTrack = (lastStore: StoreProps, trackIndex: number) => {
+  return getScoreTrack(lastStore, trackIndex);
+};
+
+export const getShadeMelodyNote = (
+  lastStore: StoreProps,
+  trackIndex: number,
+  noteIndex: number,
+) => {
+  return getShadeMelodyTrack(lastStore, trackIndex)?.notes[noteIndex];
 };

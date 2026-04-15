@@ -1,10 +1,8 @@
 <script lang="ts">
-  import useReducerCache from "../../../store/reducer/reducerCache";
   import store from "../../../store/store";
+  import { getTimelineFocusInfo } from "../../../../state/ui-state/timeline-ui-store";
 
-  $: reduerCache = useReducerCache($store);
-
-  $: values = reduerCache.getFocusInfo();
+  $: values = getTimelineFocusInfo($store);
 </script>
 
 <div

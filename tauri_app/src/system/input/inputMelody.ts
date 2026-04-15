@@ -2,10 +2,11 @@
 import type StoreInput from "../store/props/storeInput";
 import StoreMelody from "../store/props/storeMelody";
 import StorePreview from "../store/props/storePreview";
-import useReducerCache from "../store/reducer/reducerCache";
 import useReducerMelody from "../store/reducer/reducerMelody";
 import { createOutlineActions } from "../../app/outline/outline-actions";
 import { createPlaybackActions } from "../../app/playback/playback-actions";
+import { getBeatNoteTail } from "../../state/cache-state/cache-store";
+import { getTimelineCurrentBaseCache } from "../../state/cache-state/timeline-cache";
 import useReducerRef from "../store/reducer/reducerRef";
 import type { StoreUtil } from "../store/store";
 import MusicTheory from "../../domain/theory/music-theory";
@@ -15,7 +16,6 @@ const useInputMelody = (storeUtil: StoreUtil) => {
 
     const { adjustGridScrollYFromCursor, adjustGridScrollXFromNote, adjustOutlineScroll } = useReducerRef(lastStore);
     const reducerOutline = createOutlineActions(lastStore);
-    const reducerCache = useReducerCache(lastStore);
     const reducerMelody = useReducerMelody(lastStore);
     // const { isPreview } = useAccessorPreview(lastStore);
 
@@ -96,7 +96,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
             const moveCursor = (dir: -1 | 1) => {
                 const temp = cursor.pos + dir;
                 const [tempPos, tempLen] = [temp, cursor.len].map(size => StoreMelody.calcBeat(cursor.norm, size));
-                const tailBeatNote = reducerCache.getBeatNoteTail();
+                const tailBeatNote = getBeatNoteTail(lastStore);
                 if (tempPos < 0 || tempPos + tempLen > tailBeatNote) return;
                 cursor.pos = temp;
                 adjustGridScrollXFromNote(cursor);
@@ -372,7 +372,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
                         } else if (dir === 1) {
                             const side = StoreMelody.calcBeatSide(temp);
                             const tempRight = side.pos + side.len;
-                            const baseTail = reducerCache.getBeatNoteTail();
+                            const baseTail = getBeatNoteTail(lastStore);
                             if (tempRight > baseTail) return;
 
                             if (end < notes.length - 1) {
@@ -450,7 +450,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
                         const t = StoreMelody.calcBeatSide(temp).pos;
                         if (cur > t) return;
                     } else {
-                        const baseTail = reducerCache.getBeatNoteTail();
+                        const baseTail = getBeatNoteTail(lastStore);
                         // const notes = reducerMelody.getCurrScoreTrack().notes;
                         const tailNoteSide = StoreMelody.calcBeatSide(temp);
                         const tailNoteRight = tailNoteSide.pos + tailNoteSide.len;
@@ -480,8 +480,8 @@ const useInputMelody = (storeUtil: StoreUtil) => {
             }
         }
         callbacks.holdC = () => {
-            const { getCurBase } = reducerCache;
-            const tonality = getCurBase().scoreBase.tonality;
+            const tonality = getTimelineCurrentBaseCache(lastStore)?.scoreBase.tonality;
+            if (tonality == undefined) return;
 
             const movePitchLockScale = (note: StoreMelody.Note, dir: -1 | 1) => {
                 const max = Layout.pitch.NUM - 1;

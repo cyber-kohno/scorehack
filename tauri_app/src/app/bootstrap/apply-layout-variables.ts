@@ -1,5 +1,6 @@
 import Layout from "../../styles/tokens/layout-tokens";
 import type { StoreProps } from "../../system/store/store";
+import { getBeatSumWidth } from "../../state/cache-state/cache-store";
 
 const setCustomProps = (customProps: { key: string; value: string }[]) => {
   customProps.forEach((prop) => {
@@ -73,10 +74,7 @@ export const applyStaticLayoutVariables = () => {
 };
 
 export const applyDynamicLayoutVariables = (lastStore: StoreProps) => {
-  const beatSum = lastStore.cache.chordCaches.reduce(
-    (total, cur) => total + cur.viewPosWidth,
-    0,
-  );
+  const beatSum = getBeatSumWidth(lastStore);
 
   setCustomProps([{ key: "--beat-sum", value: `${beatSum}px` }]);
 };

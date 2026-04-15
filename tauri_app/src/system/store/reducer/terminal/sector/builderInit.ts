@@ -6,7 +6,7 @@ import { createTerminalLogger } from "../../../../../app/terminal/terminal-logge
 import { createOutlineActions } from "../../../../../app/outline/outline-actions";
 import MusicTheory from "../../../../../domain/theory/music-theory";
 import type { StoreProps } from "../../../store";
-import useReducerCache from "../../reducerCache";
+import { createCacheActions } from "../../../../../app/cache/cache-actions";
 import useReducerTermianl from "../../reducerTerminal";
 
 const useBuilderInit = (lastStore: StoreProps) => {
@@ -14,7 +14,7 @@ const useBuilderInit = (lastStore: StoreProps) => {
   const terminal = reducer.getTerminal();
   const logger = createTerminalLogger(terminal);
 
-  const reducerCache = useReducerCache(lastStore);
+  const { recalculate } = createCacheActions(lastStore);
   const reducerOutline = createOutlineActions(lastStore);
 
   const VALID_SCALES = MusicTheory.KEY12_MAJOR_SCALE_LIST.map(
@@ -50,7 +50,7 @@ const useBuilderInit = (lastStore: StoreProps) => {
           const arg0Number = logger.validateNumber(arg0, 1);
           if (arg0Number == null) return;
           data.tempo = arg0Number;
-          reducerCache.calculate();
+          recalculate();
           logger.outputInfo(`Changed the tempo. [${prev} -> ${arg0Number}]`);
         },
       },
@@ -70,7 +70,7 @@ const useBuilderInit = (lastStore: StoreProps) => {
           const { keyIndex, scale } = MusicTheory.getKeyScaleFromName(next);
           tonality.key12 = keyIndex;
           tonality.scale = scale;
-          reducerCache.calculate();
+          recalculate();
           logger.outputInfo(`Changed the scale. [${prev} -> ${next}]`);
         },
       },
@@ -83,3 +83,7 @@ const useBuilderInit = (lastStore: StoreProps) => {
 };
 
 export default useBuilderInit;
+
+
+
+

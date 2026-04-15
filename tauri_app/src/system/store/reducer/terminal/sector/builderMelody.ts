@@ -5,6 +5,7 @@ import {
 import { createPlaybackActions } from "../../../../../app/playback/playback-actions";
 import { createTerminalLogger } from "../../../../../app/terminal/terminal-logger";
 import { createMelodyActions } from "../../../../../app/melody/melody-actions";
+import { createProjectDataActions } from "../../../../../app/project-data/project-data-actions";
 import { createProjectIoService } from "../../../../../app/project-io/project-io-service";
 import StorePreview from "../../../props/storePreview";
 import { createStoreUtil, type StoreProps } from "../../../store";
@@ -17,6 +18,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
   const reducer = useReducerTermianl(lastStore);
   const terminal = reducer.getTerminal();
   const { changeScoreTrack, getCurrScoreTrack } = createMelodyActions(lastStore);
+  const { getScoreTracks, getAudioTracks } = createProjectDataActions(lastStore);
   const { isLoadSoundFont, loadSoundFont } = createPlaybackActions(storeUtil);
 
   const logger = createTerminalLogger(terminal);
@@ -45,7 +47,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         args: [],
         callback: () => {
           const trackIndex = lastStore.control.melody.trackIndex;
-          const tracks = lastStore.data.scoreTracks.map((t, i) => ({
+          const tracks = getScoreTracks().map((t, i) => ({
             ...t,
             isActive: trackIndex === i,
           }));
@@ -82,7 +84,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         args: [],
         callback: () => {
           const trackIndex = lastStore.control.melody.trackIndex;
-          const tracks = lastStore.data.audioTracks.map((t, i) => ({
+          const tracks = getAudioTracks().map((t, i) => ({
             ...t,
             isActive: trackIndex === i,
           }));
@@ -117,7 +119,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         usage: "Create a new score track.",
         args: [{ name: "trackName?: string" }],
         callback: (args) => {
-          const tracks = lastStore.data.scoreTracks;
+          const tracks = getScoreTracks();
           const name = args[0] ?? `track${tracks.length}`;
           tracks.push({
             name,
@@ -137,7 +139,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         usage: "Create a new audio track.",
         args: [{ name: "audioName?: string" }],
         callback: (args) => {
-          const audios = lastStore.data.audioTracks;
+          const audios = getAudioTracks();
           const name = args[0] ?? `audio${audios.length}`;
           audios.push({
             name,
@@ -159,13 +161,13 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         args: [
           {
             name: "name",
-            getCandidate: () => lastStore.data.audioTracks.map((a) => a.name),
+            getCandidate: () => getAudioTracks().map((a) => a.name),
           },
         ],
         callback: (args) => {
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
-          const audio = lastStore.data.audioTracks.find((a) => a.name === arg0);
+          const audio = getAudioTracks().find((a) => a.name === arg0);
           if (audio == undefined) {
             logger.outputError(`The specified audio track does not exist. [${arg0}]`);
             return;
@@ -193,7 +195,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         usage: "Deletes the music track.",
         args: [],
         callback: (args) => {
-          const tracks = lastStore.data.scoreTracks;
+          const tracks = getScoreTracks();
           const melody = lastStore.control.melody;
           let delIndex = melody.trackIndex;
           const arg0 = logger.validateRequired(args[0], 1);
@@ -219,12 +221,12 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         args: [
           {
             name: "trackName: string",
-            getCandidate: () => lastStore.data.scoreTracks.map((st) => st.name),
+            getCandidate: () => getScoreTracks().map((st) => st.name),
           },
         ],
         callback: (args) => {
           const melody = lastStore.control.melody;
-          const tracks = lastStore.data.scoreTracks;
+          const tracks = getScoreTracks();
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
           const nextIndex = tracks.findIndex((st) => st.name === arg0);

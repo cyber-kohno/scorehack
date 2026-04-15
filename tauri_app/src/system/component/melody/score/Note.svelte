@@ -2,13 +2,15 @@
   import Layout from "../../../../styles/tokens/layout-tokens";
   import { calcMelodyBeat, calcMelodyBeatSide, type MelodyNote } from "../../../../domain/melody/melody-types";
   import type StoreRef from "../../../store/props/storeRef";
-  import useReducerCache from "../../../store/reducer/reducerCache";
   import store from "../../../store/store";
   import MusicTheory from "../../../../domain/theory/music-theory";
   import Factors from "./Factors.svelte";
   import ContextUtil from "../../../store/contextUtil";
   import UnitDisplay from "../UnitDisplay.svelte";
-  import { isMelodyFocusRangeIndex } from "../../../../state/ui-state/melody-ui-store";
+  import {
+    getMelodyNoteTonality,
+    isMelodyFocusRangeIndex,
+  } from "../../../../state/ui-state/melody-ui-store";
 
   export let note: MelodyNote;
   export let index: number;
@@ -41,10 +43,7 @@
     }
   }
 
-  $: tonality = (() => {
-    const { getBaseFromBeat } = useReducerCache($store);
-    return getBaseFromBeat(calcMelodyBeat(note.norm, note.pos)).scoreBase.tonality;
-  })();
+  $: tonality = getMelodyNoteTonality($store, note);
 
   $: [isDisp, left, scaleIndex, width] = (() => {
     const beatSide = calcMelodyBeatSide(note);
@@ -57,7 +56,7 @@
     return [isDisp, left, scaleIndex, width];
   })();
 
-  $: isScale = MusicTheory.isScale(note.pitch, tonality);
+  $: isScale = tonality == undefined ? false : MusicTheory.isScale(note.pitch, tonality);
   $: melody = $store.control.melody;
   $: isCriteria = $store.control.mode === "melody" && melody.focus === index;
   $: isFocus = isMelodyFocusRangeIndex($store, index);

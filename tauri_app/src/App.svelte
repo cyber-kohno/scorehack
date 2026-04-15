@@ -4,6 +4,7 @@
   import { initializeAppFromStore } from "./app/bootstrap/initialize-app";
   import { bindGlobalKeyboard } from "./app/bootstrap/bind-global-keyboard";
   import { applyDynamicLayoutVariables } from "./app/bootstrap/apply-layout-variables";
+  import { isCacheStandby } from "./state/cache-state/cache-store";
   import RootLayout from "./ui/shell/RootLayout.svelte";
 
   onMount(() => {
@@ -11,7 +12,7 @@
     return bindGlobalKeyboard(store, createStoreUtil);
   });
 
-  $: isStandby = $store.cache.elementCaches.length === 0;
+  $: isStandby = isCacheStandby($store);
   $: applyDynamicLayoutVariables($store);
 </script>
 

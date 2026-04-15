@@ -1,9 +1,8 @@
 <script lang="ts">
-  import useReducerCache from "../../store/reducer/reducerCache";
   import store from "../../store/store";
+  import { getTimelineTailMarginLeft } from "../../../state/ui-state/timeline-ui-store";
 
   $: [left, width] = (() => {
-    const { getChordBlockRight } = useReducerCache($store);
     let width = 0;
     const ref = $store.ref.grid;
     if (ref) {
@@ -11,7 +10,7 @@
     }
     // console.log(width);
 
-    const left = getChordBlockRight();
+    const left = getTimelineTailMarginLeft($store);
     return [left, width];
   })();
 </script>

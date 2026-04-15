@@ -2,6 +2,8 @@
   import type { OutlineDataChord } from "../../../../domain/outline/outline-types";
   import store from "../../../store/store";
   import MusicTheory from "../../../../domain/theory/music-theory";
+  import { getCurrentOutlineTop } from "../../../../state/cache-state/outline-cache";
+  import { getOutlineElement } from "../../../../state/project-data/outline-project-data";
 
   $: outline = $store.control.outline;
 
@@ -22,19 +24,16 @@
   // })();
 
   $: [left, top] = (() => {
-    const outlineRef = $store.ref.outline;
-    if (outlineRef != undefined) {
-      const element = $store.cache.elementCaches[$store.control.outline.focus];
-      // const frameTop = outlineRef.getBoundingClientRect().top;
-      const top = element.outlineTop - outlineRef.scrollTop;
-      const left = 210;
-      return [left, top];
-    }
-    throw new Error();
+    const top = getCurrentOutlineTop($store);
+    if (top == null) throw new Error();
+    const left = 210;
+    return [left, top];
   })();
 
   $: symbol = (() => {
-    const element = $store.data.elements[outline.focus];
+    const element = getOutlineElement($store, outline.focus);
+    if (element == undefined)
+      throw new Error("Current outline element is required.");
     const chord = element.data as OutlineDataChord;
     if (chord.degree == undefined)
       throw new Error("Chord degree must be defined.");

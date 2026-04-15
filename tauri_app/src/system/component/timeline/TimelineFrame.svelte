@@ -7,38 +7,10 @@
   import store from "../../store/store";
   import StoreRef from "../../store/props/storeRef";
   import PianoViewFrame from "./grid/PianoViewFrame.svelte";
-  import useReducerCache from "../../store/reducer/reducerCache";
-  import MusicTheory from "../../../domain/theory/music-theory";
+  import { getTimelinePianoInfo } from "../../../state/ui-state/timeline-ui-store";
 
   $: scrollLimitProps = StoreRef.getScrollLimitProps($store.ref.header);
-
-  $: reducerCache = useReducerCache($store);
-
-  $: pianoInfo = (() => {
-    const element = reducerCache.getCurElement();
-
-    // 繧ｳ繝ｼ繝芽ｦ∫ｴ莉･螟悶〒縺ｯ陦ｨ遉ｺ縺励↑縺・・
-    if (element.type !== "chord") return null;
-
-    const chordCache = reducerCache.getCurChord();
-
-    const base = reducerCache.getCurBase();
-    const tonality = base.scoreBase.tonality;
-    const scaleList = MusicTheory.getScaleKeyIndexesFromTonality(tonality);
-
-    let uses: number[] = [];
-
-    const compiledChord = chordCache.compiledChord;
-    if (compiledChord) {
-      uses = compiledChord.structs.map((s) => s.key12);
-    }
-
-
-    return {
-      scaleList,
-      uses,
-    };
-  })();
+  $: pianoInfo = getTimelinePianoInfo($store);
 </script>
 
 <div class="wrap">

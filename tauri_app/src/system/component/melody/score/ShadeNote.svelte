@@ -3,6 +3,7 @@
   import StoreMelody from "../../../store/props/storeMelody";
   import type StoreRef from "../../../store/props/storeRef";
   import store from "../../../store/store";
+  import { getShadeMelodyNote, getShadeMelodyTrack } from "../../../../state/ui-state/melody-ui-store";
 
   export let trackIndex: number;
   export let noteIndex: number;
@@ -25,9 +26,10 @@
     }
   }
 
-  $: scoreTrack = $store.data.scoreTracks[trackIndex];
-  $: note = scoreTrack.notes[noteIndex];
+  $: scoreTrack = getShadeMelodyTrack($store, trackIndex);
+  $: note = getShadeMelodyNote($store, trackIndex, noteIndex);
   $: [isDisp, left, width] = (() => {
+    if (note == null) return [false, 0, 0];
     const beatSide = StoreMelody.calcBeatSide(note);
     const [left, width] = [beatSide.pos, beatSide.len].map(
       (v) => v * $store.env.beatWidth
@@ -42,7 +44,7 @@
   const MARGIN = -10;
 </script>
 
-{#if isDisp}
+{#if isDisp && note != null}
   <div class="itemwrap" style:left="{left}px" style:width="{width}px">
     <div
       class="effect"

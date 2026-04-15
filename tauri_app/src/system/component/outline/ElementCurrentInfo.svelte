@@ -1,31 +1,29 @@
 ﻿<script lang="ts">
-  import StoreOutline from "../../store/props/storeOutline";
-  import useReducerCache from "../../store/reducer/reducerCache";
   import store from "../../store/store";
-  import MusicTheory from "../../../domain/theory/music-theory";
+  import {
+    getCurrentOutlineElementCache,
+    getOutlineHeaderInfo,
+  } from "../../../state/ui-state/outline-ui-store";
 
-  $: reducerCache = useReducerCache($store);
-
-  $: scoreBase = reducerCache.getCurBase().scoreBase;
-
-  $: elementCache = $store.cache.elementCaches[$store.control.outline.focus];
+  $: headerInfo = getOutlineHeaderInfo($store);
+  $: elementCache = getCurrentOutlineElementCache($store);
 </script>
 
-{#if scoreBase !== null}
+{#if headerInfo !== null}
   <div class="wrap">
     <div class="record">
       <div class="title">scale:</div>
-      <div class="value">{MusicTheory.getScaleName(scoreBase.tonality)}</div>
+      <div class="value">{headerInfo.scaleName}</div>
     </div>
     <div class="record">
       <div class="title">ts:</div>
-      <div class="value">{MusicTheory.getTSName(scoreBase.ts)}</div>
+      <div class="value">{headerInfo.tsName}</div>
     </div>
     <div class="record">
       <div class="title">tempo:</div>
-      <div class="value">{scoreBase.tempo}</div>
+      <div class="value">{headerInfo.tempo}</div>
     </div>
-    {#if elementCache.curSection !== ""}
+    {#if elementCache != null && elementCache.curSection !== ""}
       <div class="record">
         <div class="title">section:</div>
         <div class="value">{elementCache.curSection}</div>
@@ -51,7 +49,6 @@
     background-color: rgba(211, 224, 252, 0.298);
     width: 100%;
     height: 22px;
-    /* border-radius: 8px; */
   }
   .record * {
     display: inline-block;
@@ -76,5 +73,3 @@
     overflow: hidden;
   }
 </style>
-
-

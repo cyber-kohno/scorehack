@@ -6,20 +6,27 @@ import {
   normalizeMelodyNote,
 } from "../../../domain/melody/melody-types";
 import { createOutlineActions } from "../../../app/outline/outline-actions";
+import { createProjectDataActions } from "../../../app/project-data/project-data-actions";
+import {
+  getTimelineFocusChordCache,
+  getTimelineFocusElementCache,
+} from "../../../state/cache-state/timeline-cache";
 import type { StoreProps } from "../store";
 import useReducerRef from "./reducerRef";
 
 const useReducerMelody = (lastStore: StoreProps) => {
   const { syncChordSeqFromNote } = createOutlineActions(lastStore);
+  const { getScoreTrack, getScoreTracks } = createProjectDataActions(lastStore);
   const { adjustGridScrollXFromNote, adjustGridScrollYFromCursor } = useReducerRef(lastStore);
 
   const syncCursorFromElementSeq = () => {
-    const focus = lastStore.control.outline.focus;
-    const cache = lastStore.cache;
-    const { lastChordSeq, chordSeq } = cache.elementCaches[focus];
+    const elementCache = getTimelineFocusElementCache(lastStore);
+    if (elementCache == undefined) return;
+    const { lastChordSeq, chordSeq } = elementCache;
     let pos = 0;
     if (lastChordSeq !== -1) {
-      const chordCache = cache.chordCaches[lastChordSeq];
+      const chordCache = getTimelineFocusChordCache(lastStore);
+      if (chordCache == undefined) return;
       pos = chordCache.startBeatNote;
       if (chordSeq === -1) pos += chordCache.lengthBeatNote;
     }
@@ -35,7 +42,8 @@ const useReducerMelody = (lastStore: StoreProps) => {
 
   const addNote = (note: MelodyNote) => {
     const melody = lastStore.control.melody;
-    const layer = lastStore.data.scoreTracks[melody.trackIndex];
+    const layer = getScoreTrack(melody.trackIndex);
+    if (layer == undefined) throw new Error();
     const notes = (layer as MelodyScoreTrack).notes;
     notes.push(note);
     notes.sort((n1, n2) => {
@@ -59,7 +67,9 @@ const useReducerMelody = (lastStore: StoreProps) => {
 
   const getCurrScoreTrack = () => {
     const melody = lastStore.control.melody;
-    return lastStore.data.scoreTracks[melody.trackIndex];
+    const track = getScoreTrack(melody.trackIndex);
+    if (track == undefined) throw new Error();
+    return track;
   };
 
   const focusInNearNote = (dir: -1 | 1) => {
@@ -100,7 +110,7 @@ const useReducerMelody = (lastStore: StoreProps) => {
 
   const changeScoreTrack = (nextIndex: number) => {
     const melody = lastStore.control.melody;
-    const tracks = lastStore.data.scoreTracks;
+    const tracks = getScoreTracks();
     if (tracks[nextIndex] == undefined) throw new Error();
     syncCursorFromElementSeq();
     melody.trackIndex = nextIndex;

@@ -1,8 +1,14 @@
 ﻿import type StoreCache from "../../system/store/props/storeCache";
-import StoreRef from "../../system/store/props/storeRef";
 import type { OutlineDataChord } from "../../domain/outline/outline-types";
 import type { StoreProps } from "../../system/store/store";
 import MusicTheory from "../../domain/theory/music-theory";
+import { getOutlineElement } from "../project-data/outline-project-data";
+import {
+  getCurrentOutlineBaseCache,
+  getCurrentOutlineElementCache as getCurrentOutlineElementCacheFromCache,
+  getOutlineTailPos as getOutlineTailPosFromCache,
+  getVisibleOutlineElementCaches,
+} from "../cache-state/outline-cache";
 
 export const getOutlineFocus = (lastStore: StoreProps) => {
   return lastStore.control.outline.focus;
@@ -11,13 +17,11 @@ export const getOutlineFocus = (lastStore: StoreProps) => {
 export const getCurrentOutlineElementCache = (
   lastStore: StoreProps,
 ): StoreCache.ElementCache | undefined => {
-  return lastStore.cache.elementCaches[getOutlineFocus(lastStore)];
+  return getCurrentOutlineElementCacheFromCache(lastStore);
 };
 
 export const getCurrentOutlineScoreBase = (lastStore: StoreProps) => {
-  const baseSeq = getCurrentOutlineElementCache(lastStore)?.baseSeq;
-  if (baseSeq == undefined) return null;
-  return lastStore.cache.baseCaches[baseSeq]?.scoreBase ?? null;
+  return getCurrentOutlineBaseCache(lastStore)?.scoreBase ?? null;
 };
 
 export const getOutlineHeaderInfo = (lastStore: StoreProps) => {
@@ -34,32 +38,24 @@ export const getOutlineHeaderInfo = (lastStore: StoreProps) => {
 };
 
 export const getVisibleOutlineElements = (lastStore: StoreProps) => {
-  const elementSeq = getOutlineFocus(lastStore);
-  const elementCaches = lastStore.cache.elementCaches;
-  const limitProps = StoreRef.getScrollLimitProps(lastStore.ref.outline);
-  if (limitProps == null) return [];
-
-  return elementCaches.filter(
-    (el, i) =>
-      Math.abs(elementSeq - i) < 12 ||
-      Math.abs(limitProps.scrollMiddleY - (el.outlineTop + el.viewHeight / 2)) <=
-        limitProps.rectHeight,
-  );
+  return getVisibleOutlineElementCaches(lastStore);
 };
 
 export const isOutlineChordSelectorVisible = (lastStore: StoreProps) => {
   const element = getCurrentOutlineElementCache(lastStore);
   if (element == undefined) return false;
+  const projectElement = getOutlineElement(lastStore, getOutlineFocus(lastStore));
+  if (projectElement == undefined) return false;
 
   return (
     lastStore.control.mode === "harmonize" &&
     lastStore.control.outline.arrange == null &&
     lastStore.input.holdC &&
     element.type === "chord" &&
-    (element.data as OutlineDataChord).degree != undefined
+    (projectElement.data as OutlineDataChord).degree != undefined
   );
 };
 
 export const getOutlineTailPos = (lastStore: StoreProps) => {
-  return lastStore.cache.outlineTailPos;
+  return getOutlineTailPosFromCache(lastStore);
 };

@@ -2,6 +2,13 @@ import MusicTheory from "../../domain/theory/music-theory";
 import StoreRef from "../../system/store/props/storeRef";
 import type { StoreProps } from "../../system/store/store";
 import { getTimelineFocusPos } from "../../app/timeline/get-timeline-focus-pos";
+import {
+  getTimelineBaseCaches,
+  getTimelineChordCaches,
+  getTimelineCurrentBaseCache,
+  getTimelineCurrentChordCache,
+  getTimelineFocusElementCache,
+} from "../cache-state/timeline-cache";
 
 export const getTimelineHeaderScrollLimitProps = (lastStore: StoreProps) => {
   return StoreRef.getScrollLimitProps(lastStore.ref.header);
@@ -24,12 +31,11 @@ export const getTimelineBeatWidth = (lastStore: StoreProps) => {
 };
 
 export const getTimelinePianoInfo = (lastStore: StoreProps) => {
-  const focus = lastStore.control.outline.focus;
-  const element = lastStore.cache.elementCaches[focus];
+  const element = getTimelineFocusElementCache(lastStore);
   if (element == undefined || element.type !== "chord") return null;
 
-  const chordCache = lastStore.cache.chordCaches[element.chordSeq];
-  const base = lastStore.cache.baseCaches[element.baseSeq];
+  const chordCache = getTimelineCurrentChordCache(lastStore);
+  const base = getTimelineCurrentBaseCache(lastStore);
   if (chordCache == undefined || base == undefined) return null;
 
   const tonality = base.scoreBase.tonality;
@@ -45,12 +51,47 @@ export const getTimelinePianoInfo = (lastStore: StoreProps) => {
   };
 };
 
+export const getTimelineFocusInfo = (lastStore: StoreProps) => {
+  const elementCache = getTimelineFocusElementCache(lastStore);
+  const chordCaches = getTimelineChordCaches(lastStore);
+  if (elementCache == undefined) {
+    return { left: 0, width: 20, isChord: false };
+  }
+
+  const lastChordSeq = elementCache.lastChordSeq;
+  const chordSeq = elementCache.chordSeq;
+  let left = 0;
+  let width = 20;
+  let isChord = false;
+
+  if (chordSeq === -1) {
+    if (lastChordSeq !== -1) {
+      const chordCache = chordCaches[lastChordSeq];
+      left = chordCache.viewPosLeft + chordCache.viewPosWidth;
+    }
+  } else {
+    const chordCache = chordCaches[chordSeq];
+    left = chordCache.viewPosLeft;
+    width = chordCache.viewPosWidth;
+    isChord = true;
+  }
+
+  return { left, width, isChord };
+};
+
+export const getTimelineTailMarginLeft = (lastStore: StoreProps) => {
+  const chordCaches = getTimelineChordCaches(lastStore);
+  if (chordCaches.length === 0) return 0;
+  const chordCache = chordCaches[chordCaches.length - 1];
+  return chordCache.viewPosLeft + chordCache.viewPosWidth;
+};
+
 export const getVisibleTimelineChordCaches = (
   lastStore: StoreProps,
   scrollLimitProps: StoreRef.ScrollLimitProps,
 ) => {
   const focusPos = getTimelineFocusPos(lastStore);
-  return lastStore.cache.chordCaches.filter((chordCache) => {
+  return getTimelineChordCaches(lastStore).filter((chordCache) => {
     const middle = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;
     return (
       Math.abs(scrollLimitProps.scrollMiddleX - middle) <
@@ -89,7 +130,7 @@ export const getTimelineProgressItems = (
   }[] = [];
 
   const focusPos = getTimelineFocusPos(lastStore);
-  lastStore.cache.chordCaches.forEach((chordCache) => {
+  getTimelineChordCaches(lastStore).forEach((chordCache) => {
     const x = chordCache.viewPosLeft;
     const middle = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;
     if (

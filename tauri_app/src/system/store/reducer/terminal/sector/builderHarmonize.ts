@@ -5,6 +5,7 @@ import {
 import { createPlaybackActions } from "../../../../../app/playback/playback-actions";
 import { createTerminalLogger } from "../../../../../app/terminal/terminal-logger";
 import { createOutlineActions } from "../../../../../app/outline/outline-actions";
+import { createProjectDataActions } from "../../../../../app/project-data/project-data-actions";
 import StorePianoEditor from "../../../props/arrange/piano/storePianoEditor";
 import StorePreview from "../../../props/storePreview";
 import { createStoreUtil, type StoreProps } from "../../../store";
@@ -16,6 +17,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
   const reducer = useReducerTermianl(lastStore);
   const terminal = reducer.getTerminal();
   const { isLoadSoundFont, loadSoundFont } = createPlaybackActions(storeUtil);
+  const { getArrangeTracks } = createProjectDataActions(lastStore);
 
   const { changeHarmonizeTrack, getCurrHarmonizeTrack } =
     createOutlineActions(lastStore);
@@ -37,7 +39,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
         args: [],
         callback: () => {
           const trackIndex = lastStore.control.outline.trackIndex;
-          const tracks = lastStore.data.arrange.tracks.map((t, i) => ({
+          const tracks = getArrangeTracks().map((t, i) => ({
             ...t,
             isActive: trackIndex === i,
           }));
@@ -83,7 +85,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
         usage: "Create a new harmonize track.",
         args: [{ name: "trackName?: string" }],
         callback: (args) => {
-          const tracks = lastStore.data.arrange.tracks;
+          const tracks = getArrangeTracks();
           const name = args[0] ?? `track${tracks.length}`;
           tracks.push({
             name,
@@ -106,13 +108,12 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
         args: [
           {
             name: "trackName: string",
-            getCandidate: () =>
-              lastStore.data.arrange.tracks.map((ht) => ht.name),
+            getCandidate: () => getArrangeTracks().map((ht) => ht.name),
           },
         ],
         callback: (args) => {
           const outline = lastStore.control.outline;
-          const tracks = lastStore.data.arrange.tracks;
+          const tracks = getArrangeTracks();
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
           const nextIndex = tracks.findIndex((st) => st.name === arg0);

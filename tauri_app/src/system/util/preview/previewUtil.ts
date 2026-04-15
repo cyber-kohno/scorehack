@@ -1,5 +1,4 @@
 ﻿import useReducerMelody from "../../store/reducer/reducerMelody";
-import useReducerCache from "../../store/reducer/reducerCache";
 import useReducerRef from "../../store/reducer/reducerRef";
 import MusicTheory from "../../../domain/theory/music-theory";
 import SoundFont, { type InstrumentName } from "soundfont-player";
@@ -22,6 +21,14 @@ import {
   type PlaybackTrackTargetMode,
 } from "../../../domain/playback/playback-types";
 import { createSoundFontPlayer } from "../../../infra/audio/soundfont-player";
+import { createProjectDataActions } from "../../../app/project-data/project-data-actions";
+import { getChordCacheFromBeat } from "../../../state/cache-state/cache-store";
+import {
+  getPlaybackBaseCaches,
+  getPlaybackChordCaches,
+  getPlaybackElementCaches,
+  getPlaybackTailChordCache,
+} from "../../../state/cache-state/playback-cache";
 import {
   addLoadedSoundFont,
   clearPlaybackAudios,
@@ -159,15 +166,18 @@ namespace PreviewUtil {
 
   export const useUpdater = (storeUtil: StoreUtil) => {
     const { lastStore, commit } = storeUtil;
+    const { getOutlineElements, getScoreTracks, getAudioTracks, getArrangeData } =
+      createProjectDataActions(lastStore);
+    const chordCaches = getPlaybackChordCaches(lastStore);
+    const elementCaches = getPlaybackElementCaches(lastStore);
+    const baseCaches = getPlaybackBaseCaches(lastStore);
 
     const startTest = (option: Option) => {
       const { outline, melody } = lastStore.control;
-      const { chordCaches, elementCaches } = lastStore.cache;
-      const { elements, scoreTracks, audioTracks } = lastStore.data;
-      const baseCaches = lastStore.cache.baseCaches;
-      const preview = lastStore.preview;
-      const { getChordFromBeat } = useReducerCache(lastStore);
-
+            const elements = getOutlineElements();
+      const scoreTracks = getScoreTracks();
+      const audioTracks = getAudioTracks();
+            const preview = lastStore.preview;
       const { getCurrScoreTrack } = useReducerMelody(lastStore);
       const reducerArrange = ArrangeUtil.useReducer(lastStore);
       const { adjustGridScrollXFromOutline, adjustOutlineScroll } =
@@ -270,9 +280,8 @@ namespace PreviewUtil {
 
       // 繧｢繝ｬ繝ｳ繧ｸ縺ｮ繝弱・繝医ｒ蜿朱寔
       if (!containsLayer("tl-focus-layer", "tl-layer-all")) {
-        const arrange = lastStore.data.arrange;
-        const { chordCaches, baseCaches } = lastStore.cache;
-        arrange.tracks.forEach((track, trackIndex) => {
+        const arrange = getArrangeData();
+                arrange.tracks.forEach((track, trackIndex) => {
           if (option.target === "ol-focus-layer") {
             if (outline.trackIndex !== trackIndex) return 1;
           }
@@ -357,9 +366,8 @@ namespace PreviewUtil {
       const startTime = getPlaybackTimeFromBeat(baseCaches, timelineStart);
 
       const endTime = (() => {
-        const tailChordCache = chordCaches[chordCaches.length - 1];
-
-        if (chordCaches == undefined) return 0;
+        const tailChordCache = getPlaybackTailChordCache(lastStore);
+        if (tailChordCache == undefined) return 0;
 
         return tailChordCache.startTime + tailChordCache.sustainTime;
       })();
@@ -433,7 +441,8 @@ namespace PreviewUtil {
         // console.log(`posBeat: ${posBeat}`);
         setPlaybackLinePos(lastStore, posBeat);
 
-        const chord = getChordFromBeat(posBeat);
+        const chord = getChordCacheFromBeat(lastStore, posBeat);
+        if (chord == undefined) return;
 
         if (outline.focus !== chord.elementSeq) {
           outline.focus = chord.elementSeq;
@@ -490,4 +499,5 @@ namespace PreviewUtil {
   };
 }
 export default PreviewUtil;
+
 

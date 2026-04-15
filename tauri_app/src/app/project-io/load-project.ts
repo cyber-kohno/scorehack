@@ -2,6 +2,8 @@ import useReducerCache from "../../system/store/reducer/reducerCache";
 import type { StoreProps } from "../../system/store/store";
 import { openScoreFilePath } from "../../infra/tauri/dialog";
 import { readUtf8TextFile } from "../../infra/tauri/fs";
+import { createCacheActions } from "../cache/cache-actions";
+import { createProjectDataActions } from "../project-data/project-data-actions";
 import { getFileName, unzipFromBase64 } from "./project-file-codec";
 import type { ProjectIoHandle } from "./save-project";
 
@@ -16,7 +18,8 @@ export const loadProject = async (
   cancel: () => void,
 ) => {
   const fileHandle = lastStore.fileHandle;
-  const { calculate } = useReducerCache(lastStore);
+  const { recalculate } = createCacheActions(lastStore);
+  const { setProjectData, getScoreTracks } = createProjectDataActions(lastStore);
 
   try {
     const path = await openScoreFilePath();
@@ -28,14 +31,15 @@ export const loadProject = async (
     const fileContents = await readUtf8TextFile(path);
     fileHandle.score = toHandle(path);
     const text = unzipFromBase64(fileContents);
-    lastStore.data = JSON.parse(text);
+    setProjectData(JSON.parse(text));
     lastStore.ref.trackArr.length = 0;
-    for (let i = 0; i < lastStore.data.scoreTracks.length; i++) {
+    for (let i = 0; i < getScoreTracks().length; i++) {
       lastStore.ref.trackArr.push([]);
     }
-    calculate();
+    recalculate();
     success(fileHandle.score);
   } catch {
     cancel();
   }
 };
+

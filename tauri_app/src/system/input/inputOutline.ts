@@ -1,7 +1,7 @@
-﻿import StorePianoEditor from "../store/props/arrange/piano/storePianoEditor";
+import StorePianoEditor from "../store/props/arrange/piano/storePianoEditor";
 import type StoreInput from "../store/props/storeInput";
 import type StoreOutline from "../store/props/storeOutline";
-import useReducerCache from "../store/reducer/reducerCache";
+import { createCacheActions } from "../../app/cache/cache-actions";
 import { createOutlineActions } from "../../app/outline/outline-actions";
 import { createPlaybackPreviewRouter } from "../../app/playback/playback-preview-router";
 import useReducerRef from "../store/reducer/reducerRef";
@@ -14,7 +14,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
   const { lastStore, commit } = storeUtil;
 
   const reducerOutline = createOutlineActions(lastStore);
-  const reducerCache = useReducerCache(lastStore);
+  const { recalculate } = createCacheActions(lastStore);
   const reducerRef = useReducerRef(lastStore);
   const element = reducerOutline.getCurrentElement();
   const inputArrange = useInputArrange(storeUtil);
@@ -84,7 +84,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
             data,
           };
           reducerOutline.insertElement(element);
-          reducerCache.calculate();
+          recalculate();
           commit();
         }
         break;
@@ -97,7 +97,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
             type: "section",
             data,
           });
-          reducerCache.calculate();
+          recalculate();
           commit();
         }
         break;
@@ -112,7 +112,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
             type: "modulate",
             data,
           });
-          reducerCache.calculate();
+          recalculate();
           commit();
         }
         break;
@@ -122,10 +122,10 @@ const useInputOutline = (storeUtil: StoreUtil) => {
             (e) => e.type === "section",
           ).length;
           const isLastSection = element.type === "section" && sectionCnt === 1;
-          // 蛻晄悄蛟､繝悶Ο繝・け縺ｨ縲∵怙蠕後・1縺､縺ｮ繧ｻ繧ｯ繧ｷ繝ｧ繝ｳ縺ｯ豸医○縺ｪ縺・
+          // 初期値ブロチE��と、最後�E1つのセクションは消せなぁE
           if (element.type === "init" || isLastSection) break;
           reducerOutline.removeFocusElement();
-          reducerCache.calculate();
+          recalculate();
           reducerRef.adjustGridScrollXFromOutline();
           reducerRef.adjustOutlineScroll();
           commit();
@@ -164,7 +164,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
             );
             chordData.degree = diatonic;
             reducerOutline.setChordData(chordData);
-            reducerCache.calculate();
+            recalculate();
             commit();
           }
         }
@@ -244,7 +244,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
 
               if (temp != undefined) {
                 data.degree.symbol = temp;
-                reducerCache.calculate();
+                recalculate();
                 commit();
               }
             };
@@ -281,7 +281,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
             const chordData = reducerOutline.getCurrentChordData();
 
             /**
-             * 繧ｭ繝ｼ繧貞濠髻ｳ蜊倅ｽ阪〒遘ｻ蜍輔☆繧・
+             * キーを半音単位で移動すめE
              * @param dir
              */
             const modKey = (dir: -1 | 1) => {
@@ -303,7 +303,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
                   ...degree12,
                 };
                 // reducerOutline.setChordData(chordData);
-                reducerCache.calculate();
+                recalculate();
               }
               commit();
             };
@@ -312,7 +312,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
               const temp = chordData.beat + dir;
               if (temp >= 1 && temp <= 4) chordData.beat = temp;
               // reducerOutline.setChordData(chordData);
-              reducerCache.calculate();
+              recalculate();
               reducerRef.adjustGridScrollXFromOutline();
               commit();
             };
@@ -339,7 +339,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
       const data = element.data as StoreOutline.DataChord;
 
       /**
-       * 繧ｳ繝ｼ繝峨ヶ繝ｭ繝・け縺ｮ繧ｱ繝・・繧ｷ繝ｳ繧ｳ繝壹・繧ｷ繝ｧ繝ｳ繧貞｢玲ｸ帙☆繧・
+       * コードブロチE��のケチE�Eシンコペ�Eションを増減すめE
        * @param dir
        */
       const modEat = (dir: -1 | 1) => {
@@ -349,7 +349,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
         if (temp >= -2 && temp <= 2) {
           data.eat = temp;
           reducerOutline.setChordData(data);
-          reducerCache.calculate();
+          recalculate();
           reducerRef.adjustGridScrollXFromOutline();
         }
         commit();
@@ -366,11 +366,11 @@ const useInputOutline = (storeUtil: StoreUtil) => {
 
     callbacks.holdShift = () => {
       /**
-       * 蝓ｺ貅悶ｒ繝ｭ繝・け縺励※縲∫ｯ・峇謖・ｮ壹・繝輔か繝ｼ繧ｫ繧ｹ繧堤ｧｻ蜍輔☆繧・
+       * 基準をロチE��して、篁E��持E���Eフォーカスを移動すめE
        * @param dir
        */
       const moveRange = (dir: -1 | 1) => {
-        // 繝輔か繝ｼ繧ｫ繧ｹ縺梧悴繝ｭ繝・け縺ｧ縺ゅｋ蝣ｴ蜷医∫樟蝨ｨ縺ｮ繝輔か繝ｼ繧ｫ繧ｹ繧偵Ο繝・け縺ｫ險ｭ螳壹☆繧・
+        // フォーカスが未ロチE��である場合、現在のフォーカスをロチE��に設定すめE
         if (outline.focusLock === -1) outline.focusLock = outline.focus;
         reducerOutline.moveFocus(dir);
         reducerRef.adjustGridScrollXFromOutline();
@@ -396,5 +396,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
   };
 };
 export default useInputOutline;
+
+
 
 

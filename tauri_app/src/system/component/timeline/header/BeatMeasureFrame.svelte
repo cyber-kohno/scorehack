@@ -1,12 +1,13 @@
 <script lang="ts">
   import type StoreRef from "../../../store/props/storeRef";
   import store from "../../../store/store";
+  import { getTimelineBaseCaches } from "../../../../state/cache-state/timeline-cache";
   import MeasureBlock from "./MeasureBlock.svelte";
   import MeasureFocus from "./MeasureFocus.svelte";
 
   export let scrollLimitProps: StoreRef.ScrollLimitProps;
 
-  $: baseCaches = $store.cache.baseCaches;
+  $: baseCaches = getTimelineBaseCaches($store);
 
 </script>
 

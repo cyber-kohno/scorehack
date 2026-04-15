@@ -10,8 +10,13 @@
   import ActiveTrack from "../../../../ui/melody/score/ActiveTrack.svelte";
   import TimelineTailMargin from "../TimelineTailMargin.svelte";
   import { isPlaybackActive } from "../../../../state/ui-state/playback-ui-store";
+  import {
+    getTimelineBaseCaches,
+    getTimelineChordCaches,
+  } from "../../../../state/cache-state/timeline-cache";
 
-  $: cache = $store.cache;
+  $: baseCaches = getTimelineBaseCaches($store);
+  $: chordCaches = getTimelineChordCaches($store);
 
   $: isMelodyMode = (() => $store.control.mode === "melody")();
   $: isPreview = isPlaybackActive($store);
@@ -23,10 +28,10 @@
 
 <div class="wrap" data-isPreview={isPreview} bind:this={$store.ref.grid}>
   {#if scrollLimitProps != null}
-    {#each cache.baseCaches as baseCache}
+    {#each baseCaches as baseCache}
       <BaseBlock {baseCache} {scrollLimitProps} />
     {/each}
-    {#each cache.chordCaches as chordCache, index}
+    {#each chordCaches as chordCache, index}
       <ChordBlock {chordCache} {index} />
     {/each}
     <TimelineTailMargin />

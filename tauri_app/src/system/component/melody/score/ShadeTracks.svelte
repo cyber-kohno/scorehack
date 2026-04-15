@@ -1,6 +1,7 @@
 <script lang="ts">
     import StoreRef from "../../../store/props/storeRef";
     import store from "../../../store/store";
+    import { getShadeMelodyTracks } from "../../../../state/ui-state/melody-ui-store";
     import ShadeNote from "./ShadeNote.svelte";
 
     /** 選択中のトラック */
@@ -13,16 +14,16 @@
         // ハーモニーモード時は全てがシェイドトラックになるため無条件で表示する
         $store.control.mode === "harmonize";
 
-    $: scoreTracks = $store.data.scoreTracks;
+    $: scoreTracks = getShadeMelodyTracks($store);
 
     $: scrollLimitProps = StoreRef.getScrollLimitProps($store.ref.grid);
 </script>
 
 {#if scrollLimitProps != null}
-    {#each scoreTracks as track, trackIndex}
-        {#if isDisp(trackIndex)}
-            {#each track.notes as _, noteIndex}
-                <ShadeNote {trackIndex} {noteIndex} {scrollLimitProps} />
+    {#each scoreTracks as trackInfo}
+        {#if isDisp(trackInfo.trackIndex)}
+            {#each trackInfo.track.notes as _, noteIndex}
+                <ShadeNote trackIndex={trackInfo.trackIndex} {noteIndex} {scrollLimitProps} />
             {/each}
         {/if}
     {/each}

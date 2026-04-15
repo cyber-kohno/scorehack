@@ -1,8 +1,10 @@
-import Layout from "../../../styles/tokens/layout-tokens";
+﻿import Layout from "../../../styles/tokens/layout-tokens";
 import StorePianoBacking from "../props/arrange/piano/storePianoBacking";
 import StoreMelody from "../props/storeMelody";
 import type StoreRef from "../props/storeRef";
 import type { StoreProps } from "../store";
+import { getCurrentOutlineElementCache } from "../../../state/cache-state/outline-cache";
+import { getTimelineFocusChordCache } from "../../../state/cache-state/timeline-cache";
 import ArrangeUtil from "./arrangeUtil";
 
 const useReducerRef = (lastStore: StoreProps) => {
@@ -26,7 +28,6 @@ const useReducerRef = (lastStore: StoreProps) => {
             if (include(key)) clearTimeout(key.id);
         });
         const next = timerKeys.filter(key => !include(key));
-        // console.log(`next${next.length}, timerKeys${timerKeys.length}`);
         timerKeys.length = 0;
         timerKeys.push(...next);
 
@@ -70,8 +71,6 @@ const useReducerRef = (lastStore: StoreProps) => {
             const height = gridRef.getBoundingClientRect().height;
 
             const top = getTop(height);
-            // gridRef.scrollTo({ top, behavior: "smooth" });
-            // pitchRef.scrollTo({ top, behavior: "smooth" });
             smoothScrollTop([gridRef, pitchRef], top);
         }
     }
@@ -89,15 +88,14 @@ const useReducerRef = (lastStore: StoreProps) => {
     const adjustGridScrollXFromOutline = () => {
 
         adjustGridScrollX((width) => {
-            const focus = lastStore.control.outline.focus;
-            const cache = lastStore.cache;
-            const { lastChordSeq, chordSeq } = cache.elementCaches[focus];
+            const element = getCurrentOutlineElementCache(lastStore);
+            if (element == undefined) return 0;
+            const { lastChordSeq, chordSeq } = element;
             let pos = 0;
-            // 先頭以降の要素
             if (lastChordSeq !== -1) {
-                const chordCache = cache.chordCaches[lastChordSeq];
+                const chordCache = getTimelineFocusChordCache(lastStore);
+                if (chordCache == undefined) return 0;
 
-                // コード要素
                 if (chordSeq !== -1) {
                     pos = chordCache.viewPosLeft + chordCache.viewPosWidth / 2 - width / 2;
                 } else {
@@ -114,12 +112,12 @@ const useReducerRef = (lastStore: StoreProps) => {
         if (ref) {
             const { height: outlineHeight } = ref.getBoundingClientRect();
             const elementSeq = lastStore.control.outline.focus;
-            const element = lastStore.cache.elementCaches[elementSeq];
+            const element = getCurrentOutlineElementCache(lastStore);
+            if (element == undefined) return;
             const elementRef = lastStore.ref.elementRefs.find(r => r.seq === elementSeq);
             if (elementRef != undefined) {
                 const height = elementRef.ref.getBoundingClientRect().height;
                 const top = element.outlineTop - outlineHeight / 2 + height / 2;
-                // ref.scrollTo({ top, behavior: "smooth" });
                 smoothScrollTop([ref], top);
             }
         }
@@ -132,7 +130,6 @@ const useReducerRef = (lastStore: StoreProps) => {
             const { height: frameHeight } = ref.getBoundingClientRect();
             const itemTop = helper.focus * 26;
             const top = itemTop - frameHeight / 2;
-            // ref.scrollTo({ top, behavior: "smooth" });
             smoothScrollTop([ref], top);
         }
     }
@@ -140,7 +137,6 @@ const useReducerRef = (lastStore: StoreProps) => {
         const ref = lastStore.ref.terminal;
         if (ref) {
             const top = ref.scrollHeight;
-            // ref.scrollTo({ top, behavior: "smooth" });
             smoothScrollTop([ref], top);
 
         }

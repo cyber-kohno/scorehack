@@ -1,14 +1,12 @@
 <script lang="ts">
   import ContextUtil from "../../../store/contextUtil";
-  import useReducerCache from "../../../store/reducer/reducerCache";
   import store from "../../../store/store";
   import {
     getMelodyCurrentBeatRect,
     isMelodyMode,
   } from "../../../../state/ui-state/melody-ui-store";
-
-  $: reduerCache = useReducerCache($store);
-  $: focusInfo = reduerCache.getFocusInfo();
+  import { getTimelineFocusInfo } from "../../../../state/ui-state/timeline-ui-store";
+  $: focusInfo = getTimelineFocusInfo($store);
   $: melodyRect = getMelodyCurrentBeatRect($store);
   $: isMelody = isMelodyMode($store);
 

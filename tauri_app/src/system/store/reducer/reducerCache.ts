@@ -10,12 +10,12 @@ import {
   type OutlineDataTempo,
 } from "../../../domain/outline/outline-types";
 import MusicTheory from "../../../domain/theory/music-theory";
+import { getCache, setCache } from "../../../state/cache-state/cache-store";
 import type StoreCache from "../props/storeCache";
 import type { StoreProps } from "../store";
 
 const useReducerCache = (lastStore: StoreProps) => {
-
-    const cache = lastStore.cache;
+    const readCache = () => getCache(lastStore);
 
     const calculate = () => {
         const elements = lastStore.data.elements;
@@ -328,19 +328,20 @@ const useReducerCache = (lastStore: StoreProps) => {
         baseCache.viewPosWidth = viewPos - baseCache.viewPosLeft;
         baseCaches.push(baseCache);
 
-        lastStore.cache = {
+        setCache(lastStore, {
             baseCaches, chordCaches, elementCaches, outlineTailPos
-        }
+        });
     };
 
     const getChordInfoFromElementSeq = (elementSeq: number) => {
-        const cache = lastStore.cache;
+        const cache = readCache();
         const chordSeq = cache.elementCaches[elementSeq].chordSeq;
         if (chordSeq === -1) throw new Error(`Chord sequence was not found for elementSeq[${elementSeq}].`);
         return cache.chordCaches[chordSeq];
     }
 
     const getChordTail = () => {
+        const cache = readCache();
         const chordCaches = cache.chordCaches;
         return chordCaches[chordCaches.length - 1];
     }
@@ -349,6 +350,7 @@ const useReducerCache = (lastStore: StoreProps) => {
         return tail.startBeatNote + tail.lengthBeatNote;
     }
     const getChordBlockRight = () => {
+        const cache = readCache();
         const chordCaches = cache.chordCaches;
         if (chordCaches.length === 0) return 0;
         const chordCache = chordCaches[chordCaches.length - 1];
@@ -356,16 +358,19 @@ const useReducerCache = (lastStore: StoreProps) => {
     }
 
     const getCurElement = () => {
+        const cache = readCache();
         const { elementCaches } = cache;
         const focus = lastStore.control.outline.focus;
         if (elementCaches[focus] == undefined) throw new Error('Focused element cache was not found.');
         return elementCaches[focus];
     }
     const getCurBase = () => {
+        const cache = readCache();
         const element = getCurElement();
         return cache.baseCaches[element.baseSeq];
     }
     const getBaseFromBeat = (pos: number) => {
+        const cache = readCache();
         const base = cache.baseCaches.find(b => {
             return b.startBeatNote <= pos && pos < b.startBeatNote + b.lengthBeatNote;
         });
@@ -373,6 +378,7 @@ const useReducerCache = (lastStore: StoreProps) => {
         return base;
     }
     const getChordFromBeat = (pos: number) => {
+        const cache = readCache();
         const chord = cache.chordCaches.find(c => {
             return c.startBeatNote <= pos && pos < c.startBeatNote + c.lengthBeatNote;
         });
@@ -380,6 +386,7 @@ const useReducerCache = (lastStore: StoreProps) => {
         return chord;
     }
     const getCurChord = () => {
+        const cache = readCache();
         const element = getCurElement();
         if (element.chordSeq === -1) throw new Error('Current element is not a chord.');
         const chordCache = cache.chordCaches[element.chordSeq];
@@ -387,6 +394,7 @@ const useReducerCache = (lastStore: StoreProps) => {
     }
 
     const getFocusInfo = () => {
+        const cache = readCache();
         const outline = lastStore.control.outline;
         const elementCache = cache.elementCaches[outline.focus];
         const chordCaches = cache.chordCaches;

@@ -9,7 +9,7 @@ import {
   type OutlineDataModulate,
 } from "../../../../../domain/outline/outline-types";
 import type { StoreProps } from "../../../store";
-import useReducerCache from "../../reducerCache";
+import { createCacheActions } from "../../../../../app/cache/cache-actions";
 import useReducerTermianl from "../../reducerTerminal";
 
 const useBuilderModulate = (lastStore: StoreProps) => {
@@ -17,7 +17,7 @@ const useBuilderModulate = (lastStore: StoreProps) => {
   const terminal = reducer.getTerminal();
   const logger = createTerminalLogger(terminal);
 
-  const reducerCache = useReducerCache(lastStore);
+  const { recalculate } = createCacheActions(lastStore);
   const reducerOutline = createOutlineActions(lastStore);
 
   const get = (): TerminalCommand[] => {
@@ -49,7 +49,7 @@ const useBuilderModulate = (lastStore: StoreProps) => {
           }
           data.method = "domm";
           data.val = Number(value);
-          reducerCache.calculate();
+          recalculate();
           outputModLog(prev, `domm ${value}`);
         },
       },
@@ -72,7 +72,7 @@ const useBuilderModulate = (lastStore: StoreProps) => {
           }
           data.method = "key";
           data.val = Number(value);
-          reducerCache.calculate();
+          recalculate();
           outputModLog(prev, `key ${value}`);
         },
       },
@@ -86,7 +86,7 @@ const useBuilderModulate = (lastStore: StoreProps) => {
 
           data.method = "parallel";
           data.val = undefined;
-          reducerCache.calculate();
+          recalculate();
           outputModLog(prev, "parallel");
         },
       },
@@ -100,7 +100,7 @@ const useBuilderModulate = (lastStore: StoreProps) => {
 
           data.method = "relative";
           data.val = undefined;
-          reducerCache.calculate();
+          recalculate();
           outputModLog(prev, "relative");
         },
       },
@@ -113,3 +113,7 @@ const useBuilderModulate = (lastStore: StoreProps) => {
 };
 
 export default useBuilderModulate;
+
+
+
+
