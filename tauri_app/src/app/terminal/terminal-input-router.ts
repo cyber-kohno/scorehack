@@ -1,4 +1,4 @@
-import useInputTerminal from "../../system/input/inputTerminal";
+import useInputTerminal from "./terminal-input";
 import type { StoreUtil } from "../../system/store/store";
 
 export const createTerminalInputRouter = (storeUtil: StoreUtil) => {

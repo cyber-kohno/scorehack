@@ -1,4 +1,8 @@
 import type ProjectFileStore from "../../state/session-state/project-file-store";
+import {
+  getScoreFileHandle,
+  setScoreFileHandle,
+} from "../../state/session-state/project-file-store";
 import type { StoreProps } from "../../system/store/store";
 import { saveScoreFilePath } from "../../infra/tauri/dialog";
 import { writeUtf8TextFile } from "../../infra/tauri/fs";
@@ -23,12 +27,11 @@ export const saveProject = async (
   extension: string,
   callbacks: ProjectIoCallbacks,
 ) => {
-  const fileHandle = lastStore.fileHandle;
-
   try {
-    if (fileHandle.score) {
-      await writeUtf8TextFile(fileHandle.score.path, gzipToBase64(plainData));
-      callbacks.success(fileHandle.score);
+    const scoreHandle = getScoreFileHandle();
+    if (scoreHandle) {
+      await writeUtf8TextFile(scoreHandle.path, gzipToBase64(plainData));
+      callbacks.success(scoreHandle);
       return;
     }
 
@@ -39,8 +42,9 @@ export const saveProject = async (
     }
 
     await writeUtf8TextFile(path, gzipToBase64(plainData));
-    fileHandle.score = toHandle(path);
-    callbacks.success(fileHandle.score);
+    const nextHandle = toHandle(path);
+    setScoreFileHandle(nextHandle);
+    callbacks.success(nextHandle);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred.";

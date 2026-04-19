@@ -5,14 +5,16 @@ import {
   setInputHoldState,
   type InputHoldKey,
 } from "../../state/session-state/keyboard-session";
+import { setModeState } from "../../state/session-state/mode-store";
+import { resetScoreTrackRefs } from "../../state/session-state/track-ref-session";
 import { getShellMode } from "../../state/ui-state/shell-ui-store";
 
 export const switchMode = (lastStore: StoreProps) => {
   const melodyActions = createMelodyActions(lastStore);
   const mode = getShellMode(lastStore);
   if (mode === "harmonize") melodyActions.syncCursorFromElementSeq();
-  lastStore.control.mode = mode === "harmonize" ? "melody" : "harmonize";
-  lastStore.ref.trackArr.forEach((track) => (track.length = 0));
+  setModeState(mode === "harmonize" ? "melody" : "harmonize");
+  resetScoreTrackRefs();
 };
 
 export const setInputHold = (

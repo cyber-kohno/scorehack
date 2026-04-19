@@ -1,23 +1,27 @@
 <script lang="ts">
   import Layout from "../../../../styles/tokens/layout-tokens";
   import { calcMelodyBeat, calcMelodyBeatSide, type MelodyNote } from "../../../../domain/melody/melody-types";
-  import type StoreRef from "../../../store/props/storeRef";
+  import { envStore } from "../../../../state/session-state/env-store";
+  import { inputStore } from "../../../../state/session-state/input-store";
+  import { melodyTrackStore } from "../../../../state/session-state/melody-track-store";
+  import { melodyFocusStore } from "../../../../state/session-state/melody-focus-store";
+  import { upsertTrackRef } from "../../../../state/session-state/track-ref-session";
+  import type { ScrollLimitProps } from "../../../../state/session-state/scroll-limit-props";
   import store from "../../../store/store";
   import MusicTheory from "../../../../domain/theory/music-theory";
   import Factors from "./Factors.svelte";
-  import ContextUtil from "../../../store/contextUtil";
   import UnitDisplay from "../UnitDisplay.svelte";
   import {
     getMelodyNoteTonality,
     isMelodyFocusRangeIndex,
   } from "../../../../state/ui-state/melody-ui-store";
+  import { isPlaybackActive } from "../../../../state/ui-state/playback-ui-store";
+  import { modeStore } from "../../../../state/session-state/mode-store";
 
   export let note: MelodyNote;
   export let index: number;
-  export let scrollLimitProps: StoreRef.ScrollLimitProps;
+  export let scrollLimitProps: ScrollLimitProps;
   export let cursorMiddle: number;
-
-  const isPreview = ContextUtil.get('isPreview');
 
   type OperationStatus =
     | "move"
@@ -32,14 +36,8 @@
   let ref: HTMLElement | null = null;
   $: {
     if (ref != null) {
-      const trackIndex = $store.control.melody.trackIndex;
-      const refs = $store.ref.trackArr[trackIndex];
-
-      let instance = refs.find((r) => r.seq === index);
-      if (instance == undefined) {
-        instance = { seq: index, ref };
-        refs.push(instance);
-      } else instance.ref = ref;
+      const trackIndex = $melodyTrackStore;
+      upsertTrackRef(trackIndex, index, ref);
     }
   }
 
@@ -47,7 +45,7 @@
 
   $: [isDisp, left, scaleIndex, width] = (() => {
     const beatSide = calcMelodyBeatSide(note);
-    const [left, width] = [beatSide.pos, beatSide.len].map((v) => v * $store.env.beatWidth);
+    const [left, width] = [beatSide.pos, beatSide.len].map((v) => v * $envStore.beatWidth);
     const middle = left + width / 2;
     const isDisp =
       Math.abs(scrollLimitProps.scrollMiddleX - middle) <= scrollLimitProps.rectWidth ||
@@ -57,20 +55,19 @@
   })();
 
   $: isScale = tonality == undefined ? false : MusicTheory.isScale(note.pitch, tonality);
-  $: melody = $store.control.melody;
-  $: isCriteria = $store.control.mode === "melody" && melody.focus === index;
+  $: isCriteria = $modeStore === "melody" && $melodyFocusStore.focus === index;
   $: isFocus = isMelodyFocusRangeIndex($store, index);
 
   $: getOperationHighlight = (): OperationStatus => {
-    if ($isPreview()) return "preview";
+    if (isPlaybackActive($store)) return "preview";
     if (!isFocus) return "focus";
 
-    const input = $store.input;
+    const input = $inputStore;
     if (input.holdD) return "move";
-    else if (input.holdF && melody.focusLock === -1) return "len";
+    else if (input.holdF && $melodyFocusStore.focusLock === -1) return "len";
     else if (input.holdC) return "scale";
     else if (input.holdX) return "octave";
-    else if (input.holdShift || melody.focusLock !== -1) return "range";
+    else if (input.holdShift || $melodyFocusStore.focusLock !== -1) return "range";
     return "none";
   };
 </script>
@@ -85,7 +82,7 @@
   >
     <div class="effect" style:top="{Layout.getPitchTop(note.pitch) - 2 + 30}px" bind:this={ref}></div>
     <div class="frame" style:top="{Layout.getPitchTop(note.pitch) - 2}px" data-isScale={isScale}>
-      {#if !$isPreview()}
+      {#if !isPlaybackActive($store)}
         {#if !isCriteria}
           <div class="protrusion" style:height="{28 / note.norm.div}px"></div>
         {:else}
@@ -177,3 +174,5 @@
     font-weight: 600;
   }
 </style>
+
+

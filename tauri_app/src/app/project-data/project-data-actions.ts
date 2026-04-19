@@ -3,7 +3,7 @@ import type {
   MelodyAudioTrack,
   MelodyScoreTrack,
 } from "../../domain/melody/melody-types";
-import type StoreArrange from "../../system/store/props/arrange/storeArrange";
+import type StoreArrange from "../../domain/arrange/arrange-store";
 import type { StoreProps } from "../../system/store/store";
 import {
   getProjectData,

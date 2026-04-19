@@ -1,24 +1,25 @@
 <script lang="ts">
   import Layout from "../../../styles/tokens/layout-tokens";
-  import StoreMelody from "../../store/props/storeMelody";
+  import { getMelodyCursorState } from "../../../app/melody/melody-cursor-state";
+  import { envStore } from "../../../state/session-state/env-store";
+  import { melodyOverlapStore } from "../../../state/session-state/melody-overlap-store";
+  import StoreMelody from "../../../domain/melody/melody-store";
   import store from "../../store/store";
   import UnitDisplay from "./UnitDisplay.svelte";
 
   $: noteInfo = (() => {
-    const melody = $store.control.melody;
-    const cursor = melody.cursor;
+    const cursor = getMelodyCursorState($store);
     const beatSize = StoreMelody.calcBeat(cursor.norm, cursor.pos);
-    const left = $store.env.beatWidth * beatSize;
+    const left = $envStore.beatWidth * beatSize;
     const pitch = cursor.pitch;
-    const isOverlap = melody.isOverlap;
+    const isOverlap = $melodyOverlapStore;
     return { left, pitch, isOverlap };
   })();
 
   $: width = (() => {
-    const melody = $store.control.melody;
-    const cursor = melody.cursor;
+    const cursor = getMelodyCursorState($store);
     const beatSize = StoreMelody.calcBeat(cursor.norm, cursor.len);
-    return $store.env.beatWidth * beatSize;
+    return $envStore.beatWidth * beatSize;
   })();
 </script>
 
@@ -32,7 +33,7 @@
     style:top="{Layout.getPitchTop(noteInfo.pitch)}px"
     style:width="{width - 10}px"
   >
-    <UnitDisplay note={$store.control.melody.cursor} />
+    <UnitDisplay note={getMelodyCursorState($store)} />
   </div>
 </div>
 

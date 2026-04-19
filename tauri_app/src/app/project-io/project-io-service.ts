@@ -1,5 +1,6 @@
-import type StoreMelody from "../../system/store/props/storeMelody";
+import type StoreMelody from "../../domain/melody/melody-store";
 import type { StoreProps } from "../../system/store/store";
+import { getProjectData } from "../../state/project-data/project-data-store";
 import { exportMidi } from "./export-midi";
 import { importAudio } from "./import-audio";
 import { loadProject } from "./load-project";
@@ -7,7 +8,7 @@ import { saveProject, type ProjectIoCallbacks } from "./save-project";
 
 export const createProjectIoService = (lastStore: StoreProps) => {
   const saveScoreFile = (callbacks: ProjectIoCallbacks) => {
-    const plainData = JSON.stringify(lastStore.data);
+    const plainData = JSON.stringify(getProjectData(lastStore));
     return saveProject(lastStore, plainData, "sch", callbacks);
   };
 

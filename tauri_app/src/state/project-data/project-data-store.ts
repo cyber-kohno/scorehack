@@ -1,13 +1,48 @@
-import type StoreData from "../../system/store/props/storeData";
+import type { MelodyAudioTrack } from "../../domain/melody/melody-types";
+import type { MelodyScoreTrack } from "../../domain/melody/melody-types";
+import type { OutlineElement } from "../../domain/outline/outline-types";
+import type StoreArrange from "../../domain/arrange/arrange-store";
 import type { StoreProps } from "../../system/store/store";
+import {
+  getAudioTrackState,
+  setAudioTrackState,
+} from "../session-state/audio-track-store";
+import {
+  getArrangeDataState,
+  setArrangeDataState,
+} from "../session-state/arrange-data-store";
+import {
+  getScoreTrackState,
+  setScoreTrackState,
+} from "../session-state/score-track-store";
+import {
+  getOutlineElementState,
+  setOutlineElementState,
+} from "../session-state/outline-element-store";
 
-export const getProjectData = (lastStore: StoreProps): StoreData.Props => {
-  return lastStore.data;
+export type ProjectDataSnapshot = {
+  elements: OutlineElement[];
+  scoreTracks: MelodyScoreTrack[];
+  audioTracks: MelodyAudioTrack[];
+  arrange: StoreArrange.DataProps;
+};
+
+export const getProjectData = (lastStore: StoreProps): ProjectDataSnapshot => {
+  return {
+    elements: getOutlineElementState(),
+    scoreTracks: getScoreTrackState(),
+    audioTracks: getAudioTrackState(),
+    arrange: getArrangeDataState(),
+  };
 };
 
 export const setProjectData = (
   lastStore: StoreProps,
-  nextData: StoreData.Props,
+  nextData: ProjectDataSnapshot,
 ): void => {
-  lastStore.data = nextData;
+  const { elements, scoreTracks, audioTracks, arrange } = nextData;
+  setOutlineElementState(elements);
+  setScoreTrackState(scoreTracks);
+  setAudioTrackState(audioTracks);
+  setArrangeDataState(arrange);
 };

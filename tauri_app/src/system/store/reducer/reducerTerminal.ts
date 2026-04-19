@@ -1,17 +1,26 @@
 import type { StoreProps } from "../store";
 import { createMelodyActions } from "../../../app/melody/melody-actions";
+import { createProjectDataActions } from "../../../app/project-data/project-data-actions";
 import { createTerminalCommandRegistry } from "../../../app/terminal/terminal-command-registry";
 import { createTerminalLogger } from "../../../app/terminal/terminal-logger";
+import {
+  clearTerminalState,
+  getTerminalStateStore,
+  setTerminalState,
+} from "../../../state/session-state/terminal-store";
+import { getModeState } from "../../../state/session-state/mode-store";
+import { getOutlineFocusState } from "../../../state/session-state/outline-focus-store";
+import { getOutlineArrangeState } from "../../../state/session-state/outline-arrange-store";
 
 const useReducerTermianl = (lastStore: StoreProps) => {
-  const isUse = () => lastStore.terminal != null;
+  const isUse = () => getTerminalStateStore() != null;
 
   const { getCurrScoreTrack } = createMelodyActions(lastStore);
+  const projectData = createProjectDataActions(lastStore);
 
   const updateTarget = () => {
     const terminal = getTerminal();
-    const control = lastStore.control;
-    const data = lastStore.data;
+    const mode = getModeState();
     let ret = "unknown";
     const set = (v: string) => {
       ret = v;
@@ -19,16 +28,17 @@ const useReducerTermianl = (lastStore: StoreProps) => {
     const add = (v: string) => {
       ret += "\\" + v;
     };
-    switch (control.mode) {
+    switch (mode) {
       case "harmonize": {
-        const outline = control.outline;
-        const element = data.elements[control.outline.focus];
+        const arrange = getOutlineArrangeState();
+        const element = projectData.getOutlineElement(getOutlineFocusState().focus);
+        if (element == undefined) throw new Error();
         set("harmonize");
-        if (outline.arrange == null) {
+        if (arrange == null) {
           add(element.type);
         } else {
           add("arrange");
-          add(outline.arrange.method);
+          add(arrange.method);
         }
         break;
       }
@@ -42,7 +52,7 @@ const useReducerTermianl = (lastStore: StoreProps) => {
   };
 
   const open = () => {
-    lastStore.terminal = {
+    setTerminalState({
       outputs: [],
       target: "",
       command: "",
@@ -50,17 +60,17 @@ const useReducerTermianl = (lastStore: StoreProps) => {
       focus: 0,
       availableFuncs: [],
       helper: null,
-    };
+    });
     updateTarget();
     createTerminalCommandRegistry(lastStore).buildAvailableFunctions();
   };
 
   const close = () => {
-    lastStore.terminal = null;
+    clearTerminalState();
   };
 
   const getTerminal = () => {
-    const terminal = lastStore.terminal;
+    const terminal = getTerminalStateStore();
     if (terminal == null) throw new Error("Terminal is not available.");
     return terminal;
   };

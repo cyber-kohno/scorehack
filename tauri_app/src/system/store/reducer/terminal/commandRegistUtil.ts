@@ -1,4 +1,4 @@
-import type StoreArrange from "../../props/arrange/storeArrange";
+import type StoreArrange from "../../../../domain/arrange/arrange-store";
 import type { OutlineElementType } from "../../../../domain/outline/outline-types";
 import type { StoreProps } from "../../store";
 import useReducerTermianl from "../reducerTerminal";

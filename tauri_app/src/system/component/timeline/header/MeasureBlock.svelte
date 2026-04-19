@@ -1,23 +1,23 @@
-﻿<script lang="ts">
-  import type StoreCache from "../../../store/props/storeCache";
-  import type StoreRef from "../../../store/props/storeRef";
+<script lang="ts">
+  import type StoreCache from "../../../../state/cache-state/cache-store";
+  import type { ScrollLimitProps } from "../../../../state/session-state/scroll-limit-props";
+  import { envStore } from "../../../../state/session-state/env-store";
   import store from "../../../store/store";
   import { getTimelineFocusPos } from "../../../../app/timeline/get-timeline-focus-pos";
   import MusicTheory from "../../../../domain/theory/music-theory";
 
   export let baseCache!: StoreCache.BaseCache;
-  export let scrollLimitProps: StoreRef.ScrollLimitProps;
+  export let scrollLimitProps: ScrollLimitProps;
 
   $: barDivBeatCnt = MusicTheory.getBarDivBeatCount(baseCache.scoreBase.ts);
   $: beatDiv16Count = MusicTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
   $: barDiv16Cnt = barDivBeatCnt * beatDiv16Count;
 
-  $: beatWidth = $store.env.beatWidth * (beatDiv16Count / 4);
+  $: beatWidth = $envStore.beatWidth * (beatDiv16Count / 4);
   $: left = baseCache.startBeat * beatWidth;
   $: width = baseCache.lengthBeat * beatWidth;
 
   $: memoriList = (() => {
-    // console.log(baseCache);
     const list: {
       x: number;
       width: number;
@@ -80,9 +80,6 @@
     position: absolute;
     top: 0;
     height: 100%;
-    /* background-color: rgb(166, 170, 198); */
-    /* background: linear-gradient(to bottom, #ebebeb, rgb(145, 152, 185)); */
-    /* background: linear-gradient(to bottom, #0e3465, rgb(0, 0, 0)); */
   }
   .memori {
     display: inline-block;
@@ -101,10 +98,7 @@
     left: -22px;
     top: 16px;
     color: rgb(255, 98, 98);
-    /* background-color: rgba(46, 123, 190, 0.198); */
     width: 50px;
     text-align: center;
   }
 </style>
-
-

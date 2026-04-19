@@ -1,12 +1,15 @@
 <script lang="ts">
   import Layout from "../../../../../styles/tokens/layout-tokens";
-  import ContextUtil from "../../../../store/contextUtil";
   import VoicingCell from "./PEVoicingCell.svelte";
+  import {
+    getArrangeEditorArrangeContext,
+    getArrangeEditorPianoEditorContext,
+  } from "../../../../../ui/arrange/piano-editor-context";
 
-  const arrange = ContextUtil.get('arrange');
+  const arrange = getArrangeEditorArrangeContext();
   $: structs = $arrange.target.compiledChord.structs;
 
-  const editor = ContextUtil.get('pianoEditor');
+  const editor = getArrangeEditorPianoEditorContext();
 
   const OCTAVE_MAX = Layout.arrange.piano.VOICING_OCTAVE_MAX;
 

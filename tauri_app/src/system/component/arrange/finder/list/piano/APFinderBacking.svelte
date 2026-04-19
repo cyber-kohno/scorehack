@@ -1,9 +1,9 @@
 <script lang="ts">
-  import StorePianoBacking from "../../../../../store/props/arrange/piano/storePianoBacking";
-  import type StorePianoEditor from "../../../../../store/props/arrange/piano/storePianoEditor";
-  import ArrangeUtil from "../../../../../store/reducer/arrangeUtil";
+import StorePianoBacking from "../../../../../../domain/arrange/piano-backing-store";
+import type StorePianoEditor from "../../../../../../domain/arrange/piano-editor-store";
   import store from "../../../../../store/store";
   import APFinderExistMark from "./APFinderExistMark.svelte";
+  import { getCurrentArrangeTrack } from "../../../../../../app/arrange/arrange-state";
 
 
     export let voicingCnt: number;
@@ -17,8 +17,7 @@
     };
 
     $: isPresetExist = (() => {
-        const {getCurTrack} = ArrangeUtil.useReducer($store);
-        const lib = getCurTrack().pianoLib;
+        const lib = getCurrentArrangeTrack($store).pianoLib;
         if(lib == undefined) throw new Error();
         const preset = lib.presets.find(p => p.bkgPatt === usageBkg.bkgPatt);
         return preset != undefined;

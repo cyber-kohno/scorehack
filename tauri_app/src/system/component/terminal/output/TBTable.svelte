@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type StoreTerminal from "../../../store/props/storeTerminal";
+  import type { TerminalTableProps } from "../../../../../state/session-state/terminal-store";
 
-  export let table!: StoreTerminal.TableProps | undefined;
+  export let table!: TerminalTableProps | undefined;
   if (table == undefined) throw new Error();
 </script>
 

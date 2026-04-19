@@ -2,10 +2,11 @@
   import { writable } from "svelte/store";
   import store from "../../system/store/store";
   import HighlightText from "../../system/component/common/HighlightText.svelte";
-  import type StoreTerminal from "../../system/store/props/storeTerminal";
+  import type { TerminalHelperProps } from "../../state/session-state/terminal-store";
   import { setHelperFrameRef } from "../../state/session-state/terminal-session";
+  import { getTerminalCursorRef } from "../../state/session-state/terminal-ref-store";
 
-  export let helper!: StoreTerminal.HelperProps;
+  export let helper!: TerminalHelperProps;
 
   const pos = writable({ top: -1024, left: -1024 });
   let helperRef: HTMLDivElement | undefined;
@@ -13,7 +14,7 @@
   $: setHelperFrameRef($store, helperRef);
 
   $: {
-    const ref = $store.ref.cursor;
+    const ref = getTerminalCursorRef();
     setTimeout(() => {
       if (ref != null) {
         const { left, bottom } = ref.getBoundingClientRect();

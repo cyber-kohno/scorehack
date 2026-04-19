@@ -1,35 +1,41 @@
 import type { MelodyNote } from "../../domain/melody/melody-types";
 import { calcMelodyBeatSide } from "../../domain/melody/melody-types";
-import StoreRef from "../../system/store/props/storeRef";
+import { getMelodyCursorState } from "../../app/melody/melody-cursor-state";
 import type { StoreProps } from "../../system/store/store";
+import { getEnvBeatWidth } from "../session-state/env-store";
+import { getModeState } from "../session-state/mode-store";
 import { getBaseCacheFromBeat } from "../cache-state/cache-store";
 import {
   getScoreTrack,
   getScoreTracks,
 } from "../project-data/melody-project-data";
+import { getTimelineGridScrollLimitProps } from "../session-state/timeline-viewport-store";
+import { getMelodyTrackIndex } from "../session-state/melody-track-store";
+import { getMelodyFocusState } from "../session-state/melody-focus-store";
+import { getMelodyOverlapState } from "../session-state/melody-overlap-store";
 
 export const isMelodyMode = (lastStore: StoreProps) => {
-  return lastStore.control.mode === "melody";
+  return getModeState() === "melody";
 };
 
 export const getMelodyCursor = (lastStore: StoreProps): MelodyNote => {
-  return lastStore.control.melody.cursor;
+  return getMelodyCursorState(lastStore);
 };
 
 export const isMelodyCursorOverlap = (lastStore: StoreProps) => {
-  return lastStore.control.melody.isOverlap;
+  return getMelodyOverlapState();
 };
 
 export const getMelodyFocusIndex = (lastStore: StoreProps) => {
-  return lastStore.control.melody.focus;
+  return getMelodyFocusState().focus;
 };
 
 export const getMelodyFocusLockIndex = (lastStore: StoreProps) => {
-  return lastStore.control.melody.focusLock;
+  return getMelodyFocusState().focusLock;
 };
 
 export const getCurrentMelodyTrackIndex = (lastStore: StoreProps) => {
-  return lastStore.control.melody.trackIndex;
+  return getMelodyTrackIndex();
 };
 
 export const getCurrentMelodyScoreTrack = (lastStore: StoreProps) => {
@@ -66,12 +72,13 @@ export const isMelodyFocusRangeIndex = (lastStore: StoreProps, index: number) =>
 export const getMelodyCurrentBeatRect = (lastStore: StoreProps) => {
   const note = getCurrentMelodyTargetNote(lastStore);
   const side = calcMelodyBeatSide(note);
-  const [left, width] = [side.pos, side.len].map((v) => v * lastStore.env.beatWidth);
+  const beatWidth = getEnvBeatWidth();
+  const [left, width] = [side.pos, side.len].map((v) => v * beatWidth);
   return { left, width };
 };
 
 export const getMelodyScrollLimitProps = (lastStore: StoreProps) => {
-  return StoreRef.getScrollLimitProps(lastStore.ref.grid);
+  return getTimelineGridScrollLimitProps();
 };
 
 export const getMelodyCursorMiddle = (lastStore: StoreProps) => {
@@ -90,7 +97,7 @@ export const isMelodyCursorVisible = (lastStore: StoreProps, isPreview: boolean)
 
 export const getShadeMelodyTracks = (lastStore: StoreProps) => {
   const currentTrackIndex = getCurrentMelodyTrackIndex(lastStore);
-  const isHarmonizeMode = lastStore.control.mode === "harmonize";
+  const isHarmonizeMode = getModeState() === "harmonize";
 
   return getScoreTracks(lastStore)
     .map((track, trackIndex) => ({ track, trackIndex }))

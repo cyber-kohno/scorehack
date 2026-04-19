@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type StoreRef from "../../../store/props/storeRef";
+  import type { ScrollLimitProps } from "../../../../state/session-state/scroll-limit-props";
   import store from "../../../store/store";
   import { getTimelineBaseCaches } from "../../../../state/cache-state/timeline-cache";
   import MeasureBlock from "./MeasureBlock.svelte";
   import MeasureFocus from "./MeasureFocus.svelte";
 
-  export let scrollLimitProps: StoreRef.ScrollLimitProps;
+  export let scrollLimitProps: ScrollLimitProps;
 
   $: baseCaches = getTimelineBaseCaches($store);
 
@@ -28,3 +28,5 @@
     height: var(--memori-height);
   }
 </style>
+
+

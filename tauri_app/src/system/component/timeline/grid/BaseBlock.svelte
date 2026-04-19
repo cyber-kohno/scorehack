@@ -1,7 +1,8 @@
 <script lang="ts">
   import Layout from "../../../../styles/tokens/layout-tokens";
-  import type StoreCache from "../../../store/props/storeCache";
-  import type StoreRef from "../../../store/props/storeRef";
+  import type StoreCache from "../../../../state/cache-state/cache-store";
+  import { envStore } from "../../../../state/session-state/env-store";
+  import type { ScrollLimitProps } from "../../../../state/session-state/scroll-limit-props";
   import store from "../../../store/store";
   import { getTimelineFocusPos } from "../../../../app/timeline/get-timeline-focus-pos";
   import MusicTheory from "../../../../domain/theory/music-theory";
@@ -10,10 +11,10 @@
   type PitchType = "tonic" | "other" | "scale";
 
   export let baseCache: StoreCache.BaseCache;
-  export let scrollLimitProps: StoreRef.ScrollLimitProps;
+  export let scrollLimitProps: ScrollLimitProps;
 
   $: beatDiv16Count = MusicTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
-  $: beatWidth = $store.env.beatWidth * (beatDiv16Count / 4);
+  $: beatWidth = $envStore.beatWidth * (beatDiv16Count / 4);
 
   $: measureLines = (() => {
     const list: { left: number; width: number }[] = [];

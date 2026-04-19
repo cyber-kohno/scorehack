@@ -1,10 +1,15 @@
-<script lang="ts">
-  import ContextUtil from "../../../../store/contextUtil";
-  import store from "../../../../store/store";
+﻿<script lang="ts">
+  import {
+    getArrangeEditorBackingContext,
+    getArrangeEditorPianoEditorContext,
+  } from "../../../../../ui/arrange/piano-editor-context";
+  import { setArrangePianoPedalRef } from "../../../../../state/session-state/arrange-ref-store";
 
-  const bp = ContextUtil.get("backingProps");
-  const editor = ContextUtil.get("pianoEditor");
+  let pedalRef: HTMLElement | undefined = undefined;
+  const bp = getArrangeEditorBackingContext();
+  const editor = getArrangeEditorPianoEditorContext();
   $: backing = $bp.backing;
+  $: setArrangePianoPedalRef(pedalRef);
 
   $: layer = backing.layers[0];
   $: isDivMode = $editor.control === "col";
@@ -16,11 +21,9 @@
       $editor.phase === "edit"
     );
   };
-
-  $: pianoRef = $store.ref.arrange.piano;
 </script>
 
-<div class="wrap" bind:this={pianoRef.pedal}>
+<div class="wrap" bind:this={pedalRef}>
   {#each layer.cols as col, index}
     <div class="item" style:width={`${$bp.getColWidth(col)}px`}>
       <div class="frame">

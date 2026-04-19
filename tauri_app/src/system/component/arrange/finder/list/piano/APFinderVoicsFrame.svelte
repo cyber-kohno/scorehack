@@ -1,9 +1,9 @@
-<script lang="ts">
+﻿<script lang="ts">
   import { onMount } from "svelte";
   import APFinderVoicItem from "./APFinderVoicItem.svelte";
-  import type StorePianoEditor from "../../../../../store/props/arrange/piano/storePianoEditor";
-  import type ArrangeLibrary from "../../../../../store/props/arrange/arrangeLibrary";
-  import store from "../../../../../store/store";
+import type StorePianoEditor from "../../../../../../domain/arrange/piano-editor-store";
+import type ArrangeLibrary from "../../../../../../domain/arrange/arrange-library";
+  import { upsertArrangeFinderRecordRef } from "../../../../../../state/session-state/arrange-ref-store";
 
   export let finder: ArrangeLibrary.PianoArrangeFinder;
   export let sndsPatts: StorePianoEditor.SoundsPattern[];
@@ -11,21 +11,14 @@
   export let backingIndex: number;
   export let usageBkg: StorePianoEditor.Preset;
 
-  let ref: HTMLElement | null = null; // 要素の参照を保存
+  let ref: HTMLElement | null = null;
   onMount(() => {
     if (ref != null) {
-      const finderRefs = $store.ref.arrange.finder;
-
-      let instance = finderRefs.records.find((r) => r.seq === backingIndex);
-
       if (backingIndex === finder.cursor.backing) {
         const left = finder.cursor.sounds * 109;
         ref.scrollTo({ left });
       }
-      if (instance == undefined) {
-        instance = { seq: backingIndex, ref };
-        finderRefs.records.push(instance);
-      } else instance.ref = ref;
+      upsertArrangeFinderRecordRef(backingIndex, ref);
     }
   });
 </script>

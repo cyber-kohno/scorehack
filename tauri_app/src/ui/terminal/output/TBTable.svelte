@@ -1,8 +1,8 @@
 ﻿<script lang="ts">
-  import type StoreTerminal from "../../../system/store/props/storeTerminal";
+  import type { TerminalTableProps } from "../../../state/session-state/terminal-store";
   import LegacyTBTable from "../../../system/component/terminal/output/TBTable.svelte";
 
-  export let table!: StoreTerminal.TableProps | undefined;
+  export let table!: TerminalTableProps | undefined;
 </script>
 
 <LegacyTBTable {table} />

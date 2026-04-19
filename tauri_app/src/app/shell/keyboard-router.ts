@@ -1,4 +1,4 @@
-import type StoreInput from "../../system/store/props/storeInput";
+﻿import type { InputCallbacks } from "../../state/session-state/input-store";
 import { createMelodyInputRouter } from "../melody/melody-input-router";
 import { createOutlineInputRouter } from "../outline/outline-input-router";
 import type { StoreProps, StoreUtil } from "../../system/store/store";
@@ -14,6 +14,7 @@ import {
   switchMode,
   type InputHoldKey,
 } from "./root-control";
+import { getInputStateStore } from "../../state/session-state/input-store";
 
 const HOLD_KEY_MAP: Partial<Record<string, InputHoldKey>> = {
   e: "holdE",
@@ -28,12 +29,13 @@ const HOLD_KEY_MAP: Partial<Record<string, InputHoldKey>> = {
 
 const applyHoldCallbacks = (
   lastStore: StoreProps,
-  callbacks: StoreInput.Callbacks,
+  callbacks: InputCallbacks,
 ) => {
+  const input = getInputStateStore();
   Object.keys(callbacks).some((key) => {
-    const holdKey = key as keyof typeof lastStore.input;
+    const holdKey = key as keyof typeof input;
     const callback = callbacks[holdKey];
-    if (lastStore.input[holdKey] && callback != undefined) {
+    if (input[holdKey] && callback != undefined) {
       callback();
       return true;
     }
@@ -41,8 +43,8 @@ const applyHoldCallbacks = (
   });
 };
 
-const getRootHoldCallbacks = (eventKey: string): StoreInput.Callbacks => {
-  const callbacks: StoreInput.Callbacks = {};
+const getRootHoldCallbacks = (eventKey: string): InputCallbacks => {
+  const callbacks: InputCallbacks = {};
 
   callbacks.holdE = () => {
     switch (eventKey) {
@@ -134,3 +136,6 @@ export const createKeyboardRouter = (storeUtil: StoreUtil) => {
     onKeyUp,
   };
 };
+
+
+

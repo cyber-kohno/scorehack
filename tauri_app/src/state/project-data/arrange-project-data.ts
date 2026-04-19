@@ -1,9 +1,12 @@
-import type StoreArrange from "../../system/store/props/arrange/storeArrange";
+import type StoreArrange from "../../domain/arrange/arrange-store";
 import type { StoreProps } from "../../system/store/store";
-import { getProjectData } from "./project-data-store";
+import {
+  getArrangeDataState,
+  setArrangeDataState,
+} from "../session-state/arrange-data-store";
 
 export const getArrangeData = (lastStore: StoreProps): StoreArrange.DataProps => {
-  return getProjectData(lastStore).arrange;
+  return getArrangeDataState();
 };
 
 export const getArrangeTracks = (
@@ -23,5 +26,6 @@ export const setArrangeTracks = (
   lastStore: StoreProps,
   tracks: StoreArrange.Track[],
 ): void => {
-  getArrangeData(lastStore).tracks = tracks;
+  getArrangeDataState().tracks = tracks;
+  setArrangeDataState(getArrangeDataState());
 };

@@ -1,27 +1,30 @@
 import type { StoreProps } from "../../system/store/store";
+import { getTerminalStateStore } from "../session-state/terminal-store";
+import { getModeState, type ControlMode } from "../session-state/mode-store";
+import { getOutlineArrangeState } from "../session-state/outline-arrange-store";
 
-export type ShellMode = StoreProps["control"]["mode"];
+export type ShellMode = ControlMode;
 
 export const getShellMode = (lastStore: StoreProps): ShellMode => {
-  return lastStore.control.mode;
+  return getModeState();
 };
 
 export const isTerminalVisible = (lastStore: StoreProps) => {
-  return lastStore.terminal != null;
+  return getTerminalStateStore() != null;
 };
 
 export const isArrangeInUse = (lastStore: StoreProps) => {
-  return lastStore.control.outline.arrange != null;
+  return getOutlineArrangeState() != null;
 };
 
 export const isArrangeEditorVisible = (lastStore: StoreProps) => {
-  const arrange = lastStore.control.outline.arrange;
+  const arrange = getOutlineArrangeState();
   if (arrange == null) return false;
   return arrange.editor != undefined;
 };
 
 export const isArrangeFinderVisible = (lastStore: StoreProps) => {
-  const arrange = lastStore.control.outline.arrange;
+  const arrange = getOutlineArrangeState();
   if (arrange == null) return false;
   return arrange.finder != undefined;
 };

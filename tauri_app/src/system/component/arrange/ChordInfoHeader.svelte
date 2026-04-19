@@ -1,11 +1,10 @@
-﻿<script lang="ts">
-  import StoreCache from "../../store/props/storeCache";
-  import ArrangeUtil from "../../store/reducer/arrangeUtil";
+<script lang="ts">
+  import StoreCache from "../../../state/cache-state/cache-store";
   import store from "../../store/store";
   import MusicTheory from "../../../domain/theory/music-theory";
+  import { getActiveArrange } from "../../../app/arrange/arrange-state";
 
-  $: reducer = ArrangeUtil.useReducer($store);
-  $: target = reducer.getArrange().target;
+  $: target = getActiveArrange($store).target;
 </script>
 
 <div class="wrap">
@@ -63,13 +62,9 @@
     width: 100px;
     height: 26px;
     font-style: italic;
-    /* background-color: rgb(236, 252, 252); */
     color: rgb(156, 15, 15);
     font-size: 18px;
-    /* font-weight: 600; */
     text-align: left;
     vertical-align: top;
   }
 </style>
-
-

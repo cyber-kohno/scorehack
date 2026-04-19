@@ -1,22 +1,33 @@
-﻿<script lang="ts">
+<script lang="ts">
   import GridRootFrame from "./grid/GridRootFrame.svelte";
   import BeatMeasureFrame from "./header/BeatMeasureFrame.svelte";
   import ChordListFrame from "./header/ChordListFrame.svelte";
   import ProgressInfo from "./header/ProgressInfo.svelte";
   import PitchListFrame from "./pitch/PitchListFrame.svelte";
   import store from "../../store/store";
-  import StoreRef from "../../store/props/storeRef";
   import PianoViewFrame from "./grid/PianoViewFrame.svelte";
-  import { getTimelinePianoInfo } from "../../../state/ui-state/timeline-ui-store";
+  import {
+    getTimelineHeaderScrollLimitProps,
+    getTimelinePianoInfo,
+  } from "../../../state/ui-state/timeline-ui-store";
+  import {
+    setTimelineHeaderRef,
+    timelineViewportStore,
+  } from "../../../state/session-state/timeline-viewport-store";
 
-  $: scrollLimitProps = StoreRef.getScrollLimitProps($store.ref.header);
+  $: scrollLimitProps = (() => {
+    $timelineViewportStore;
+    return getTimelineHeaderScrollLimitProps($store);
+  })();
   $: pianoInfo = getTimelinePianoInfo($store);
+  let headerRef: HTMLElement | undefined = undefined;
+  $: setTimelineHeaderRef(headerRef);
 </script>
 
 <div class="wrap">
   <div class="header">
     <div class="blank"></div>
-    <div class="active" bind:this={$store.ref.header}>
+    <div class="active" bind:this={headerRef}>
       {#if scrollLimitProps != null}
         <ChordListFrame {scrollLimitProps} />
         <ProgressInfo {scrollLimitProps} />
@@ -52,7 +63,6 @@
   .header {
     display: inline-block;
     position: relative;
-    /* background-color: #c416c1; */
     width: 100%;
     height: var(--timeline-header-height);
     overflow: hidden;
@@ -63,7 +73,6 @@
     position: relative;
     width: var(--pitch-width);
     height: 100%;
-    /* background-color: #2fd4f9; */
   }
   .active {
     display: inline-block;
@@ -76,7 +85,6 @@
   .main {
     display: inline-block;
     position: relative;
-    /* background-color: #5b6466; */
     width: 100%;
     height: calc(100% - var(--timeline-header-height));
   }
@@ -87,9 +95,5 @@
     bottom: 5px;
     z-index: 4;
     opacity: 0.95;
-    /* width: 300px;
-        height: 200px; */
   }
 </style>
-
-

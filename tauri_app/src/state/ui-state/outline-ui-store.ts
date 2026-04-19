@@ -1,7 +1,11 @@
-﻿import type StoreCache from "../../system/store/props/storeCache";
+import type StoreCache from "../../state/cache-state/cache-store";
 import type { OutlineDataChord } from "../../domain/outline/outline-types";
 import type { StoreProps } from "../../system/store/store";
 import MusicTheory from "../../domain/theory/music-theory";
+import { getInputHoldValue } from "../session-state/input-store";
+import { getModeState } from "../session-state/mode-store";
+import { getOutlineArrangeState } from "../session-state/outline-arrange-store";
+import { getOutlineFocusState } from "../session-state/outline-focus-store";
 import { getOutlineElement } from "../project-data/outline-project-data";
 import {
   getCurrentOutlineBaseCache,
@@ -11,7 +15,7 @@ import {
 } from "../cache-state/outline-cache";
 
 export const getOutlineFocus = (lastStore: StoreProps) => {
-  return lastStore.control.outline.focus;
+  return getOutlineFocusState().focus;
 };
 
 export const getCurrentOutlineElementCache = (
@@ -48,9 +52,9 @@ export const isOutlineChordSelectorVisible = (lastStore: StoreProps) => {
   if (projectElement == undefined) return false;
 
   return (
-    lastStore.control.mode === "harmonize" &&
-    lastStore.control.outline.arrange == null &&
-    lastStore.input.holdC &&
+    getModeState() === "harmonize" &&
+    getOutlineArrangeState() == null &&
+    getInputHoldValue("holdC") &&
     element.type === "chord" &&
     (projectElement.data as OutlineDataChord).degree != undefined
   );
@@ -59,3 +63,4 @@ export const isOutlineChordSelectorVisible = (lastStore: StoreProps) => {
 export const getOutlineTailPos = (lastStore: StoreProps) => {
   return getOutlineTailPosFromCache(lastStore);
 };
+

@@ -5,16 +5,28 @@
     getVisibleOutlineElements,
     isOutlineChordSelectorVisible,
   } from "../../../state/ui-state/outline-ui-store";
+  import {
+    outlineRefStore,
+    setOutlineFrameRef,
+  } from "../../../state/session-state/outline-ref-store";
   import Element from "./element/Element.svelte";
   import ChordSelector from "./item/ChordSelector.svelte";
 
-  $: dispElements = getVisibleOutlineElements($store);
+  $: dispElements = (() => {
+    $outlineRefStore;
+    return getVisibleOutlineElements($store);
+  })();
   $: isDispChordSelector = isOutlineChordSelectorVisible($store);
-  $: outlineTailPos = getOutlineTailPos($store);
+  $: outlineTailPos = (() => {
+    $outlineRefStore;
+    return getOutlineTailPos($store);
+  })();
+  let outlineRef: HTMLDivElement | undefined;
+  $: setOutlineFrameRef(outlineRef);
 </script>
 
 <div class="wrap">
-  <div class="list-main" bind:this={$store.ref.outline}>
+  <div class="list-main" bind:this={outlineRef}>
     {#each dispElements as element}
       <Element {element} />
     {/each}

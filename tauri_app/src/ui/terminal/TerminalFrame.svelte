@@ -3,8 +3,8 @@
   import CommandCursor from "./CommandCursor.svelte";
   import HelperFrame from "./HelperFrame.svelte";
   import TerminalOutput from "./TerminalOutput.svelte";
+  import { adjustTerminalScroll } from "../../app/terminal/terminal-scroll";
   import store from "../../system/store/store";
-  import useReducerRef from "../../system/store/reducer/reducerRef";
   import {
     getTerminalCommandSegments,
     getTerminalHelper,
@@ -14,6 +14,7 @@
     isTerminalWaiting,
   } from "../../state/ui-state/terminal-ui-store";
   import { setTerminalFrameRef } from "../../state/session-state/terminal-session";
+  import { getTerminalFrameRef } from "../../state/session-state/terminal-ref-store";
 
   let terminalRef: HTMLDivElement | undefined;
   let lastScrollHeight = 0;
@@ -29,9 +30,9 @@
   onMount(() => {
     const unsubscribe = store.subscribe(($store) => {
       setTimeout(() => {
-        const ref = $store.ref.terminal;
+        const ref = getTerminalFrameRef();
         if (ref != undefined && lastScrollHeight !== ref.scrollHeight) {
-          useReducerRef($store).adjustTerminalScroll();
+          adjustTerminalScroll($store);
           lastScrollHeight = ref.scrollHeight;
         }
       }, 0);

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type StoreCache from "../../../store/props/storeCache";
+    import type StoreCache from "../../../../state/cache-state/cache-store";
     import ArrangeTracksManage from "./arrange/ArrangeTracksManage.svelte";
 
     export let chordCache: StoreCache.ChordCache;
@@ -19,10 +19,7 @@
         display: inline-block;
         position: absolute;
         z-index: 1;
-
-        /*background-color: #d70f0fa2;*/
         top: var(--pitch-top-margin);
-        /* height: calc(100% - var(--pitch-top-margin)); */
         height: var(--pitch-frame-height);
     }
 </style>

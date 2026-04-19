@@ -1,10 +1,11 @@
 <script lang="ts">
   import store from "../../store/store";
   import { getTimelineTailMarginLeft } from "../../../state/ui-state/timeline-ui-store";
+  import { getTimelineGridRef } from "../../../state/session-state/timeline-viewport-store";
 
   $: [left, width] = (() => {
     let width = 0;
-    const ref = $store.ref.grid;
+    const ref = getTimelineGridRef();
     if (ref) {
       width = ref.getBoundingClientRect().width;
     }

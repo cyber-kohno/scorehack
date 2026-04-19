@@ -1,4 +1,4 @@
-import useInputMelody from "../../system/input/inputMelody";
+import useInputMelody from "./melody-input";
 import type { StoreUtil } from "../../system/store/store";
 
 export const createMelodyInputRouter = (storeUtil: StoreUtil) => {

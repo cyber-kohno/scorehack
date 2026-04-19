@@ -1,7 +1,7 @@
 <script lang="ts">
-  import ContextUtil from "../../../../../store/contextUtil";
+  import { getArrangeEditorBackingContext } from "../../../../../../ui/arrange/piano-editor-context";
 
-  $: bp = ContextUtil.get("backingProps");
+  $: bp = getArrangeEditorBackingContext();
   $: backing = $bp.backing;
 
   $: layerSub = $bp.getBackLayer();

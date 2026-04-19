@@ -4,8 +4,7 @@
   import MusicTheory from "../../../../domain/theory/music-theory";
   import { getCurrentOutlineTop } from "../../../../state/cache-state/outline-cache";
   import { getOutlineElement } from "../../../../state/project-data/outline-project-data";
-
-  $: outline = $store.control.outline;
+  import { outlineFocusStore } from "../../../../state/session-state/outline-focus-store";
 
   // $: [left, top] = (() => {
   //   const elementRef = $store.ref.elementRefs.find(
@@ -31,7 +30,7 @@
   })();
 
   $: symbol = (() => {
-    const element = getOutlineElement($store, outline.focus);
+    const element = getOutlineElement($store, $outlineFocusStore.focus);
     if (element == undefined)
       throw new Error("Current outline element is required.");
     const chord = element.data as OutlineDataChord;

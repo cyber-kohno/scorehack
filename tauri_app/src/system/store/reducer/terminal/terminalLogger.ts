@@ -1,6 +1,6 @@
-import type StoreTerminal from "../../props/storeTerminal"
+import type { TerminalState } from "../../../../state/session-state/terminal-store";
 
-const useTerminalLogger = (terminal: StoreTerminal.Props) => {
+const useTerminalLogger = (terminal: TerminalState) => {
 
     const backupCommand = () => {
         terminal.outputs.push({

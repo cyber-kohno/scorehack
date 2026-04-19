@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type StorePianoEditor from "../../../store/props/arrange/piano/storePianoEditor";
-  import store from "../../../store/store";
+import type StorePianoEditor from "../../../../domain/arrange/piano-editor-store";
   import SideItemLabel from "./SideItemLabel.svelte";
+  import { outlineArrangeStore } from "../../../../state/session-state/outline-arrange-store";
 
   $: arrange = (() => {
-    const arrange = $store.control.outline.arrange;
+    const arrange = $outlineArrangeStore;
     if (arrange == null) throw new Error();
     return arrange;
   })();

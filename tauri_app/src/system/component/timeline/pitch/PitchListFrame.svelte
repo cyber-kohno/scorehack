@@ -1,23 +1,21 @@
-﻿<script lang="ts">
-  import { onMount } from "svelte";
+<script lang="ts">
   import Layout from "../../../../styles/tokens/layout-tokens";
   import MusicTheory from "../../../../domain/theory/music-theory";
   import store from "../../../store/store";
   import PitchFocus from "./PitchFocus.svelte";
   import { isTimelineMelodyMode } from "../../../../state/ui-state/timeline-ui-store";
-
-  // let ref: HTMLElement | undefined = undefined;
-  // onMount(() => ($store.ref.pitch = ref));
+  import { setTimelinePitchRef } from "../../../../state/session-state/timeline-viewport-store";
 
   const pitchNames = [...Array(Layout.pitch.NUM).keys()]
     .map((v) => MusicTheory.getPitchKey(v).reverse().join(""))
-    // 髻ｳ遞九・菴弱＞鬆・↓荳九°繧我ｸｦ縺ｹ繧・
     .reverse();
 
   $: isMelodyMode = isTimelineMelodyMode($store);
+  let pitchRef: HTMLElement | undefined = undefined;
+  $: setTimelinePitchRef(pitchRef);
 </script>
 
-<div class="wrap" bind:this={$store.ref.pitch}>
+<div class="wrap" bind:this={pitchRef}>
   <div class="top-margin"></div>
   {#each pitchNames as pitch}
     <div class="item">{pitch}</div>
@@ -59,5 +57,3 @@
     color: #fafaffb2;
   }
 </style>
-
-

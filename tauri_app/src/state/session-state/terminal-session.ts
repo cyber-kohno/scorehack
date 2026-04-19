@@ -1,22 +1,27 @@
 import type { StoreProps } from "../../system/store/store";
+import {
+  setTerminalCursorRefState,
+  setTerminalFrameRefState,
+  setTerminalHelperRefState,
+} from "./terminal-ref-store";
 
 export const setTerminalFrameRef = (
-  lastStore: StoreProps,
+  _lastStore: StoreProps,
   ref: HTMLElement | undefined,
 ) => {
-  lastStore.ref.terminal = ref;
+  setTerminalFrameRefState(ref);
 };
 
 export const setHelperFrameRef = (
-  lastStore: StoreProps,
+  _lastStore: StoreProps,
   ref: HTMLElement | undefined,
 ) => {
-  lastStore.ref.helper = ref;
+  setTerminalHelperRefState(ref);
 };
 
 export const setCursorRef = (
-  lastStore: StoreProps,
+  _lastStore: StoreProps,
   ref: HTMLElement | undefined,
 ) => {
-  lastStore.ref.cursor = ref;
+  setTerminalCursorRefState(ref);
 };

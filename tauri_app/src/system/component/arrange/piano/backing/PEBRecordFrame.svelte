@@ -1,11 +1,15 @@
 ﻿<script lang="ts">
-    import ContextUtil from "../../../../store/contextUtil";
     import store from "../../../../store/store";
     import MusicTheory from "../../../../../domain/theory/music-theory";
+    import {
+        getArrangeEditorArrangeContext,
+        getArrangeEditorBackingContext,
+        getArrangeEditorPianoEditorContext,
+    } from "../../../../../ui/arrange/piano-editor-context";
 
-    $: arrange = ContextUtil.get("arrange");
-    $: editor = ContextUtil.get("pianoEditor");
-    $: bp = ContextUtil.get("backingProps");
+    $: arrange = getArrangeEditorArrangeContext();
+    $: editor = getArrangeEditorPianoEditorContext();
+    $: bp = getArrangeEditorBackingContext();
     $: backing = $bp.backing;
 
     $: structs = (() => {

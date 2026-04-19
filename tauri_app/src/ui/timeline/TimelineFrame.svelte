@@ -5,18 +5,27 @@
   import TimelinePitchColumn from "./pitch/TimelinePitchColumn.svelte";
   import TimelineGrid from "./grid/TimelineGrid.svelte";
   import {
+    setTimelineHeaderRef,
+    timelineViewportStore,
+  } from "../../state/session-state/timeline-viewport-store";
+  import {
     getTimelineHeaderScrollLimitProps,
     getTimelinePianoInfo,
   } from "../../state/ui-state/timeline-ui-store";
 
-  $: scrollLimitProps = getTimelineHeaderScrollLimitProps($store);
+  $: scrollLimitProps = (() => {
+    $timelineViewportStore;
+    return getTimelineHeaderScrollLimitProps($store);
+  })();
   $: pianoInfo = getTimelinePianoInfo($store);
+  let headerRef: HTMLElement | undefined = undefined;
+  $: setTimelineHeaderRef(headerRef);
 </script>
 
 <div class="wrap">
   <div class="header">
     <div class="blank"></div>
-    <div class="active" bind:this={$store.ref.header}>
+    <div class="active" bind:this={headerRef}>
       {#if scrollLimitProps != null}
         <TimelineHeader {scrollLimitProps} />
       {/if}

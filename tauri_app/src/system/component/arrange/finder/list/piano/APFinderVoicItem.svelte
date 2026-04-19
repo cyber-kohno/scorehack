@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type ArrangeLibrary from "../../../../../store/props/arrange/arrangeLibrary";
-  import type StorePianoEditor from "../../../../../store/props/arrange/piano/storePianoEditor";
-  import ArrangeUtil from "../../../../../store/reducer/arrangeUtil";
+import type ArrangeLibrary from "../../../../../../domain/arrange/arrange-library";
+import type StorePianoEditor from "../../../../../../domain/arrange/piano-editor-store";
   import store from "../../../../../store/store";
+  import { getCurrentArrangeTrack } from "../../../../../../app/arrange/arrange-state";
 
 
     import PbPresetExistMark from "./APFinderExistMark.svelte";
@@ -16,8 +16,7 @@
     export let usageBkg: StorePianoEditor.Preset;
 
     $: isPresetExist = (() => {
-        const {getCurTrack} = ArrangeUtil.useReducer($store);
-        const lib = getCurTrack().pianoLib;
+        const lib = getCurrentArrangeTrack($store).pianoLib;
         if(lib == undefined) throw new Error();
         const preset = lib.presets.find((p) => p.bkgPatt === usageBkg.bkgPatt);
         if (preset == undefined) return false;

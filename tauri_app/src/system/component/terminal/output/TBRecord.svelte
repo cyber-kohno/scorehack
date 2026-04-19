@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type StoreTerminal from "../../../store/props/storeTerminal";
+  import type { TerminalRecordProps } from "../../../../../state/session-state/terminal-store";
 
-  export let record!: StoreTerminal.RecordProps | undefined;
+  export let record!: TerminalRecordProps | undefined;
   if (record == undefined) throw new Error();
 </script>
 

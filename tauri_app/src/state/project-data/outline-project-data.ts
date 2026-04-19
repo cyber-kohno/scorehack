@@ -1,9 +1,12 @@
 import type { OutlineElement } from "../../domain/outline/outline-types";
 import type { StoreProps } from "../../system/store/store";
-import { getProjectData } from "./project-data-store";
+import {
+  getOutlineElementState,
+  setOutlineElementState,
+} from "../session-state/outline-element-store";
 
 export const getOutlineElements = (lastStore: StoreProps): OutlineElement[] => {
-  return getProjectData(lastStore).elements;
+  return getOutlineElementState();
 };
 
 export const getOutlineElement = (
@@ -21,7 +24,7 @@ export const setOutlineElements = (
   lastStore: StoreProps,
   elements: OutlineElement[],
 ): void => {
-  getProjectData(lastStore).elements = elements;
+  setOutlineElementState(elements);
 };
 
 export const insertOutlineElementAt = (

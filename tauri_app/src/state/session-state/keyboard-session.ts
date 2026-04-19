@@ -1,15 +1,19 @@
+﻿import type { InputState } from "./input-store";
 import type { StoreProps } from "../../system/store/store";
+import { getInputStateStore, setInputHoldValue } from "./input-store";
 
-export type InputHoldKey = keyof StoreProps["input"];
+export type InputHoldKey = keyof InputState;
 
 export const setInputHoldState = (
-  lastStore: StoreProps,
+  _lastStore: StoreProps,
   key: InputHoldKey,
   isDown: boolean,
 ) => {
-  lastStore.input[key] = isDown;
+  setInputHoldValue(key, isDown);
 };
 
-export const hasAnyInputHold = (lastStore: StoreProps) => {
-  return Object.values(lastStore.input).some((flag) => flag);
+export const hasAnyInputHold = (_lastStore: StoreProps) => {
+  return Object.values(getInputStateStore()).some((flag) => flag);
 };
+
+

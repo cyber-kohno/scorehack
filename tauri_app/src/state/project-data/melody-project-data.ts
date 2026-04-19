@@ -4,9 +4,17 @@ import type {
 } from "../../domain/melody/melody-types";
 import type { StoreProps } from "../../system/store/store";
 import { getProjectData } from "./project-data-store";
+import {
+  getAudioTrackState,
+  setAudioTrackState,
+} from "../session-state/audio-track-store";
+import {
+  getScoreTrackState,
+  setScoreTrackState,
+} from "../session-state/score-track-store";
 
 export const getScoreTracks = (lastStore: StoreProps): MelodyScoreTrack[] => {
-  return getProjectData(lastStore).scoreTracks;
+  return getScoreTrackState();
 };
 
 export const getScoreTrack = (
@@ -20,11 +28,11 @@ export const setScoreTracks = (
   lastStore: StoreProps,
   tracks: MelodyScoreTrack[],
 ): void => {
-  getProjectData(lastStore).scoreTracks = tracks;
+  setScoreTrackState(tracks);
 };
 
 export const getAudioTracks = (lastStore: StoreProps): MelodyAudioTrack[] => {
-  return getProjectData(lastStore).audioTracks;
+  return getAudioTrackState();
 };
 
 export const getAudioTrack = (
@@ -38,5 +46,5 @@ export const setAudioTracks = (
   lastStore: StoreProps,
   tracks: MelodyAudioTrack[],
 ): void => {
-  getProjectData(lastStore).audioTracks = tracks;
+  setAudioTrackState(tracks);
 };

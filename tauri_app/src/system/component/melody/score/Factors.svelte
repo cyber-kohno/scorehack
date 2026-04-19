@@ -1,6 +1,6 @@
 <script lang="ts">
-  import StoreMelody from "../../../store/props/storeMelody";
-  import store from "../../../store/store";
+  import StoreMelody from "../../../../domain/melody/melody-store";
+  import { envStore } from "../../../../state/session-state/env-store";
 
   type Type = "4div" | "8div" | "16div" | "4div3t" | "8div3t";
 
@@ -73,7 +73,7 @@
   <div
     class="item"
     data-type={buildType(norm)}
-    style:width="{$store.env.beatWidth / norm.div / (norm.tuplets ?? 1)}px"
+    style:width="{$envStore.beatWidth / norm.div / (norm.tuplets ?? 1)}px"
   ></div>
 {/each}
 

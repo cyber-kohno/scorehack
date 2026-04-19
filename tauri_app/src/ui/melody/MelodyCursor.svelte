@@ -1,18 +1,19 @@
 <script lang="ts">
   import Layout from "../../styles/tokens/layout-tokens";
   import store from "../../system/store/store";
+  import { envStore } from "../../state/session-state/env-store";
   import {
     getMelodyCursor,
     isMelodyCursorOverlap,
   } from "../../state/ui-state/melody-ui-store";
   import MelodyUnitDisplay from "./MelodyUnitDisplay.svelte";
-  import StoreMelody from "../../system/store/props/storeMelody";
+  import StoreMelody from "../../domain/melody/melody-store";
 
   $: cursor = getMelodyCursor($store);
   $: beatLeft = StoreMelody.calcBeat(cursor.norm, cursor.pos);
   $: beatWidth = StoreMelody.calcBeat(cursor.norm, cursor.len);
-  $: left = $store.env.beatWidth * beatLeft;
-  $: width = $store.env.beatWidth * beatWidth;
+  $: left = $envStore.beatWidth * beatLeft;
+  $: width = $envStore.beatWidth * beatWidth;
   $: isOverlap = isMelodyCursorOverlap($store);
 </script>
 

@@ -1,20 +1,25 @@
 <script lang="ts">
-  import ContextUtil from "../../../store/contextUtil";
   import store from "../../../store/store";
   import ChordInfoHeader from "../ChordInfoHeader.svelte";
   import FocusableContent from "../FocusableContent.svelte";
   import BackingFrame from "./backing/PEBackingFrame.svelte";
   import PEVoicingChooser from "./voicing/PEVoicingChooser.svelte";
-  import ArrangeUtil from "../../../store/reducer/arrangeUtil";
+  import {
+    setArrangeEditorArrangeContext,
+    setArrangeEditorPianoEditorContext,
+  } from "../../../../ui/arrange/piano-editor-context";
+  import {
+    getActiveArrange,
+    getPianoArrangeEditor,
+  } from "../../../../app/arrange/arrange-state";
 
-  $: reducer = ArrangeUtil.useReducer($store);
-  $: arrange = reducer.getArrange();
-  $: editor = reducer.getPianoEditor();
+  $: arrange = getActiveArrange($store);
+  $: editor = getPianoArrangeEditor($store);
 
   $: {
     // console.log('ArrangePianoEditor');
-    ContextUtil.set('arrange', arrange);
-    ContextUtil.set('pianoEditor', editor);
+    setArrangeEditorArrangeContext(arrange);
+    setArrangeEditorPianoEditorContext(editor);
   }
 </script>
 
@@ -37,3 +42,5 @@
     background-color: #abe4ea;
   }
 </style>
+
+

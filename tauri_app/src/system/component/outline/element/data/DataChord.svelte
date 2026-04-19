@@ -1,12 +1,12 @@
 ﻿<script lang="ts">
   import type { OutlineDataChord } from "../../../../../domain/outline/outline-types";
-  import store from "../../../../store/store";
+  import { cacheStateStore } from "../../../../../state/cache-state/cache-store";
   import MusicTheory from "../../../../../domain/theory/music-theory";
 
   export let data!: OutlineDataChord;
   export let elementSeq!: number;
 
-  $: chordCaches = $store.cache.chordCaches;
+  $: chordCaches = $cacheStateStore.chordCaches;
 
   $: chordSeq = chordCaches.findIndex((c) => c.elementSeq == elementSeq);
 
@@ -24,7 +24,6 @@
     if (eatTail != 0) {
       tips[tips.length - 1] = eatTail;
     }
-    // console.log(`${props.cache.elementSeq}, tip:[${tips.length}]`);
     return tips;
   })();
 
@@ -40,7 +39,7 @@
     return degreeName;
   })();
 
-  $: chordCache = $store.cache.chordCaches[chordSeq];
+  $: chordCache = $cacheStateStore.chordCaches[chordSeq];
   $: chordName = (() => {
     const compiledChord = chordCache.compiledChord;
     if (compiledChord == undefined) return null;
@@ -69,7 +68,6 @@
   {#if chordName != null}
     <div class="chorddiv">{chordName}</div>
   {/if}
-  <!-- 繧｢繝ｬ繝ｳ繧ｸ縺ｮ繝√ャ繝・-->
   {#if chordCache.arrs.length > 0}
     <div class="arr-frame">
       {#each chordCache.arrs as arr}
@@ -172,6 +170,3 @@
     margin: 0 0 0 2px;
   }
 </style>
-
-
-

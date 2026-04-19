@@ -1,16 +1,14 @@
 <script lang="ts">
-  import ContextUtil from "../../../store/contextUtil";
   import store from "../../../store/store";
   import {
     getMelodyCurrentBeatRect,
     isMelodyMode,
   } from "../../../../state/ui-state/melody-ui-store";
   import { getTimelineFocusInfo } from "../../../../state/ui-state/timeline-ui-store";
+  import { isPlaybackActive } from "../../../../state/ui-state/playback-ui-store";
   $: focusInfo = getTimelineFocusInfo($store);
   $: melodyRect = getMelodyCurrentBeatRect($store);
   $: isMelody = isMelodyMode($store);
-
-  const isPreview = ContextUtil.get('isPreview');
 </script>
 
 {#if focusInfo.isChord}
@@ -21,7 +19,7 @@
     data-isChord={focusInfo.isChord}
   ></div>
 {/if}
-{#if isMelody && !$isPreview()}
+{#if isMelody && !isPlaybackActive($store)}
   <div class="note" style:left="{melodyRect.left}px" style:width="{melodyRect.width}px"></div>
 {/if}
 

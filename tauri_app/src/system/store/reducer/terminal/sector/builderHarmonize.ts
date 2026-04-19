@@ -1,4 +1,4 @@
-import {
+﻿import {
   createTerminalCommandDefault,
   type TerminalCommand,
 } from "../../../../../app/terminal/terminal-command-registry";
@@ -6,8 +6,13 @@ import { createPlaybackActions } from "../../../../../app/playback/playback-acti
 import { createTerminalLogger } from "../../../../../app/terminal/terminal-logger";
 import { createOutlineActions } from "../../../../../app/outline/outline-actions";
 import { createProjectDataActions } from "../../../../../app/project-data/project-data-actions";
-import StorePianoEditor from "../../../props/arrange/piano/storePianoEditor";
-import StorePreview from "../../../props/storePreview";
+import { getOutlineTrackIndex } from "../../../../../state/session-state/outline-track-store";
+import { pushTrackRefGroup } from "../../../../../state/session-state/track-ref-session";
+import {
+  PREVIEW_INSTRUMENT_NAMES,
+  validatePreviewInstrumentName,
+} from "../../../../../state/session-state/preview-store";
+import StorePianoEditor from "../../../../../domain/arrange/piano-editor-store";
 import { createStoreUtil, type StoreProps } from "../../../store";
 import useReducerTermianl from "../../reducerTerminal";
 
@@ -38,7 +43,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
         usage: "Displays a list of existing harmony tracks.",
         args: [],
         callback: () => {
-          const trackIndex = lastStore.control.outline.trackIndex;
+          const trackIndex = getOutlineTrackIndex();
           const tracks = getArrangeTracks().map((t, i) => ({
             ...t,
             isActive: trackIndex === i,
@@ -96,7 +101,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
             relations: [],
             pianoLib: StorePianoEditor.createInitialLib(),
           });
-          lastStore.ref.trackArr.push([]);
+          pushTrackRefGroup();
           logger.outputInfo(`Created a new track. [${name}]`);
           lsh();
         },
@@ -112,7 +117,6 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
           },
         ],
         callback: (args) => {
-          const outline = lastStore.control.outline;
           const tracks = getArrangeTracks();
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
@@ -121,7 +125,7 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
             logger.outputError("");
             return;
           }
-          const prev = tracks[outline.focus];
+          const prev = tracks[getOutlineTrackIndex()]?.name ?? "";
           try {
             changeHarmonizeTrack(nextIndex);
             logger.outputInfo(`Active track changed. [${prev} -> ${arg0}]`);
@@ -140,14 +144,14 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
         args: [
           {
             name: "soundfontName: string",
-            getCandidate: () => StorePreview.InstrumentNames,
+            getCandidate: () => [...PREVIEW_INSTRUMENT_NAMES],
           },
         ],
         callback: (args) => {
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
           try {
-            const sfName = StorePreview.validateSFName(arg0);
+            const sfName = validatePreviewInstrumentName(arg0);
             const track = getCurrHarmonizeTrack();
             track.soundFont = sfName;
 
@@ -201,3 +205,4 @@ const useBuilderHarmonize = (lastStore: StoreProps) => {
 };
 
 export default useBuilderHarmonize;
+

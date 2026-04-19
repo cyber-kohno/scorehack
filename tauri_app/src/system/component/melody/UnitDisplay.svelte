@@ -1,5 +1,5 @@
 <script lang="ts">
-  import StoreMelody from "../../store/props/storeMelody";
+  import StoreMelody from "../../../domain/melody/melody-store";
 
   export let note!: StoreMelody.Note;
 

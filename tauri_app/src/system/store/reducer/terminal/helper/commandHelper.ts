@@ -1,6 +1,6 @@
-import StoreTerminal from "../../../props/storeTerminal";
 import type { StoreProps } from "../../../store";
 import useReducerTermianl from "../../reducerTerminal";
+import { createTerminalHelperInitial } from "../../../../../state/session-state/terminal-store";
 
 const useCommandHelper = (lastStore: StoreProps) => {
     const terminalReducer = useReducerTermianl(lastStore);
@@ -37,7 +37,7 @@ const useCommandHelper = (lastStore: StoreProps) => {
         if (list.length > 0) {
             // 候補と完全一致した場合表示しない
             if (list[0] === keyword) return;
-            terminal.helper = StoreTerminal.createHelperInitial();
+            terminal.helper = createTerminalHelperInitial();
             const helper = terminal.helper;
             helper.list = list;
             helper.keyword = keyword

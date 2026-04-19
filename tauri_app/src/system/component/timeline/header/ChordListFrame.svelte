@@ -1,5 +1,5 @@
-﻿<script lang="ts">
-  import type StoreRef from "../../../store/props/storeRef";
+<script lang="ts">
+  import type { ScrollLimitProps } from "../../../../state/session-state/scroll-limit-props";
   import store from "../../../store/store";
   import TimelineLastMargin from "../TimelineTailMargin.svelte";
   import {
@@ -8,7 +8,7 @@
     getVisibleTimelineChordCaches,
   } from "../../../../state/ui-state/timeline-ui-store";
 
-  export let scrollLimitProps: StoreRef.ScrollLimitProps;
+  export let scrollLimitProps: ScrollLimitProps;
 
   $: focus = getTimelineOutlineFocus($store);
   $: chordCaches = getVisibleTimelineChordCaches($store, scrollLimitProps);
@@ -61,5 +61,7 @@
     background-color: #16c4b885;
   }
 </style>
+
+
 
 

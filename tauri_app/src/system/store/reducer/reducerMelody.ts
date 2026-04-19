@@ -6,19 +6,36 @@ import {
   normalizeMelodyNote,
 } from "../../../domain/melody/melody-types";
 import { createOutlineActions } from "../../../app/outline/outline-actions";
+import {
+  copyMelodyCursorState,
+  getMelodyCursorState,
+  replaceMelodyCursorState,
+} from "../../../app/melody/melody-cursor-state";
 import { createProjectDataActions } from "../../../app/project-data/project-data-actions";
 import {
   getTimelineFocusChordCache,
   getTimelineFocusElementCache,
 } from "../../../state/cache-state/timeline-cache";
+import {
+  adjustTimelineScrollXFromMelodyNote,
+  adjustTimelineScrollYFromMelodyNote,
+} from "../../../app/melody/melody-scroll";
+import {
+  getMelodyTrackIndex,
+  setMelodyTrackIndex,
+} from "../../../state/session-state/melody-track-store";
+import {
+  getMelodyFocusState,
+  setMelodyFocus,
+} from "../../../state/session-state/melody-focus-store";
+import { setMelodyOverlapState } from "../../../state/session-state/melody-overlap-store";
 import type { StoreProps } from "../store";
-import useReducerRef from "./reducerRef";
 
 const useReducerMelody = (lastStore: StoreProps) => {
   const { syncChordSeqFromNote } = createOutlineActions(lastStore);
   const { getScoreTrack, getScoreTracks } = createProjectDataActions(lastStore);
-  const { adjustGridScrollXFromNote, adjustGridScrollYFromCursor } = useReducerRef(lastStore);
-
+  const melodyFocus = getMelodyFocusState();
+  
   const syncCursorFromElementSeq = () => {
     const elementCache = getTimelineFocusElementCache(lastStore);
     if (elementCache == undefined) return;
@@ -31,18 +48,16 @@ const useReducerMelody = (lastStore: StoreProps) => {
       if (chordSeq === -1) pos += chordCache.lengthBeatNote;
     }
 
-    const melody = lastStore.control.melody;
-    const cursor = melody.cursor;
+    const cursor = getMelodyCursorState(lastStore);
     cursor.norm.div = 1;
     cursor.norm.tuplets = undefined;
     cursor.pos = pos;
     cursor.len = 1;
-    melody.focus = -1;
+    setMelodyFocus(-1);
   };
 
   const addNote = (note: MelodyNote) => {
-    const melody = lastStore.control.melody;
-    const layer = getScoreTrack(melody.trackIndex);
+    const layer = getScoreTrack(getMelodyTrackIndex());
     if (layer == undefined) throw new Error();
     const notes = (layer as MelodyScoreTrack).notes;
     notes.push(note);
@@ -53,28 +68,25 @@ const useReducerMelody = (lastStore: StoreProps) => {
   };
 
   const addNoteFromCursor = () => {
-    addNote(JSON.parse(JSON.stringify(lastStore.control.melody.cursor)));
+    addNote(copyMelodyCursorState(lastStore));
   };
 
   const judgeOverlap = () => {
-    const melody = lastStore.control.melody;
     const track = getCurrScoreTrack();
     const overlapNote = track.notes.find((n) => {
-      return judgeMelodyOverlapNotes(n, melody.cursor);
+      return judgeMelodyOverlapNotes(n, getMelodyCursorState(lastStore));
     });
-    melody.isOverlap = overlapNote != undefined;
+    setMelodyOverlapState(overlapNote != undefined);
   };
 
   const getCurrScoreTrack = () => {
-    const melody = lastStore.control.melody;
-    const track = getScoreTrack(melody.trackIndex);
+    const track = getScoreTrack(getMelodyTrackIndex());
     if (track == undefined) throw new Error();
     return track;
   };
 
   const focusInNearNote = (dir: -1 | 1) => {
-    const melody = lastStore.control.melody;
-    const cursor = melody.cursor;
+    const cursor = getMelodyCursorState(lastStore);
     const layer = getCurrScoreTrack();
     const notes = (layer as MelodyScoreTrack).notes;
 
@@ -85,43 +97,42 @@ const useReducerMelody = (lastStore: StoreProps) => {
       return dir === -1 ? cursorPos > left : cursorPos < right;
     });
     if (matchIndex !== -1) {
-      melody.focus = dir === -1 ? notes.length - 1 - matchIndex : matchIndex;
-      const note = notes[melody.focus];
+      melodyFocus.focus = dir === -1 ? notes.length - 1 - matchIndex : matchIndex;
+      const note = notes[melodyFocus.focus];
       syncChordSeqFromNote(note);
-      adjustGridScrollXFromNote(note);
-      adjustGridScrollYFromCursor(note);
+      adjustTimelineScrollXFromMelodyNote(lastStore, note);
+      adjustTimelineScrollYFromMelodyNote(lastStore, note);
     }
   };
 
   const focusOutNoteSide = (note: MelodyNote, dir: -1 | 1) => {
-    const melody = lastStore.control.melody;
-    melody.cursor = JSON.parse(JSON.stringify(note));
-    const cursor = melody.cursor;
+    replaceMelodyCursorState(lastStore, note);
+    const cursor = getMelodyCursorState(lastStore);
     cursor.len = 1;
     if (dir === 1) {
       cursor.pos += note.len;
     }
-    melody.focus = -1;
+    setMelodyFocus(-1);
     normalizeMelodyNote(note);
     judgeOverlap();
     syncChordSeqFromNote(cursor);
-    adjustGridScrollXFromNote(cursor);
+    adjustTimelineScrollXFromMelodyNote(lastStore, cursor);
   };
 
   const changeScoreTrack = (nextIndex: number) => {
-    const melody = lastStore.control.melody;
     const tracks = getScoreTracks();
     if (tracks[nextIndex] == undefined) throw new Error();
     syncCursorFromElementSeq();
-    melody.trackIndex = nextIndex;
+    setMelodyTrackIndex(nextIndex);
   };
 
   const getFocusRange = () => {
-    const melody = lastStore.control.melody;
-    if (melody.focusLock === -1) return [melody.focus, melody.focus] as const;
-    return melody.focus < melody.focusLock
-      ? [melody.focus, melody.focusLock] as const
-      : [melody.focusLock, melody.focus] as const;
+    if (melodyFocus.focusLock === -1) {
+      return [melodyFocus.focus, melodyFocus.focus] as const;
+    }
+    return melodyFocus.focus < melodyFocus.focusLock
+      ? [melodyFocus.focus, melodyFocus.focusLock] as const
+      : [melodyFocus.focusLock, melodyFocus.focus] as const;
   };
 
   return {
@@ -137,3 +148,5 @@ const useReducerMelody = (lastStore: StoreProps) => {
   };
 };
 export default useReducerMelody;
+
+

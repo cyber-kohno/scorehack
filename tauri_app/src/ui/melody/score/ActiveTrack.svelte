@@ -6,9 +6,13 @@
     getMelodyCursorMiddle,
     getMelodyScrollLimitProps,
   } from "../../../state/ui-state/melody-ui-store";
+  import { timelineViewportStore } from "../../../state/session-state/timeline-viewport-store";
 
   $: notes = getCurrentMelodyNotes($store);
-  $: scrollLimitProps = getMelodyScrollLimitProps($store);
+  $: scrollLimitProps = (() => {
+    $timelineViewportStore;
+    return getMelodyScrollLimitProps($store);
+  })();
   $: cursorMiddle = getMelodyCursorMiddle($store);
 </script>
 

@@ -1,11 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { adjustTerminalScroll } from "../../../app/terminal/terminal-scroll";
   import useReducerTermianl from "../../store/reducer/reducerTerminal";
   import store from "../../store/store";
   import CommandCursor from "./CommandCursor.svelte";
   import TerminalOutput from "./TerminalOutput.svelte";
-  import useReducerRef from "../../store/reducer/reducerRef";
   import HelperFrame from "./HelperFrame.svelte";
+  import { setTerminalFrameRefState, getTerminalFrameRef } from "../../../state/session-state/terminal-ref-store";
 
   $: reducer = useReducerTermianl($store);
   // $: {getTerminal} = useReducerTermianl($store);
@@ -19,11 +20,10 @@
   onMount(() => {
     const unsubscribe = store.subscribe(($store) => {
       setTimeout(() => {
-        const ref = $store.ref.terminal;
+        const ref = getTerminalFrameRef();
         if (ref != undefined) {
           if (lastScrollHeight !== ref.scrollHeight) {
-            const { adjustTerminalScroll } = useReducerRef($store);
-            adjustTerminalScroll();
+            adjustTerminalScroll($store);
             lastScrollHeight = ref.scrollHeight;
           }
         }
@@ -36,7 +36,7 @@
 </script>
 
 <div class="frame">
-  <div class="wrap" bind:this={$store.ref.terminal}>
+  <div class="wrap" bind:this={setTerminalFrameRefState}>
     <div class="outputs">
       {#each terminal.outputs as output}
         <TerminalOutput {output} />

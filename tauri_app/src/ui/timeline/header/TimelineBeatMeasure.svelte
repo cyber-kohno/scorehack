@@ -1,8 +1,10 @@
 <script lang="ts">
-  import type StoreRef from "../../../system/store/props/storeRef";
+  import type { ScrollLimitProps } from "../../../state/session-state/scroll-limit-props";
   import BeatMeasureFrame from "../../../system/component/timeline/header/BeatMeasureFrame.svelte";
 
-  export let scrollLimitProps: StoreRef.ScrollLimitProps;
+  export let scrollLimitProps: ScrollLimitProps;
 </script>
 
 <BeatMeasureFrame {scrollLimitProps} />
+
+

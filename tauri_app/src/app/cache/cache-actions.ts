@@ -1,10 +1,8 @@
 import type { StoreProps } from "../../system/store/store";
-import useReducerCache from "../../system/store/reducer/reducerCache";
+import { recalculateCache } from "../../state/cache-state/recalculate-cache";
 
 export const createCacheActions = (lastStore: StoreProps) => {
-  const { calculate } = useReducerCache(lastStore);
-
   return {
-    recalculate: calculate,
+    recalculate: () => recalculateCache(lastStore),
   };
 };

@@ -1,4 +1,3 @@
-import ContextUtil from "../../system/store/contextUtil";
 import { createCacheActions } from "../cache/cache-actions";
 import type { StoreProps, StoreUtil } from "../../system/store/store";
 import { applyStaticLayoutVariables } from "./apply-layout-variables";
@@ -9,7 +8,6 @@ export const initializeApp = (storeUtil: StoreUtil) => {
 
   applyStaticLayoutVariables();
   recalculate();
-  ContextUtil.set("isPreview", () => lastStore.preview.timerKeys != null);
   commit();
 };
 

@@ -5,9 +5,13 @@
     getMelodyScrollLimitProps,
     getShadeMelodyTracks,
   } from "../../../state/ui-state/melody-ui-store";
+  import { timelineViewportStore } from "../../../state/session-state/timeline-viewport-store";
 
   $: shadeTracks = getShadeMelodyTracks($store);
-  $: scrollLimitProps = getMelodyScrollLimitProps($store);
+  $: scrollLimitProps = (() => {
+    $timelineViewportStore;
+    return getMelodyScrollLimitProps($store);
+  })();
 </script>
 
 {#if scrollLimitProps != null}

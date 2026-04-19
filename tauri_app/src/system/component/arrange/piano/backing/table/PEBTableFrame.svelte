@@ -1,11 +1,13 @@
-<script>
-  import store from "../../../../../store/store";
+﻿<script>
   import PEBTableBackLayer from "./PEBTableBackLayer.svelte";
   import PEBTableMainLayer from "./PEBTableMainLayer.svelte.svelte";
-  $: pianoRef = $store.ref.arrange.piano;
+  import { setArrangePianoTableRef } from "../../../../../../state/session-state/arrange-ref-store";
+
+  let tableRef;
+  $: setArrangePianoTableRef(tableRef);
 </script>
 
-<div class="wrap" bind:this={pianoRef.table}>
+<div class="wrap" bind:this={tableRef}>
   <PEBTableMainLayer />
   <PEBTableBackLayer />
 </div>

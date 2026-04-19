@@ -1,5 +1,9 @@
-﻿import StoreRef from "../../system/store/props/storeRef";
-import type { StoreProps } from "../../system/store/store";
+﻿import type { StoreProps } from "../../system/store/store";
+import {
+  getOutlineFrameRef,
+  getOutlineScrollLimitProps,
+} from "../session-state/outline-ref-store";
+import { getOutlineFocusState } from "../session-state/outline-focus-store";
 import {
   getBaseCaches,
   getElementCaches,
@@ -7,7 +11,7 @@ import {
 } from "./cache-store";
 
 export const getCurrentOutlineElementCache = (lastStore: StoreProps) => {
-  const focus = lastStore.control.outline.focus;
+  const focus = getOutlineFocusState().focus;
   return getElementCaches(lastStore)[focus];
 };
 
@@ -18,9 +22,9 @@ export const getCurrentOutlineBaseCache = (lastStore: StoreProps) => {
 };
 
 export const getVisibleOutlineElementCaches = (lastStore: StoreProps) => {
-  const elementSeq = lastStore.control.outline.focus;
+  const elementSeq = getOutlineFocusState().focus;
   const elementCaches = getElementCaches(lastStore);
-  const limitProps = StoreRef.getScrollLimitProps(lastStore.ref.outline);
+  const limitProps = getOutlineScrollLimitProps();
   if (limitProps == null) return [];
 
   return elementCaches.filter(
@@ -37,7 +41,7 @@ export const getOutlineTailPos = (lastStore: StoreProps) => {
 
 export const getCurrentOutlineTop = (lastStore: StoreProps) => {
   const element = getCurrentOutlineElementCache(lastStore);
-  const outlineRef = lastStore.ref.outline;
+  const outlineRef = getOutlineFrameRef();
   if (element == undefined || outlineRef == undefined) return null;
   return element.outlineTop - outlineRef.scrollTop;
 };

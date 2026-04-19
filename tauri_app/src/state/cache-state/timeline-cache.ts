@@ -1,4 +1,5 @@
 import type { StoreProps } from "../../system/store/store";
+import { getOutlineFocusState } from "../session-state/outline-focus-store";
 import {
   getBaseCaches,
   getChordCaches,
@@ -6,7 +7,7 @@ import {
 } from "./cache-store";
 
 export const getTimelineFocusElementCache = (lastStore: StoreProps) => {
-  const focus = lastStore.control.outline.focus;
+  const focus = getOutlineFocusState().focus;
   return getElementCaches(lastStore)[focus];
 };
 

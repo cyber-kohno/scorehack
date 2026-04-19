@@ -1,4 +1,4 @@
-import {
+﻿import {
   createTerminalCommandDefault,
   type TerminalCommand,
 } from "../../../../../app/terminal/terminal-command-registry";
@@ -7,9 +7,20 @@ import { createTerminalLogger } from "../../../../../app/terminal/terminal-logge
 import { createMelodyActions } from "../../../../../app/melody/melody-actions";
 import { createProjectDataActions } from "../../../../../app/project-data/project-data-actions";
 import { createProjectIoService } from "../../../../../app/project-io/project-io-service";
-import StorePreview from "../../../props/storePreview";
+import {
+  pushTrackRefGroup,
+  removeTrackRefGroup,
+  resetScoreTrackRefs,
+} from "../../../../../state/session-state/track-ref-session";
+import {
+  getMelodyTrackIndex,
+  setMelodyTrackIndex,
+} from "../../../../../state/session-state/melody-track-store";
+import {
+  PREVIEW_INSTRUMENT_NAMES,
+  validatePreviewInstrumentName,
+} from "../../../../../state/session-state/preview-store";
 import { createStoreUtil, type StoreProps } from "../../../store";
-import useReducerRef from "../../reducerRef";
 import useReducerTermianl from "../../reducerTerminal";
 
 const useBuilderMelody = (lastStore: StoreProps) => {
@@ -26,7 +37,6 @@ const useBuilderMelody = (lastStore: StoreProps) => {
   const get = (): TerminalCommand[] => {
     const defaultProps = createTerminalCommandDefault("melody");
     const projectIo = createProjectIoService(lastStore);
-    const { resetScoreTrackRef } = useReducerRef(lastStore);
 
     const lss = () => {
       const func = terminal.availableFuncs.find((f) => f.funcKey === "lss");
@@ -46,7 +56,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         usage: "Displays a list of existing score tracks.",
         args: [],
         callback: () => {
-          const trackIndex = lastStore.control.melody.trackIndex;
+          const trackIndex = getMelodyTrackIndex();
           const tracks = getScoreTracks().map((t, i) => ({
             ...t,
             isActive: trackIndex === i,
@@ -83,7 +93,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         usage: "Displays a list of existing audio tracks.",
         args: [],
         callback: () => {
-          const trackIndex = lastStore.control.melody.trackIndex;
+          const trackIndex = getMelodyTrackIndex();
           const tracks = getAudioTracks().map((t, i) => ({
             ...t,
             isActive: trackIndex === i,
@@ -128,7 +138,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
             soundFont: "",
             notes: [],
           });
-          lastStore.ref.trackArr.push([]);
+          pushTrackRefGroup();
           logger.outputInfo(`Created a new track. [${name}]`);
           lss();
         },
@@ -149,7 +159,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
             adjust: 0,
             source: "",
           });
-          lastStore.ref.trackArr.push([]);
+          pushTrackRefGroup();
           logger.outputInfo(`Created a new audio. [${name}]`);
           lsa();
         },
@@ -196,8 +206,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         args: [],
         callback: (args) => {
           const tracks = getScoreTracks();
-          const melody = lastStore.control.melody;
-          let delIndex = melody.trackIndex;
+          let delIndex = getMelodyTrackIndex();
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
           const arg0Number = logger.validateNumber(arg0, 1);
@@ -209,8 +218,11 @@ const useBuilderMelody = (lastStore: StoreProps) => {
           }
           const name = tracks[delIndex].name;
           tracks.splice(delIndex, 1);
-          lastStore.ref.trackArr.splice(delIndex, 1);
-          if (delIndex > 0 && delIndex <= melody.trackIndex) melody.trackIndex--;
+          removeTrackRefGroup(delIndex);
+          const currentTrackIndex = getMelodyTrackIndex();
+          if (delIndex > 0 && delIndex <= currentTrackIndex) {
+            setMelodyTrackIndex(currentTrackIndex - 1);
+          }
           logger.outputInfo(`Track deleted. [${name}].`);
         },
       },
@@ -225,7 +237,6 @@ const useBuilderMelody = (lastStore: StoreProps) => {
           },
         ],
         callback: (args) => {
-          const melody = lastStore.control.melody;
           const tracks = getScoreTracks();
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
@@ -234,12 +245,12 @@ const useBuilderMelody = (lastStore: StoreProps) => {
             logger.outputError("");
             return;
           }
-          const prev = tracks[melody.focus];
+          const prev = tracks[getMelodyTrackIndex()]?.name ?? "";
           try {
             changeScoreTrack(nextIndex);
             logger.outputInfo(`Active track changed. [${prev} -> ${arg0}]`);
             reducer.updateTarget();
-            resetScoreTrackRef();
+            resetScoreTrackRefs(lastStore);
             lss();
           } catch {
             logger.outputError(`The destination track does not exist. [${nextIndex}]`);
@@ -253,14 +264,14 @@ const useBuilderMelody = (lastStore: StoreProps) => {
         args: [
           {
             name: "soundfontName: string",
-            getCandidate: () => StorePreview.InstrumentNames,
+            getCandidate: () => [...PREVIEW_INSTRUMENT_NAMES],
           },
         ],
         callback: (args) => {
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
           try {
-            const sfName = StorePreview.validateSFName(arg0);
+            const sfName = validatePreviewInstrumentName(arg0);
             const track = getCurrScoreTrack();
             track.soundFont = sfName;
 
@@ -294,3 +305,4 @@ const useBuilderMelody = (lastStore: StoreProps) => {
 };
 
 export default useBuilderMelody;
+

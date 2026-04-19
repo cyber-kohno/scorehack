@@ -1,10 +1,11 @@
 <script lang="ts">
+    import { envStore } from "../../../../../state/session-state/env-store";
     export let note!: TimelineStore.Note;
 
     $: noteBean = (() => {
         const keyIndex = note.pitch;
         return {
-            ...OutlineUtil.getNoteRect(note, $store.env),
+            ...OutlineUtil.getNoteRect(note, $envStore),
             keyIndex,
         };
     })();

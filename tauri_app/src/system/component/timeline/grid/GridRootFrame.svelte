@@ -5,28 +5,39 @@
   import GridFocus from "./GridFocus.svelte";
   import MelodyCursor from "../../../../ui/melody/MelodyCursor.svelte";
   import PreviewPositionLine from "../../../../ui/playback/PreviewPositionLine.svelte";
-  import StoreRef from "../../../store/props/storeRef";
   import ShadeTracks from "../../../../ui/melody/score/ShadeTracks.svelte";
   import ActiveTrack from "../../../../ui/melody/score/ActiveTrack.svelte";
   import TimelineTailMargin from "../TimelineTailMargin.svelte";
   import { isPlaybackActive } from "../../../../state/ui-state/playback-ui-store";
   import {
+    getTimelineGridScrollLimitProps,
+    setTimelineGridRef,
+    timelineViewportStore,
+  } from "../../../../state/session-state/timeline-viewport-store";
+  import {
     getTimelineBaseCaches,
     getTimelineChordCaches,
   } from "../../../../state/cache-state/timeline-cache";
+  import { modeStore } from "../../../../state/session-state/mode-store";
+  import { melodyFocusStore } from "../../../../state/session-state/melody-focus-store";
 
   $: baseCaches = getTimelineBaseCaches($store);
   $: chordCaches = getTimelineChordCaches($store);
 
-  $: isMelodyMode = (() => $store.control.mode === "melody")();
+  $: isMelodyMode = (() => $modeStore === "melody")();
   $: isPreview = isPlaybackActive($store);
   $: isDispMelodyCursor =
-    isMelodyMode && !isPreview && $store.control.melody.focus === -1;
+    isMelodyMode && !isPreview && $melodyFocusStore.focus === -1;
 
-  $: scrollLimitProps = StoreRef.getScrollLimitProps($store.ref.grid);
+  $: scrollLimitProps = (() => {
+    $timelineViewportStore;
+    return getTimelineGridScrollLimitProps();
+  })();
+  let gridRef: HTMLElement | undefined = undefined;
+  $: setTimelineGridRef(gridRef);
 </script>
 
-<div class="wrap" data-isPreview={isPreview} bind:this={$store.ref.grid}>
+<div class="wrap" data-isPreview={isPreview} bind:this={gridRef}>
   {#if scrollLimitProps != null}
     {#each baseCaches as baseCache}
       <BaseBlock {baseCache} {scrollLimitProps} />

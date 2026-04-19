@@ -1,13 +1,15 @@
 <script lang="ts">
   import Layout from "../../../../styles/tokens/layout-tokens";
-  import StoreMelody from "../../../store/props/storeMelody";
-  import type StoreRef from "../../../store/props/storeRef";
+  import StoreMelody from "../../../../domain/melody/melody-store";
+  import { envStore } from "../../../../state/session-state/env-store";
+  import { upsertTrackRef } from "../../../../state/session-state/track-ref-session";
+  import type { ScrollLimitProps } from "../../../../state/session-state/scroll-limit-props";
   import store from "../../../store/store";
   import { getShadeMelodyNote, getShadeMelodyTrack } from "../../../../state/ui-state/melody-ui-store";
 
   export let trackIndex: number;
   export let noteIndex: number;
-  export let scrollLimitProps: StoreRef.ScrollLimitProps;
+  export let scrollLimitProps: ScrollLimitProps;
 
   const COLOR_ARR = ["#faa", "#aabeff", "#ffa", "#afa", "#aff", "#ced"];
 
@@ -16,13 +18,7 @@
   let ref: HTMLElement | null = null;
   $: {
     if (ref != null) {
-      const refs = $store.ref.trackArr[trackIndex];
-
-      let instance = refs.find((r) => r.seq === noteIndex);
-      if (instance == undefined) {
-        instance = { seq: noteIndex, ref };
-        refs.push(instance);
-      } else instance.ref = ref;
+      upsertTrackRef(trackIndex, noteIndex, ref);
     }
   }
 
@@ -31,9 +27,7 @@
   $: [isDisp, left, width] = (() => {
     if (note == null) return [false, 0, 0];
     const beatSide = StoreMelody.calcBeatSide(note);
-    const [left, width] = [beatSide.pos, beatSide.len].map(
-      (v) => v * $store.env.beatWidth
-    );
+    const [left, width] = [beatSide.pos, beatSide.len].map((v) => v * $envStore.beatWidth);
     const isDisp =
       Math.abs(scrollLimitProps.scrollMiddleX - (left + width / 2)) <=
       scrollLimitProps.rectWidth;
@@ -91,3 +85,5 @@
     border-radius: 0 12px 12px 0;
   }
 </style>
+
+

@@ -1,23 +1,19 @@
 <script lang="ts">
   import { writable } from "svelte/store";
-  import type StoreTerminal from "../../store/props/storeTerminal";
+  import type { TerminalHelperProps } from "../../../state/session-state/terminal-store";
   import store from "../../store/store";
   import HighlightText from "../common/HighlightText.svelte";
+  import {
+    getTerminalCursorRef,
+    setTerminalHelperRefState,
+  } from "../../../state/session-state/terminal-ref-store";
 
-  export let helper!: StoreTerminal.HelperProps;
+  export let helper!: TerminalHelperProps;
 
-  //   $: [top, left] = (() => {
-  //     const ref = $store.ref.cursor;
-  //     if (ref != null) {
-  //       const { left, bottom } = ref.getBoundingClientRect();
-  //       return [bottom, left];
-  //     }
-  //     throw new Error();
-  //   })();
   const pos = writable({ top: -1024, left: -1024 });
 
   $: {
-    const ref = $store.ref.cursor;
+    const ref = getTerminalCursorRef();
     setTimeout(() => {
       if (ref != null) {
         const { left, bottom } = ref.getBoundingClientRect();
@@ -31,7 +27,7 @@
   class="wrap"
   style:top="{$pos.top}px"
   style:left="{$pos.left}px"
-  bind:this={$store.ref.helper}
+  bind:this={setTerminalHelperRefState}
 >
   {#each helper.list as item, i}
     <div class="item" data-isFocus={helper.focus === i}>

@@ -1,18 +1,17 @@
 <script lang="ts">
-  import type ArrangeLibrary from "../../../../../store/props/arrange/arrangeLibrary";
-  import type StorePianoEditor from "../../../../../store/props/arrange/piano/storePianoEditor";
-  import ArrangeUtil from "../../../../../store/reducer/arrangeUtil";
+import type ArrangeLibrary from "../../../../../../domain/arrange/arrange-library";
+import type StorePianoEditor from "../../../../../../domain/arrange/piano-editor-store";
   import store from "../../../../../store/store";
   import APFinderBacking from "./APFinderBacking.svelte";
   import APFinderVoicsFrame from "./APFinderVoicsFrame.svelte";
+  import { getCurrentArrangeTrack } from "../../../../../../app/arrange/arrange-state";
 
     export let finder: ArrangeLibrary.PianoArrangeFinder;
     export let usageBkg: StorePianoEditor.Preset;
     export let backingIndex: number;
 
     $: [backing, sndsPatts] = (() => {
-        const {getCurTrack} = ArrangeUtil.useReducer($store);
-        const lib = getCurTrack().pianoLib;
+        const lib = getCurrentArrangeTrack($store).pianoLib;
         if(lib == undefined) throw new Error();
         const bkgPatt = lib.backingPatterns.find(
             (bkgPatt) => bkgPatt.no === usageBkg.bkgPatt,

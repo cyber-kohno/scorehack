@@ -1,11 +1,12 @@
-import {
+﻿import {
   createTerminalCommandDefault,
   type TerminalCommand,
 } from "../../../../../app/terminal/terminal-command-registry";
 import { createPlaybackActions } from "../../../../../app/playback/playback-actions";
 import { createTerminalLogger } from "../../../../../app/terminal/terminal-logger";
+import { createProjectDataActions } from "../../../../../app/project-data/project-data-actions";
 import { createProjectIoService } from "../../../../../app/project-io/project-io-service";
-import StorePreview from "../../../props/storePreview";
+import { validatePreviewInstrumentName } from "../../../../../state/session-state/preview-store";
 import { createStoreUtil, type StoreProps } from "../../../store";
 import useReducerTermianl from "../../reducerTerminal";
 
@@ -15,6 +16,7 @@ const useBuilderCommon = (lastStore: StoreProps) => {
   const reducer = useReducerTermianl(lastStore);
   const terminal = reducer.getTerminal();
   const { loadSoundFont } = createPlaybackActions(storeUtil);
+  const projectData = createProjectDataActions(lastStore);
 
   const projectIo = createProjectIoService(lastStore);
   const logger = createTerminalLogger(terminal);
@@ -92,11 +94,11 @@ const useBuilderCommon = (lastStore: StoreProps) => {
           projectIo.loadScoreFile(
             (handle) => {
               logger.outputInfo(`File load successfully. [${handle.name}]`);
-              const tracks = lastStore.data.scoreTracks;
+              const tracks = projectData.getScoreTracks();
               (async () => {
                 for (const track of tracks) {
                   if (track.soundFont !== "") {
-                    const sfName = StorePreview.validateSFName(track.soundFont);
+                    const sfName = validatePreviewInstrumentName(track.soundFont);
                     logger.outputInfo(`Loading... [${sfName}]`);
                     commit();
                     await loadSoundFont(sfName);
@@ -126,3 +128,4 @@ const useBuilderCommon = (lastStore: StoreProps) => {
 };
 
 export default useBuilderCommon;
+

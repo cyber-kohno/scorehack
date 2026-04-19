@@ -1,10 +1,10 @@
-﻿import useLegacyInputOutline from "../../system/input/inputOutline";
-import type StoreInput from "../../system/store/props/storeInput";
+import useLegacyInputOutline from "./outline-input";
+import type { InputCallbacks } from "../../state/session-state/input-store";
 import type { StoreUtil } from "../../system/store/store";
 
 export type OutlineInputRouter = {
   control: (eventKey: string) => void;
-  getHoldCallbacks: (eventKey: string) => StoreInput.Callbacks;
+  getHoldCallbacks: (eventKey: string) => InputCallbacks;
 };
 
 export const createOutlineInputRouter = (
@@ -21,3 +21,6 @@ export const createOutlineInputRouter = (
     },
   };
 };
+
+
+

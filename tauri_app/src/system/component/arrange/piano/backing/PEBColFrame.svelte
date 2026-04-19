@@ -1,11 +1,16 @@
-<script lang="ts">
-    import ContextUtil from "../../../../store/contextUtil";
-    import StorePianoBacking from "../../../../store/props/arrange/piano/storePianoBacking";
-    import store from "../../../../store/store";
+﻿<script lang="ts">
+import StorePianoBacking from "../../../../../domain/arrange/piano-backing-store";
+    import {
+        getArrangeEditorBackingContext,
+        getArrangeEditorPianoEditorContext,
+    } from "../../../../../ui/arrange/piano-editor-context";
+    import { setArrangePianoColRef } from "../../../../../state/session-state/arrange-ref-store";
 
-    const editor = ContextUtil.get("pianoEditor");
-    const bp = ContextUtil.get("backingProps");
+    let colRef: HTMLElement | undefined = undefined;
+    const editor = getArrangeEditorPianoEditorContext();
+    const bp = getArrangeEditorBackingContext();
     $: backing = $bp.backing;
+    $: setArrangePianoColRef(colRef);
 
     $: isFocus = (index: number) => {
         return (
@@ -18,11 +23,9 @@
         const dot = col.dot ?? 0;
         return `${col.div}${".".repeat(dot)}`;
     };
-
-    $: pianoRef = $store.ref.arrange.piano;
 </script>
 
-<div class="wrap" bind:this={pianoRef.col}>
+<div class="wrap" bind:this={colRef}>
     {#each $bp.getCurLayer().cols as col, index}
         <div class="col" style:width={`${$bp.getColWidth(col)}px`}>
             <div class="inner">{getDispName(col)}</div>
@@ -39,7 +42,6 @@
         position: relative;
         width: 100%;
         height: var(--ap-backing-len-height);
-        /* background-color: #8dbbd9; */
         * {
             vertical-align: top;
         }
@@ -68,7 +70,6 @@
         display: inline-block;
         position: relative;
         margin: 1px 0 0 1px;
-        /* background-color: rgba(214, 243, 243, 0.411); */
         border-radius: 2px;
         border: 1px solid rgb(48, 48, 48);
         box-sizing: border-box;
@@ -80,6 +81,5 @@
         color: rgb(51, 67, 136);
         line-height: 28px;
         text-align: center;
-        /* overflow: hidden; */
     }
 </style>

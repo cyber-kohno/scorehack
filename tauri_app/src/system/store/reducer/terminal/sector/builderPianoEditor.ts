@@ -2,19 +2,16 @@ import {
   createTerminalCommandDefault,
   type TerminalCommand,
 } from "../../../../../app/terminal/terminal-command-registry";
+import { getPianoArrangeEditor } from "../../../../../app/arrange/arrange-state";
 import { createTerminalLogger } from "../../../../../app/terminal/terminal-logger";
-import StorePianoBacking from "../../../props/arrange/piano/storePianoBacking";
+import StorePianoBacking from "../../../../../domain/arrange/piano-backing-store";
 import type { StoreProps } from "../../../store";
-import ArrangeUtil from "../../arrangeUtil";
 import useReducerTermianl from "../../reducerTerminal";
 
 const useBuilderPianoEditor = (lastStore: StoreProps) => {
   const reducer = useReducerTermianl(lastStore);
   const terminal = reducer.getTerminal();
   const logger = createTerminalLogger(terminal);
-
-  const { getPianoEditor } = ArrangeUtil.useReducer(lastStore);
-
   const get = (): TerminalCommand[] => {
     const defaultProps = createTerminalCommandDefault("piano");
     return [
@@ -24,7 +21,7 @@ const useBuilderPianoEditor = (lastStore: StoreProps) => {
         usage: "Start using the backing.",
         args: [],
         callback: () => {
-          const editor = getPianoEditor();
+          const editor = getPianoArrangeEditor(lastStore);
           if (editor.backing != null) {
             logger.outputInfo("The backing already exists.");
             return;
@@ -39,7 +36,7 @@ const useBuilderPianoEditor = (lastStore: StoreProps) => {
         usage: "Delete the backing.",
         args: [],
         callback: () => {
-          const editor = getPianoEditor();
+          const editor = getPianoArrangeEditor(lastStore);
           if (editor.backing == null) {
             logger.outputInfo("The backing does not exist.");
             return;
@@ -56,3 +53,4 @@ const useBuilderPianoEditor = (lastStore: StoreProps) => {
   };
 };
 export default useBuilderPianoEditor;
+

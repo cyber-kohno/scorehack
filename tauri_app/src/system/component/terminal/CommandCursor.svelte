@@ -3,6 +3,7 @@
   import useReducerTermianl from "../../store/reducer/reducerTerminal";
   import store from "../../store/store";
   import { writable } from "svelte/store";
+  import { setTerminalCursorRefState } from "../../../state/session-state/terminal-ref-store";
 
   const isDisp = writable(true);
   let timerId = -1;
@@ -45,7 +46,7 @@
   });
 </script>
 
-<div class="cursor" data-isDisp={$isDisp} bind:this={$store.ref.cursor}></div>
+<div class="cursor" data-isDisp={$isDisp} bind:this={setTerminalCursorRefState}></div>
 
 <style>
   .cursor {

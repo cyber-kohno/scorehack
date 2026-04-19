@@ -1,8 +1,9 @@
-<script lang="ts">
-  import store from "../../../store/store";
+﻿<script lang="ts">
+  import { envStore } from "../../../../state/session-state/env-store";
+  import { previewStore } from "../../../../state/session-state/preview-store";
 
   $: width = 300;
-  $: pos = $store.preview.linePos * $store.env.beatWidth - width;
+  $: pos = $previewStore.linePos * $envStore.beatWidth - width;
 </script>
 
 <div class="frame">
@@ -48,3 +49,5 @@
     background-color: rgba(0, 89, 255, 0.85);
   }
 </style>
+
+

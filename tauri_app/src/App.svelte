@@ -7,8 +7,15 @@
   import { isCacheStandby } from "./state/cache-state/cache-store";
   import RootLayout from "./ui/shell/RootLayout.svelte";
 
+  let appRoot: HTMLElement | null = null;
+
+  const focusAppRoot = () => {
+    appRoot?.focus();
+  };
+
   onMount(() => {
     initializeAppFromStore(createStoreUtil, $store);
+    focusAppRoot();
     return bindGlobalKeyboard(store, createStoreUtil);
   });
 
@@ -16,7 +23,7 @@
   $: applyDynamicLayoutVariables($store);
 </script>
 
-<main>
+<main bind:this={appRoot} tabindex="-1">
   {#if !isStandby}
     <RootLayout />
   {/if}

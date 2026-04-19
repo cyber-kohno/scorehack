@@ -1,5 +1,5 @@
 import MusicTheory from "../theory/music-theory";
-import type StoreCache from "../../system/store/props/storeCache";
+import type StoreCache from "../../state/cache-state/cache-store";
 
 export const getPlaybackTimeFromBeat = (
   baseCaches: StoreCache.BaseCache[],
@@ -42,3 +42,4 @@ export const getPlaybackBeatFromTime = (
   });
   return beat;
 };
+

@@ -1,43 +1,41 @@
-import type StorePreview from "../../system/store/props/storePreview";
-import type { StoreProps } from "../../system/store/store";
+﻿import { getEnvBeatWidth } from "../session-state/env-store";
+import {
+  getPreviewState,
+  type PreviewSoundFontItem,
+} from "../session-state/preview-store";
 
-export const isPlaybackActive = (lastStore: StoreProps) => {
-  return lastStore.preview.timerKeys != null;
+export const isPlaybackActive = (_lastStore?: unknown) => {
+  return getPreviewState().timerKeys != null;
 };
 
-export const getPlaybackLinePos = (lastStore: StoreProps) => {
-  return lastStore.preview.linePos;
+export const getPlaybackLinePos = (_lastStore?: unknown) => {
+  return getPreviewState().linePos;
 };
 
-export const getPlaybackProgressTime = (lastStore: StoreProps) => {
-  return lastStore.preview.progressTime;
+export const getPlaybackProgressTime = (_lastStore?: unknown) => {
+  return getPreviewState().progressTime;
 };
 
-export const getPlaybackLastTime = (lastStore: StoreProps) => {
-  return lastStore.preview.lastTime;
+export const getPlaybackLastTime = (_lastStore?: unknown) => {
+  return getPreviewState().lastTime;
 };
 
-export const getPlaybackTimerKeys = (lastStore: StoreProps) => {
-  return lastStore.preview.timerKeys;
+export const getPlaybackTimerKeys = (_lastStore?: unknown) => {
+  return getPreviewState().timerKeys;
 };
 
-export const getPlaybackIntervalKeys = (lastStore: StoreProps) => {
-  return lastStore.preview.intervalKeys;
+export const getPlaybackIntervalKeys = (_lastStore?: unknown) => {
+  return getPreviewState().intervalKeys;
 };
 
-export const getLoadedSoundFonts = (
-  lastStore: StoreProps,
-): StorePreview.SFItem[] => {
-  return lastStore.preview.sfItems;
+export const getLoadedSoundFonts = (_lastStore?: unknown): PreviewSoundFontItem[] => {
+  return getPreviewState().sfItems;
 };
 
-export const getPlaybackAudios = (lastStore: StoreProps) => {
-  return lastStore.preview.audios;
+export const getPlaybackAudios = (_lastStore?: unknown) => {
+  return getPreviewState().audios;
 };
 
-export const getPlaybackLineOffset = (
-  lastStore: StoreProps,
-  shadeWidth: number,
-) => {
-  return getPlaybackLinePos(lastStore) * lastStore.env.beatWidth - shadeWidth;
+export const getPlaybackLineOffset = (_lastStore: unknown, shadeWidth: number) => {
+  return getPlaybackLinePos() * getEnvBeatWidth() - shadeWidth;
 };

@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-  import type ArrangeLibrary from "../../../../store/props/arrange/arrangeLibrary";
+import type ArrangeLibrary from "../../../../../domain/arrange/arrange-library";
   import MusicTheory from "../../../../../domain/theory/music-theory";
   import FinderConditionItem from "./FinderConditionItem.svelte";
 

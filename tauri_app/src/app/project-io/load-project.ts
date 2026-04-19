@@ -1,5 +1,6 @@
-import useReducerCache from "../../system/store/reducer/reducerCache";
 import type { StoreProps } from "../../system/store/store";
+import { setScoreFileHandle } from "../../state/session-state/project-file-store";
+import { resetTrackRefGroups } from "../../state/session-state/track-ref-session";
 import { openScoreFilePath } from "../../infra/tauri/dialog";
 import { readUtf8TextFile } from "../../infra/tauri/fs";
 import { createCacheActions } from "../cache/cache-actions";
@@ -17,7 +18,6 @@ export const loadProject = async (
   success: (handle: ProjectIoHandle) => void,
   cancel: () => void,
 ) => {
-  const fileHandle = lastStore.fileHandle;
   const { recalculate } = createCacheActions(lastStore);
   const { setProjectData, getScoreTracks } = createProjectDataActions(lastStore);
 
@@ -29,17 +29,16 @@ export const loadProject = async (
     }
 
     const fileContents = await readUtf8TextFile(path);
-    fileHandle.score = toHandle(path);
+    const nextHandle = toHandle(path);
+    setScoreFileHandle(nextHandle);
     const text = unzipFromBase64(fileContents);
     setProjectData(JSON.parse(text));
-    lastStore.ref.trackArr.length = 0;
-    for (let i = 0; i < getScoreTracks().length; i++) {
-      lastStore.ref.trackArr.push([]);
-    }
+    resetTrackRefGroups(getScoreTracks().length);
     recalculate();
-    success(fileHandle.score);
+    success(nextHandle);
   } catch {
     cancel();
   }
 };
+
 

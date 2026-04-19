@@ -1,6 +1,6 @@
 import useTerminalLogger from "../../system/store/reducer/terminal/terminalLogger";
-import type StoreTerminal from "../../system/store/props/storeTerminal";
+import type { TerminalState } from "../../state/session-state/terminal-store";
 
-export const createTerminalLogger = (terminal: StoreTerminal.Props) => {
+export const createTerminalLogger = (terminal: TerminalState) => {
   return useTerminalLogger(terminal);
 };

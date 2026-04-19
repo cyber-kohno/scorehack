@@ -1,5 +1,5 @@
-﻿<script lang="ts">
-  import type StoreCache from "../../../system/store/props/storeCache";
+<script lang="ts">
+  import type StoreCache from "../../../state/cache-state/cache-store";
   import store from "../../../system/store/store";
   import FocusCover from "../../../system/component/common/FocusCover.svelte";
   import OutlineChordElement from "./OutlineChordElement.svelte";
@@ -7,6 +7,8 @@
   import OutlineModulateElement from "./OutlineModulateElement.svelte";
   import OutlineSectionElement from "./OutlineSectionElement.svelte";
   import OutlineTempoElement from "./OutlineTempoElement.svelte";
+  import { upsertOutlineElementRef } from "../../../state/session-state/outline-ref-store";
+  import { outlineFocusStore } from "../../../state/session-state/outline-focus-store";
 
   export let element!: StoreCache.ElementCache;
 
@@ -15,21 +17,12 @@
   let ref: HTMLElement | null = null;
   $: {
     if (ref != null) {
-      const refs = $store.ref.elementRefs;
-
-      let instance = refs.find((r) => r.seq === index);
-      if (instance == undefined) {
-        instance = { seq: index, ref };
-        refs.push(instance);
-      } else {
-        instance.ref = ref;
-      }
+      upsertOutlineElementRef(index, ref);
     }
   }
 
   $: [isFocus, isRange] = (() => {
-    const outline = $store.control.outline;
-    const { focus, focusLock } = outline;
+    const { focus, focusLock } = $outlineFocusStore;
 
     let [st, ed] = [focus, focus];
     if (focusLock !== -1) {
@@ -81,3 +74,4 @@
     left: 10px;
   }
 </style>
+
