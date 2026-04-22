@@ -1,7 +1,7 @@
 import StorePianoEditor from "../../domain/arrange/piano-editor-store";
 import { createProjectDataActions } from "../project-data/project-data-actions";
 import { getElementCaches } from "../../state/cache-state/cache-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 
 export const shiftOutlineArrangeRelationsAfterChordInsert = (
   lastStore: StoreProps,

@@ -1,5 +1,5 @@
 import Layout from "../../styles/tokens/layout-tokens";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import { getBeatSumWidth } from "../../state/cache-state/cache-store";
 
 const setCustomProps = (customProps: { key: string; value: string }[]) => {

@@ -1,8 +1,8 @@
-import type { MelodyAudioTrack } from "../../domain/melody/melody-types";
+﻿import type { MelodyAudioTrack } from "../../domain/melody/melody-types";
 import type { MelodyScoreTrack } from "../../domain/melody/melody-types";
 import type { OutlineElement } from "../../domain/outline/outline-types";
 import type StoreArrange from "../../domain/arrange/arrange-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../root-store";
 import {
   getAudioTrackState,
   setAudioTrackState,

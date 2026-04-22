@@ -1,5 +1,5 @@
 import type StoreMelody from "../../domain/melody/melody-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import { getProjectData } from "../../state/project-data/project-data-store";
 import { exportMidi } from "./export-midi";
 import { importAudio } from "./import-audio";

@@ -2,7 +2,7 @@ import ArrangeLibrary from "../../domain/arrange/arrange-library";
 import StorePianoEditor from "../../domain/arrange/piano-editor-store";
 import type StoreArrange from "../../domain/arrange/arrange-store";
 import type StoreCache from "../../state/cache-state/cache-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import type MusicTheory from "../../domain/theory/music-theory";
 import { getOutlineTrackIndex } from "../../state/session-state/outline-track-store";
 import { getOutlineArrangeState } from "../../state/session-state/outline-arrange-store";

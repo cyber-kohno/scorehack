@@ -4,7 +4,7 @@ import type {
   MelodyScoreTrack,
 } from "../../domain/melody/melody-types";
 import type StoreArrange from "../../domain/arrange/arrange-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import {
   getProjectData,
   setProjectData,

@@ -1,5 +1,5 @@
-import { get, writable } from "svelte/store";
-import type { StoreProps } from "../../system/store/store";
+﻿import { get, writable } from "svelte/store";
+import type { StoreProps } from "../root-store";
 import type {
   OutlineDataInit,
   OutlineElement,
@@ -98,11 +98,11 @@ export const cacheStateStore = writable<StoreCache.Props>(StoreCache.INITIAL);
 
 export const getCacheStateStore = () => get(cacheStateStore);
 
-export const getCache = (_lastStore: StoreProps): StoreCache.Props => {
+export const getCache = (): StoreCache.Props => {
   return getCacheStateStore();
 };
 
-export const setCache = (_lastStore: StoreProps, nextCache: StoreCache.Props) => {
+export const setCache = (nextCache: StoreCache.Props) => {
   cacheStateStore.set(nextCache);
 };
 
@@ -111,19 +111,23 @@ export const touchCacheState = () => {
 };
 
 export const getBaseCaches = (lastStore: StoreProps) => {
-  return getCache(lastStore).baseCaches;
+  void lastStore;
+  return getCache().baseCaches;
 };
 
 export const getChordCaches = (lastStore: StoreProps) => {
-  return getCache(lastStore).chordCaches;
+  void lastStore;
+  return getCache().chordCaches;
 };
 
 export const getElementCaches = (lastStore: StoreProps) => {
-  return getCache(lastStore).elementCaches;
+  void lastStore;
+  return getCache().elementCaches;
 };
 
 export const getOutlineTailPosition = (lastStore: StoreProps) => {
-  return getCache(lastStore).outlineTailPos;
+  void lastStore;
+  return getCache().outlineTailPos;
 };
 
 export const isCacheStandby = (lastStore: StoreProps) => {

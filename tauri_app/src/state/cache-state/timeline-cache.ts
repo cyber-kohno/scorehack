@@ -1,4 +1,4 @@
-import type { StoreProps } from "../../system/store/store";
+﻿import type { StoreProps } from "../root-store";
 import { getOutlineFocusState } from "../session-state/outline-focus-store";
 import {
   getBaseCaches,

@@ -1,4 +1,4 @@
-import StorePianoEditor from "../../domain/arrange/piano-editor-store";
+﻿import StorePianoEditor from "../../domain/arrange/piano-editor-store";
 import type { InputCallbacks } from "../../state/session-state/input-store";
 import { createCacheActions } from "../../app/cache/cache-actions";
 import {
@@ -6,24 +6,33 @@ import {
   adjustTimelineScrollXFromOutline,
 } from "../../app/outline/outline-scroll";
 import { createOutlineActions } from "../../app/outline/outline-actions";
-import { createPlaybackPreviewRouter } from "../../app/playback/playback-preview-router";
+import { createPlaybackActions } from "../../app/playback/playback-actions";
 import {
   getOutlineFocusState,
-  setOutlineFocusLock,
 } from "../../state/session-state/outline-focus-store";
-import { getOutlineArrangeState } from "../../state/session-state/outline-arrange-store";
 import { getOutlineElements } from "../../state/project-data/outline-project-data";
 import { isPlaybackActive } from "../../state/ui-state/playback-ui-store";
-import type { StoreUtil } from "../../system/store/store";
+import type { StoreUtil } from "../../state/root-store";
 import type {
   OutlineDataChord,
-  OutlineDataModulate,
-  OutlineDataSection,
-  OutlineElement,
 } from "../../domain/outline/outline-types";
 import MusicTheory from "../../domain/theory/music-theory";
 import useInputFinder from "../arrange/finder/finder-input";
 import useInputArrange from "../arrange/arrange-input";
+import {
+  isOutlineArrangeEditorActive,
+  isOutlineArrangeFinderActive,
+  isOutlineArrangeInputActive,
+  moveOutlineInputFocus,
+  moveOutlineInputRangeFocus,
+  moveOutlineInputSectionFocus,
+} from "./outline-input-focus-actions";
+import {
+  insertOutlineChordElement,
+  insertOutlineModulateElement,
+  insertOutlineSectionElement,
+  removeOutlineFocusElementIfAllowed,
+} from "./outline-input-element-actions";
 
 const useInputOutline = (storeUtil: StoreUtil) => {
   const { lastStore, commit } = storeUtil;
@@ -34,32 +43,45 @@ const useInputOutline = (storeUtil: StoreUtil) => {
   const inputArrange = useInputArrange(storeUtil);
   const inputFinder = useInputFinder(storeUtil);
 
-  const { startPreview, stopPreview } = createPlaybackPreviewRouter(storeUtil);
+  const { startPreview, stopPreview } = createPlaybackActions(storeUtil);
 
   const isPreview = isPlaybackActive();
 
-  const isArrangeEditorActive = () => {
-    const arrange = getOutlineArrangeState();
-    return arrange != null && arrange.editor != undefined;
+  const commitOutlineChange = () => {
+    commit();
   };
-  const isArrangeFinderActive = () => {
-    const arrange = getOutlineArrangeState();
-    return arrange != null && arrange.finder != undefined;
+
+  const commitAfterOutlineScroll = () => {
+    adjustTimelineScrollXFromOutline(lastStore);
+    adjustOutlineScroll(lastStore);
+    commit();
+  };
+
+  const commitAfterRecalculate = () => {
+    recalculate();
+    commit();
+  };
+
+  const commitAfterRecalculateAndOutlineScroll = () => {
+    recalculate();
+    adjustTimelineScrollXFromOutline(lastStore);
+    adjustOutlineScroll(lastStore);
+    commit();
   };
 
   const control = (eventKey: string) => {
     const isInit = element.type === "init";
     const isChord = element.type === "chord";
 
-    if (isArrangeFinderActive()) {
+    if (isOutlineArrangeFinderActive()) {
       inputFinder.control(eventKey);
       return;
     }
-    if (isArrangeEditorActive()) {
+    if (isOutlineArrangeEditorActive()) {
       inputArrange.control(eventKey);
       return;
     }
-    if (isArrangeFinderActive() || isArrangeEditorActive()) return;
+    if (isOutlineArrangeInputActive()) return;
 
     if (isPreview) {
       switch (eventKey) {
@@ -69,94 +91,65 @@ const useInputOutline = (storeUtil: StoreUtil) => {
       return;
     }
 
-    const moveFocus = (dir: -1 | 1) => {
-      setOutlineFocusLock(-1);
-      reducerOutline.moveFocus(dir);
-      adjustTimelineScrollXFromOutline(lastStore);
-      adjustOutlineScroll(lastStore);
-      commit();
-    };
-
-    const moveSectionFocus = (dir: -1 | 1) => {
-      setOutlineFocusLock(-1);
-      reducerOutline.moveSectionFocus(dir);
-      adjustTimelineScrollXFromOutline(lastStore);
-      adjustOutlineScroll(lastStore);
-      commit();
-    };
-
     switch (eventKey) {
       case "a":
         {
           if (isInit) break;
-          const data: OutlineDataChord = {
-            beat: 4,
-            eat: 0,
-          };
-          const element: OutlineElement = {
-            type: "chord",
-            data,
-          };
-          reducerOutline.insertElement(element);
-          recalculate();
-          commit();
+          insertOutlineChordElement(reducerOutline);
+          commitAfterRecalculate();
         }
         break;
       case "s":
         {
-          const data: OutlineDataSection = {
-            name: "section",
-          };
-          reducerOutline.insertElement({
-            type: "section",
-            data,
-          });
-          recalculate();
-          commit();
+          insertOutlineSectionElement(reducerOutline);
+          commitAfterRecalculate();
         }
         break;
       case "m":
         {
           if (isInit) break;
-          const data: OutlineDataModulate = {
-            method: "domm",
-            val: 1,
-          };
-          reducerOutline.insertElement({
-            type: "modulate",
-            data,
-          });
-          recalculate();
-          commit();
+          insertOutlineModulateElement(reducerOutline);
+          commitAfterRecalculate();
         }
         break;
       case "Delete":
         {
-          const sectionCnt = getOutlineElements(lastStore).filter(
-            (e) => e.type === "section",
-          ).length;
-          const isLastSection = element.type === "section" && sectionCnt === 1;
-          // 蛻晄悄蛟､繝悶Ο繝・け縺ｨ縲∵怙蠕後・1縺､縺ｮ繧ｻ繧ｯ繧ｷ繝ｧ繝ｳ縺ｯ豸医○縺ｪ縺・
-          if (element.type === "init" || isLastSection) break;
-          reducerOutline.removeFocusElement();
-          recalculate();
-          adjustTimelineScrollXFromOutline(lastStore);
-          adjustOutlineScroll(lastStore);
-          commit();
+          const removed = removeOutlineFocusElementIfAllowed({
+            lastStore,
+            outlineActions: reducerOutline,
+            element,
+          });
+          if (removed) commitAfterRecalculateAndOutlineScroll();
         }
         break;
 
       case "ArrowUp":
-        moveFocus(-1);
+        moveOutlineInputFocus({
+          lastStore,
+          dir: -1,
+          onMoved: commitAfterOutlineScroll,
+        });
         break;
       case "ArrowDown":
-        moveFocus(1);
+        moveOutlineInputFocus({
+          lastStore,
+          dir: 1,
+          onMoved: commitAfterOutlineScroll,
+        });
         break;
       case "ArrowLeft":
-        moveSectionFocus(-1);
+        moveOutlineInputSectionFocus({
+          lastStore,
+          dir: -1,
+          onMoved: commitAfterOutlineScroll,
+        });
         break;
       case "ArrowRight":
-        moveSectionFocus(1);
+        moveOutlineInputSectionFocus({
+          lastStore,
+          dir: 1,
+          onMoved: commitAfterOutlineScroll,
+        });
         break;
       case "1":
       case "2":
@@ -178,8 +171,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
             );
             chordData.degree = diatonic;
             reducerOutline.setChordData(chordData);
-            recalculate();
-            commit();
+            commitAfterRecalculate();
           }
         }
         break;
@@ -187,14 +179,14 @@ const useInputOutline = (storeUtil: StoreUtil) => {
       case "b":
         {
           reducerOutline.openArrangeEditor();
-          commit();
+          commitOutlineChange();
         }
         break;
       case "w":
         {
           if (isChord) {
             reducerOutline.openArrangeFinder();
-            commit();
+            commitOutlineChange();
           }
         }
         break;
@@ -204,11 +196,11 @@ const useInputOutline = (storeUtil: StoreUtil) => {
   };
 
   const getHoldCallbacks = (eventKey: string): InputCallbacks => {
-    if (isArrangeFinderActive()) {
+    if (isOutlineArrangeFinderActive()) {
       // console.log('arrange != null');
       return inputFinder.getHoldCallbacks(eventKey);
     }
-    if (isArrangeEditorActive()) {
+    if (isOutlineArrangeEditorActive()) {
       // console.log('arrange != null');
       return inputArrange.getHoldCallbacks(eventKey);
     }
@@ -258,8 +250,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
 
               if (temp != undefined) {
                 data.degree.symbol = temp;
-                recalculate();
-                commit();
+                commitAfterRecalculate();
               }
             };
             switch (eventKey) {
@@ -295,7 +286,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
             const chordData = reducerOutline.getCurrentChordData();
 
             /**
-             * 繧ｭ繝ｼ繧貞濠髻ｳ蜊倅ｽ阪〒遘ｻ蜍輔☆繧・
+             * 郢ｧ・ｭ郢晢ｽｼ郢ｧ雋樊ｿ鬮ｻ・ｳ陷雁・ｽｽ髦ｪ縲帝§・ｻ陷崎ｼ披・郢ｧ繝ｻ
              * @param dir
              */
             const modKey = (dir: -1 | 1) => {
@@ -316,19 +307,16 @@ const useInputOutline = (storeUtil: StoreUtil) => {
                   symbol: chordData.degree.symbol,
                   ...degree12,
                 };
-                // reducerOutline.setChordData(chordData);
                 recalculate();
               }
-              commit();
+              commitOutlineChange();
             };
 
             const modBeat = (dir: -1 | 1) => {
               const temp = chordData.beat + dir;
               if (temp >= 1 && temp <= 4) chordData.beat = temp;
-              // reducerOutline.setChordData(chordData);
               recalculate();
-              adjustTimelineScrollXFromOutline(lastStore);
-              commit();
+              commitAfterOutlineScroll();
             };
             switch (eventKey) {
               case "ArrowLeft":
@@ -353,7 +341,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
       const data = element.data as OutlineDataChord;
 
       /**
-       * 繧ｳ繝ｼ繝峨ヶ繝ｭ繝・け縺ｮ繧ｱ繝・・繧ｷ繝ｳ繧ｳ繝壹・繧ｷ繝ｧ繝ｳ繧貞｢玲ｸ帙☆繧・
+       * 郢ｧ・ｳ郢晢ｽｼ郢晏ｳｨ繝ｶ郢晢ｽｭ郢昴・縺醍ｸｺ・ｮ郢ｧ・ｱ郢昴・繝ｻ郢ｧ・ｷ郢晢ｽｳ郢ｧ・ｳ郢晏｣ｹ繝ｻ郢ｧ・ｷ郢晢ｽｧ郢晢ｽｳ郢ｧ雋橸ｽ｢邇ｲ・ｸ蟶吮・郢ｧ繝ｻ
        * @param dir
        */
       const modEat = (dir: -1 | 1) => {
@@ -366,7 +354,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
           recalculate();
           adjustTimelineScrollXFromOutline(lastStore);
         }
-        commit();
+        commitOutlineChange();
       };
       switch (eventKey) {
         case "ArrowLeft":
@@ -380,17 +368,15 @@ const useInputOutline = (storeUtil: StoreUtil) => {
 
     callbacks.holdShift = () => {
       /**
-       * 蝓ｺ貅悶ｒ繝ｭ繝・け縺励※縲∫ｯ・峇謖・ｮ壹・繝輔か繝ｼ繧ｫ繧ｹ繧堤ｧｻ蜍輔☆繧・
+       * 陜難ｽｺ雋・じ・堤ｹ晢ｽｭ郢昴・縺醍ｸｺ蜉ｱ窶ｻ邵ｲ竏ｫ・ｯ繝ｻ蟲・ｬ悶・・ｮ螢ｹ繝ｻ郢晁ｼ斐°郢晢ｽｼ郢ｧ・ｫ郢ｧ・ｹ郢ｧ蝣､・ｧ・ｻ陷崎ｼ披・郢ｧ繝ｻ
        * @param dir
        */
       const moveRange = (dir: -1 | 1) => {
-        // 繝輔か繝ｼ繧ｫ繧ｹ縺梧悴繝ｭ繝・け縺ｧ縺ゅｋ蝣ｴ蜷医∫樟蝨ｨ縺ｮ繝輔か繝ｼ繧ｫ繧ｹ繧偵Ο繝・け縺ｫ險ｭ螳壹☆繧・
-        const outlineFocus = getOutlineFocusState();
-        if (outlineFocus.focusLock === -1) setOutlineFocusLock(outlineFocus.focus);
-        reducerOutline.moveFocus(dir);
-        adjustTimelineScrollXFromOutline(lastStore);
-        adjustOutlineScroll(lastStore);
-        commit();
+        moveOutlineInputRangeFocus({
+          lastStore,
+          dir,
+          onMoved: commitAfterOutlineScroll,
+        });
       };
       switch (eventKey) {
         case "ArrowUp":
@@ -411,6 +397,8 @@ const useInputOutline = (storeUtil: StoreUtil) => {
   };
 };
 export default useInputOutline;
+
+
 
 
 

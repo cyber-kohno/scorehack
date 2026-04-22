@@ -1,4 +1,4 @@
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import { getTerminalStateStore } from "../../state/session-state/terminal-store";
 import {
   getTerminalFrameRef,

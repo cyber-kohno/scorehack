@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-  import store from "../../system/store/store";
+import store from "../../state/root-store";
   import OutlineElement from "./outline-elements/OutlineElement.svelte";
   import ChordSelectorOverlay from "./ChordSelectorOverlay.svelte";
   import {

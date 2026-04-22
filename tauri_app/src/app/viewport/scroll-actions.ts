@@ -1,4 +1,4 @@
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import {
   getViewportTimerKeys,
   type ViewportTimerKey,

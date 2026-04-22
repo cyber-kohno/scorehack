@@ -1,11 +1,8 @@
 import { get, type Writable } from "svelte/store";
-import type { StoreProps, StoreUtil } from "../../system/store/store";
+import { createStoreUtil, type StoreProps } from "../../state/root-store";
 import { createKeyboardRouter } from "../shell/keyboard-router";
 
-export const bindGlobalKeyboard = (
-  store: Writable<StoreProps>,
-  createStoreUtil: (lastStore: StoreProps) => StoreUtil,
-) => {
+export const bindGlobalKeyboard = (store: Writable<StoreProps>) => {
   const onKeyDown = (event: KeyboardEvent) => {
     const { onKeyDown } = createKeyboardRouter(createStoreUtil(get(store)));
     onKeyDown(event);

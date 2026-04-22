@@ -1,7 +1,7 @@
-<script lang="ts">
+﻿<script lang="ts">
   import { onMount } from "svelte";
   import { writable } from "svelte/store";
-  import store from "../../system/store/store";
+import store from "../../state/root-store";
   import { setCursorRef } from "../../state/session-state/terminal-session";
   import { getTerminalState } from "../../state/ui-state/terminal-ui-store";
 
@@ -18,11 +18,11 @@
     }, 500);
   };
 
-  $: setCursorRef($store, cursorRef);
+  $: setCursorRef(cursorRef);
 
   onMount(() => {
     const unsubscribe = store.subscribe(($store) => {
-      const terminal = getTerminalState($store);
+      const terminal = getTerminalState();
       if (terminal == null) return;
 
       const checkKey = `${terminal.outputs.length}-${terminal.focus}`;
@@ -59,3 +59,4 @@
     opacity: 0;
   }
 </style>
+

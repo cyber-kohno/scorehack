@@ -1,7 +1,7 @@
 <script lang="ts">
   import type StoreCache from "../../../state/cache-state/cache-store";
-  import store from "../../../system/store/store";
-  import FocusCover from "../../../system/component/common/FocusCover.svelte";
+import store from "../../../state/root-store";
+  import FocusCover from "../../../ui/common/FocusCover.svelte";
   import OutlineChordElement from "./OutlineChordElement.svelte";
   import OutlineInitElement from "./OutlineInitElement.svelte";
   import OutlineModulateElement from "./OutlineModulateElement.svelte";

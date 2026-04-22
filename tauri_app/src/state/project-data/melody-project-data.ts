@@ -1,8 +1,8 @@
-import type {
+﻿import type {
   MelodyAudioTrack,
   MelodyScoreTrack,
 } from "../../domain/melody/melody-types";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../root-store";
 import { getProjectData } from "./project-data-store";
 import {
   getAudioTrackState,

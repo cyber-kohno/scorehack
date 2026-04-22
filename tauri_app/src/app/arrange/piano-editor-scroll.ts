@@ -1,6 +1,6 @@
 ﻿import Layout from "../../styles/tokens/layout-tokens";
 import StorePianoBacking from "../../domain/arrange/piano-backing-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import { getArrangePianoRefs } from "../../state/session-state/arrange-ref-store";
 import { smoothScrollLeft } from "../viewport/scroll-actions";
 import { getPianoArrangeEditor } from "./arrange-state";

@@ -1,4 +1,4 @@
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import { getTimelineFocusChordCache } from "../../state/cache-state/timeline-cache";
 
 export const getTimelineFocusPos = (lastStore: StoreProps) => {

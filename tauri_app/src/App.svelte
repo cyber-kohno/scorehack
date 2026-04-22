@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import store, { createStoreUtil } from "./system/store/store";
+  import store from "./state/root-store";
   import { initializeAppFromStore } from "./app/bootstrap/initialize-app";
   import { bindGlobalKeyboard } from "./app/bootstrap/bind-global-keyboard";
   import { applyDynamicLayoutVariables } from "./app/bootstrap/apply-layout-variables";
@@ -14,9 +14,9 @@
   };
 
   onMount(() => {
-    initializeAppFromStore(createStoreUtil, $store);
+    initializeAppFromStore($store);
     focusAppRoot();
-    return bindGlobalKeyboard(store, createStoreUtil);
+    return bindGlobalKeyboard(store);
   });
 
   $: isStandby = isCacheStandby($store);

@@ -7,7 +7,7 @@ import {
   getOutlineTrackIndex,
   setOutlineTrackIndex,
 } from "../../state/session-state/outline-track-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 
 export const moveOutlineFocus = (lastStore: StoreProps, val: number) => {
   const { getOutlineElements } = createProjectDataActions(lastStore);

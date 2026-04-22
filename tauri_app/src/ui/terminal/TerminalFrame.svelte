@@ -1,10 +1,10 @@
-<script lang="ts">
+﻿<script lang="ts">
   import { onMount } from "svelte";
   import CommandCursor from "./CommandCursor.svelte";
   import HelperFrame from "./HelperFrame.svelte";
   import TerminalOutput from "./TerminalOutput.svelte";
   import { adjustTerminalScroll } from "../../app/terminal/terminal-scroll";
-  import store from "../../system/store/store";
+import store from "../../state/root-store";
   import {
     getTerminalCommandSegments,
     getTerminalHelper,
@@ -19,13 +19,13 @@
   let terminalRef: HTMLDivElement | undefined;
   let lastScrollHeight = 0;
 
-  $: terminal = getTerminalState($store);
+  $: terminal = getTerminalState();
   $: outputs = getTerminalOutputs($store);
   $: helper = getTerminalHelper($store);
   $: isWaiting = isTerminalWaiting($store);
   $: targetPrompt = getTerminalTargetPrompt($store);
   $: [commandLeft, commandRight] = getTerminalCommandSegments($store);
-  $: setTerminalFrameRef($store, terminalRef);
+  $: setTerminalFrameRef(terminalRef);
 
   onMount(() => {
     const unsubscribe = store.subscribe(($store) => {
@@ -125,3 +125,4 @@
     height: 100px;
   }
 </style>
+

@@ -1,5 +1,5 @@
-import { createMelodyActions } from "../melody/melody-actions";
-import type { StoreProps } from "../../system/store/store";
+﻿import { createMelodyActions } from "../melody/melody-actions";
+import type { StoreProps } from "../../state/root-store";
 import {
   hasAnyInputHold,
   setInputHoldState,
@@ -22,9 +22,12 @@ export const setInputHold = (
   key: InputHoldKey,
   isDown: boolean,
 ) => {
-  setInputHoldState(lastStore, key, isDown);
+  void lastStore;
+  setInputHoldState(key, isDown);
 };
 
 export const hasHoldInput = (lastStore: StoreProps) => {
-  return hasAnyInputHold(lastStore);
+  void lastStore;
+  return hasAnyInputHold();
 };
+

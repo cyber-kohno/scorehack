@@ -1,7 +1,7 @@
-<script lang="ts">
+﻿<script lang="ts">
   import { writable } from "svelte/store";
-  import store from "../../system/store/store";
-  import HighlightText from "../../system/component/common/HighlightText.svelte";
+import store from "../../state/root-store";
+  import HighlightText from "../../ui/common/HighlightText.svelte";
   import type { TerminalHelperProps } from "../../state/session-state/terminal-store";
   import { setHelperFrameRef } from "../../state/session-state/terminal-session";
   import { getTerminalCursorRef } from "../../state/session-state/terminal-ref-store";
@@ -11,7 +11,7 @@
   const pos = writable({ top: -1024, left: -1024 });
   let helperRef: HTMLDivElement | undefined;
 
-  $: setHelperFrameRef($store, helperRef);
+  $: setHelperFrameRef(helperRef);
 
   $: {
     const ref = getTerminalCursorRef();
@@ -69,3 +69,4 @@
     background-color: rgba(255, 255, 255, 0.384);
   }
 </style>
+

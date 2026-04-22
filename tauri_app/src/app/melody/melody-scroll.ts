@@ -1,7 +1,7 @@
 import Layout from "../../styles/tokens/layout-tokens";
 import type { MelodyNote } from "../../domain/melody/melody-types";
 import { calcMelodyBeat } from "../../domain/melody/melody-types";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import { getEnvBeatWidth } from "../../state/session-state/env-store";
 import { smoothScrollLeft, smoothScrollTop } from "../viewport/scroll-actions";
 import {

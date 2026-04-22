@@ -1,6 +1,6 @@
 import { getContext, setContext } from "svelte";
 import { derived, type Readable } from "svelte/store";
-import store from "../../system/store/store";
+import store from "../../state/root-store";
 import type StorePianoBacking from "../../domain/arrange/piano-backing-store";
 import type StorePianoEditor from "../../domain/arrange/piano-editor-store";
 import type StoreArrange from "../../domain/arrange/arrange-store";

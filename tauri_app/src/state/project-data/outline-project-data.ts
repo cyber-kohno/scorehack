@@ -1,5 +1,5 @@
-import type { OutlineElement } from "../../domain/outline/outline-types";
-import type { StoreProps } from "../../system/store/store";
+﻿import type { OutlineElement } from "../../domain/outline/outline-types";
+import type { StoreProps } from "../root-store";
 import {
   getOutlineElementState,
   setOutlineElementState,

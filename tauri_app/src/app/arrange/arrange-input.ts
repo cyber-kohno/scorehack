@@ -1,5 +1,5 @@
 import type { InputCallbacks } from "../../state/session-state/input-store";
-import type { StoreUtil } from "../../system/store/store";
+import type { StoreUtil } from "../../state/root-store";
 import {
   clearOutlineArrangeState,
   getOutlineArrangeState,

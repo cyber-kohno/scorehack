@@ -1,6 +1,6 @@
 <script lang="ts">
-  import store from "../../../system/store/store";
-  import ShadeNote from "../../../system/component/melody/score/ShadeNote.svelte";
+import store from "../../../state/root-store";
+  import ShadeNote from "./ShadeNote.svelte";
   import {
     getMelodyScrollLimitProps,
     getShadeMelodyTracks,

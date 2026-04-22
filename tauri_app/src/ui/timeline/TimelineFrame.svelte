@@ -1,6 +1,6 @@
 <script lang="ts">
-  import store from "../../system/store/store";
-  import PianoViewFrame from "../../system/component/timeline/grid/PianoViewFrame.svelte";
+import store from "../../state/root-store";
+  import PianoViewFrame from "./grid/PianoViewFrame.svelte";
   import TimelineHeader from "./header/TimelineHeader.svelte";
   import TimelinePitchColumn from "./pitch/TimelinePitchColumn.svelte";
   import TimelineGrid from "./grid/TimelineGrid.svelte";

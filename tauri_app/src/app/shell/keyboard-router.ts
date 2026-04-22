@@ -1,13 +1,13 @@
 ﻿import type { InputCallbacks } from "../../state/session-state/input-store";
-import { createMelodyInputRouter } from "../melody/melody-input-router";
-import { createOutlineInputRouter } from "../outline/outline-input-router";
-import type { StoreProps, StoreUtil } from "../../system/store/store";
+import useInputMelody from "../melody/melody-input";
+import useInputOutline from "../outline/outline-input";
+import type { StoreProps, StoreUtil } from "../../state/root-store";
 import {
   getShellMode,
   isArrangeInUse,
 } from "../../state/ui-state/shell-ui-store";
 import { createTerminalActions } from "../terminal/terminal-actions";
-import { createTerminalInputRouter } from "../terminal/terminal-input-router";
+import useInputTerminal from "../terminal/terminal-input";
 import {
   hasHoldInput,
   setInputHold,
@@ -60,8 +60,8 @@ const getRootHoldCallbacks = (eventKey: string): InputCallbacks => {
 export const createKeyboardRouter = (storeUtil: StoreUtil) => {
   const { lastStore, commit } = storeUtil;
   const terminalActions = createTerminalActions(lastStore);
-  const inputOutline = createOutlineInputRouter(storeUtil);
-  const inputMelody = createMelodyInputRouter(storeUtil);
+  const inputOutline = useInputOutline(storeUtil);
+  const inputMelody = useInputMelody(storeUtil);
 
   const updateHold = (eventKey: string, isDown: boolean) => {
     const holdKey = HOLD_KEY_MAP[eventKey];
@@ -77,8 +77,7 @@ export const createKeyboardRouter = (storeUtil: StoreUtil) => {
 
     if (!hasHoldInput(lastStore)) {
       if (terminalActions.isUse()) {
-        const inputTerminal = createTerminalInputRouter(storeUtil);
-        inputTerminal.control(eventKey);
+        useInputTerminal(storeUtil).control(eventKey);
         commit();
         return;
       }

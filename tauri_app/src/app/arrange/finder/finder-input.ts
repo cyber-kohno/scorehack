@@ -12,7 +12,7 @@ import {
   clearOutlineArrangeState,
   getOutlineArrangeState,
 } from "../../../state/session-state/outline-arrange-store";
-import type { StoreUtil } from "../../../system/store/store";
+import type { StoreUtil } from "../../../state/root-store";
 
 const useInputFinder = (storeUtil: StoreUtil) => {
     const { lastStore, commit } = storeUtil;

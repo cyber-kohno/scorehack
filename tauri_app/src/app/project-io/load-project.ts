@@ -1,4 +1,4 @@
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import { setScoreFileHandle } from "../../state/session-state/project-file-store";
 import { resetTrackRefGroups } from "../../state/session-state/track-ref-session";
 import { openScoreFilePath } from "../../infra/tauri/dialog";

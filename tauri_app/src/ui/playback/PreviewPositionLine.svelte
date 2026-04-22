@@ -1,10 +1,9 @@
 <script lang="ts">
-  import store from "../../system/store/store";
-  import { getPlaybackLineOffset } from "../../state/ui-state/playback-ui-store";
+  import { envStore } from "../../state/session-state/env-store";
+  import { previewStore } from "../../state/session-state/preview-store";
 
-  const width = 300;
-
-  $: pos = getPlaybackLineOffset($store, width);
+  $: width = 300;
+  $: pos = $previewStore.linePos * $envStore.beatWidth - width;
 </script>
 
 <div class="frame">
@@ -24,12 +23,14 @@
     height: var(--pitch-frame-height);
     z-index: 12;
   }
+
   .wrap {
     display: inline-block;
     position: absolute;
     top: 0;
     height: 100%;
   }
+
   .shade {
     display: inline-block;
     position: relative;
@@ -40,6 +41,7 @@
       rgba(39, 118, 255, 0.809)
     );
   }
+
   .line {
     display: inline-block;
     position: relative;

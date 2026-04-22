@@ -1,4 +1,4 @@
-import Layout from "../../styles/tokens/layout-tokens";
+﻿import Layout from "../../styles/tokens/layout-tokens";
 import {
   OUTLINE_MARGIN_HEAD,
   type OutlineDataChord,
@@ -13,7 +13,7 @@ import { getArrangeTracks } from "../project-data/arrange-project-data";
 import { getOutlineElements } from "../project-data/outline-project-data";
 import { setCache } from "./cache-store";
 import type StoreCache from "../../state/cache-state/cache-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../root-store";
 
 export const recalculateCache = (lastStore: StoreProps) => {
   const elements = getOutlineElements(lastStore);
@@ -278,7 +278,7 @@ export const recalculateCache = (lastStore: StoreProps) => {
   baseCache.viewPosWidth = viewPos - baseCache.viewPosLeft;
   baseCaches.push(baseCache);
 
-  setCache(lastStore, {
+  setCache({
     baseCaches,
     chordCaches,
     elementCaches,

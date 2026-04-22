@@ -8,7 +8,7 @@ import type {
 } from "../../domain/outline/outline-types";
 import { createProjectDataActions } from "../project-data/project-data-actions";
 import { getOutlineFocusState } from "../../state/session-state/outline-focus-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 
 export const getCurrentOutlineElement = (lastStore: StoreProps): OutlineElement => {
   const { getOutlineElement } = createProjectDataActions(lastStore);

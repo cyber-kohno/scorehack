@@ -3,7 +3,7 @@ import {
   getMelodyCursorStore,
   setMelodyCursorStore,
 } from "../../state/session-state/melody-cursor-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 
 export const getMelodyCursorState = (lastStore: StoreProps): MelodyNote => {
   return getMelodyCursorStore();

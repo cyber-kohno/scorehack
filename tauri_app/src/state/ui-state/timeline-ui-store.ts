@@ -1,6 +1,6 @@
-import MusicTheory from "../../domain/theory/music-theory";
+﻿import MusicTheory from "../../domain/theory/music-theory";
 import type StoreCache from "../../state/cache-state/cache-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../root-store";
 import { getEnvBeatWidth } from "../session-state/env-store";
 import { getModeState } from "../session-state/mode-store";
 import { getOutlineFocusState } from "../session-state/outline-focus-store";

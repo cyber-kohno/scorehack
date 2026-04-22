@@ -1,5 +1,5 @@
-import useReducerMelody from "../../system/store/reducer/reducerMelody";
-import type { StoreProps } from "../../system/store/store";
+import useReducerMelody from "./melody-reducer";
+import type { StoreProps } from "../../state/root-store";
 
 export const createMelodyActions = (lastStore: StoreProps) => {
   const reducer = useReducerMelody(lastStore);

@@ -15,7 +15,7 @@ import {
   getTimelineCurrentChordCache,
 } from "../../state/cache-state/timeline-cache";
 import { createOutlineActions } from "../outline/outline-actions";
-import type { StoreUtil } from "../../system/store/store";
+import type { StoreUtil } from "../../state/root-store";
 import MusicTheory from "../../domain/theory/music-theory";
 import {
   clearOutlineArrangeState,

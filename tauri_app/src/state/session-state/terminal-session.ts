@@ -1,27 +1,17 @@
-import type { StoreProps } from "../../system/store/store";
-import {
+﻿import {
   setTerminalCursorRefState,
   setTerminalFrameRefState,
   setTerminalHelperRefState,
 } from "./terminal-ref-store";
 
-export const setTerminalFrameRef = (
-  _lastStore: StoreProps,
-  ref: HTMLElement | undefined,
-) => {
+export const setTerminalFrameRef = (ref: HTMLElement | undefined) => {
   setTerminalFrameRefState(ref);
 };
 
-export const setHelperFrameRef = (
-  _lastStore: StoreProps,
-  ref: HTMLElement | undefined,
-) => {
+export const setHelperFrameRef = (ref: HTMLElement | undefined) => {
   setTerminalHelperRefState(ref);
 };
 
-export const setCursorRef = (
-  _lastStore: StoreProps,
-  ref: HTMLElement | undefined,
-) => {
+export const setCursorRef = (ref: HTMLElement | undefined) => {
   setTerminalCursorRefState(ref);
 };

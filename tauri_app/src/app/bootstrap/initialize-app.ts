@@ -1,5 +1,5 @@
 import { createCacheActions } from "../cache/cache-actions";
-import type { StoreProps, StoreUtil } from "../../system/store/store";
+import { createStoreUtil, type StoreProps, type StoreUtil } from "../../state/root-store";
 import { applyStaticLayoutVariables } from "./apply-layout-variables";
 
 export const initializeApp = (storeUtil: StoreUtil) => {
@@ -11,10 +11,7 @@ export const initializeApp = (storeUtil: StoreUtil) => {
   commit();
 };
 
-export const initializeAppFromStore = (
-  createStoreUtil: (lastStore: StoreProps) => StoreUtil,
-  lastStore: StoreProps,
-) => {
+export const initializeAppFromStore = (lastStore: StoreProps) => {
   initializeApp(createStoreUtil(lastStore));
 };
 

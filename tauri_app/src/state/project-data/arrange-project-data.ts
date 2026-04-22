@@ -1,5 +1,5 @@
-import type StoreArrange from "../../domain/arrange/arrange-store";
-import type { StoreProps } from "../../system/store/store";
+﻿import type StoreArrange from "../../domain/arrange/arrange-store";
+import type { StoreProps } from "../root-store";
 import {
   getArrangeDataState,
   setArrangeDataState,

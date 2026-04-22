@@ -1,7 +1,7 @@
-import type { MelodyNote } from "../../domain/melody/melody-types";
+﻿import type { MelodyNote } from "../../domain/melody/melody-types";
 import { calcMelodyBeatSide } from "../../domain/melody/melody-types";
 import { getMelodyCursorState } from "../../app/melody/melody-cursor-state";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../root-store";
 import { getEnvBeatWidth } from "../session-state/env-store";
 import { getModeState } from "../session-state/mode-store";
 import { getBaseCacheFromBeat } from "../cache-state/cache-store";

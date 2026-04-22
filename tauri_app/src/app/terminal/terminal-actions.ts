@@ -1,5 +1,5 @@
-import useReducerTerminal from "../../system/store/reducer/reducerTerminal";
-import type { StoreProps } from "../../system/store/store";
+import useReducerTerminal from "./terminal-reducer";
+import type { StoreProps } from "../../state/root-store";
 
 export const createTerminalActions = (lastStore: StoreProps) => {
   const reducer = useReducerTerminal(lastStore);

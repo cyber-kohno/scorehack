@@ -5,7 +5,7 @@ import {
   getOutlineFrameRef,
 } from "../../state/session-state/outline-ref-store";
 import { getOutlineFocusState } from "../../state/session-state/outline-focus-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import { smoothScrollLeft, smoothScrollTop } from "../viewport/scroll-actions";
 import {
   getTimelineGridRef,

@@ -1,6 +1,6 @@
 <script lang="ts">
   import Layout from "../../styles/tokens/layout-tokens";
-  import store from "../../system/store/store";
+import store from "../../state/root-store";
   import { envStore } from "../../state/session-state/env-store";
   import {
     getMelodyCursor,

@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-  import store from "../../system/store/store";
+import store from "../../state/root-store";
   import { getOutlineHeaderInfo } from "../../state/ui-state/outline-ui-store";
 
   $: headerInfo = getOutlineHeaderInfo($store);

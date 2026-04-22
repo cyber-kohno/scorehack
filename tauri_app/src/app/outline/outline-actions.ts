@@ -1,5 +1,5 @@
-﻿import useReducerOutline from "../../system/store/reducer/reducerOutline";
-import type { StoreProps } from "../../system/store/store";
+import useReducerOutline from "./outline-reducer";
+import type { StoreProps } from "../../state/root-store";
 
 export type OutlineActions = ReturnType<typeof useReducerOutline>;
 

@@ -4,8 +4,8 @@ import {
   type CommandFunc,
   type CommandFuncArg,
   type CommandFuncDefault,
-} from "../../system/store/reducer/terminal/commandRegistUtil";
-import type { StoreProps } from "../../system/store/store";
+} from "./terminal-command-registry-util";
+import type { StoreProps } from "../../state/root-store";
 
 export type TerminalCommandArg = CommandFuncArg;
 export type TerminalCommandDefault = CommandFuncDefault;

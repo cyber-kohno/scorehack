@@ -3,7 +3,7 @@ import {
   getScoreFileHandle,
   setScoreFileHandle,
 } from "../../state/session-state/project-file-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 import { saveScoreFilePath } from "../../infra/tauri/dialog";
 import { writeUtf8TextFile } from "../../infra/tauri/fs";
 import { getFileName, gzipToBase64 } from "./project-file-codec";

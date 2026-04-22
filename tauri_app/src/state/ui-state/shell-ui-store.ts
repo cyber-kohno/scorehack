@@ -1,4 +1,4 @@
-import type { StoreProps } from "../../system/store/store";
+﻿import type { StoreProps } from "../root-store";
 import { getTerminalStateStore } from "../session-state/terminal-store";
 import { getModeState, type ControlMode } from "../session-state/mode-store";
 import { getOutlineArrangeState } from "../session-state/outline-arrange-store";

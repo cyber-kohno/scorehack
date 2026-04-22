@@ -1,6 +1,6 @@
-import type StoreCache from "../../state/cache-state/cache-store";
+﻿import type StoreCache from "../../state/cache-state/cache-store";
 import type { OutlineDataChord } from "../../domain/outline/outline-types";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../root-store";
 import MusicTheory from "../../domain/theory/music-theory";
 import { getInputHoldValue } from "../session-state/input-store";
 import { getModeState } from "../session-state/mode-store";

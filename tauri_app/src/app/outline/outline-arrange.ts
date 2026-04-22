@@ -7,7 +7,7 @@ import { setOutlineArrangeState } from "../../state/session-state/outline-arrang
 import StorePianoEditor from "../../domain/arrange/piano-editor-store";
 import type StoreArrange from "../../domain/arrange/arrange-store";
 import type StoreCache from "../../state/cache-state/cache-store";
-import type { StoreProps } from "../../system/store/store";
+import type { StoreProps } from "../../state/root-store";
 
 type BuildArrangeProps = {
   arrange: StoreArrange.EditorProps;
