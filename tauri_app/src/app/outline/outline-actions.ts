@@ -1,8 +1,10 @@
 import useReducerOutline from "./outline-reducer";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 
 export type OutlineActions = ReturnType<typeof useReducerOutline>;
 
-export const createOutlineActions = (lastStore: StoreProps): OutlineActions => {
-  return useReducerOutline(lastStore);
+export const createOutlineActions = (
+  rootStoreToken: RootStoreToken,
+): OutlineActions => {
+  return useReducerOutline(rootStoreToken);
 };

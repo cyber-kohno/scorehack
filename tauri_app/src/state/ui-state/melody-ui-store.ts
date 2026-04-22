@@ -1,7 +1,7 @@
-﻿import type { MelodyNote } from "../../domain/melody/melody-types";
+import type { MelodyNote } from "../../domain/melody/melody-types";
 import { calcMelodyBeatSide } from "../../domain/melody/melody-types";
 import { getMelodyCursorState } from "../../app/melody/melody-cursor-state";
-import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 import { getEnvBeatWidth } from "../session-state/env-store";
 import { getModeState } from "../session-state/mode-store";
 import { getBaseCacheFromBeat } from "../cache-state/cache-store";
@@ -14,104 +14,105 @@ import { getMelodyTrackIndex } from "../session-state/melody-track-store";
 import { getMelodyFocusState } from "../session-state/melody-focus-store";
 import { getMelodyOverlapState } from "../session-state/melody-overlap-store";
 
-export const isMelodyMode = (lastStore: StoreProps) => {
+export const isMelodyMode = (rootStoreToken: RootStoreToken) => {
   return getModeState() === "melody";
 };
 
-export const getMelodyCursor = (lastStore: StoreProps): MelodyNote => {
-  return getMelodyCursorState(lastStore);
+export const getMelodyCursor = (rootStoreToken: RootStoreToken): MelodyNote => {
+  return getMelodyCursorState(rootStoreToken);
 };
 
-export const isMelodyCursorOverlap = (lastStore: StoreProps) => {
+export const isMelodyCursorOverlap = (rootStoreToken: RootStoreToken) => {
   return getMelodyOverlapState();
 };
 
-export const getMelodyFocusIndex = (lastStore: StoreProps) => {
+export const getMelodyFocusIndex = (rootStoreToken: RootStoreToken) => {
   return getMelodyFocusState().focus;
 };
 
-export const getMelodyFocusLockIndex = (lastStore: StoreProps) => {
+export const getMelodyFocusLockIndex = (rootStoreToken: RootStoreToken) => {
   return getMelodyFocusState().focusLock;
 };
 
-export const getCurrentMelodyTrackIndex = (lastStore: StoreProps) => {
+export const getCurrentMelodyTrackIndex = (rootStoreToken: RootStoreToken) => {
   return getMelodyTrackIndex();
 };
 
-export const getCurrentMelodyScoreTrack = (lastStore: StoreProps) => {
-  const trackIndex = getCurrentMelodyTrackIndex(lastStore);
-  return getScoreTrack(lastStore, trackIndex);
+export const getCurrentMelodyScoreTrack = (rootStoreToken: RootStoreToken) => {
+  const trackIndex = getCurrentMelodyTrackIndex(rootStoreToken);
+  return getScoreTrack(rootStoreToken, trackIndex);
 };
 
-export const getCurrentMelodyNotes = (lastStore: StoreProps) => {
-  return getCurrentMelodyScoreTrack(lastStore)?.notes ?? [];
+export const getCurrentMelodyNotes = (rootStoreToken: RootStoreToken) => {
+  return getCurrentMelodyScoreTrack(rootStoreToken)?.notes ?? [];
 };
 
-export const getCurrentMelodyTargetNote = (lastStore: StoreProps): MelodyNote => {
-  const focus = getMelodyFocusIndex(lastStore);
-  if (focus === -1) return getMelodyCursor(lastStore);
-  return getCurrentMelodyNotes(lastStore)[focus];
+export const getCurrentMelodyTargetNote = (rootStoreToken: RootStoreToken): MelodyNote => {
+  const focus = getMelodyFocusIndex(rootStoreToken);
+  if (focus === -1) return getMelodyCursor(rootStoreToken);
+  return getCurrentMelodyNotes(rootStoreToken)[focus];
 };
 
-export const getCurrentMelodyPitch = (lastStore: StoreProps) => {
-  return getCurrentMelodyTargetNote(lastStore).pitch;
+export const getCurrentMelodyPitch = (rootStoreToken: RootStoreToken) => {
+  return getCurrentMelodyTargetNote(rootStoreToken).pitch;
 };
 
-export const getMelodyFocusRange = (lastStore: StoreProps) => {
-  const focus = getMelodyFocusIndex(lastStore);
-  const focusLock = getMelodyFocusLockIndex(lastStore);
+export const getMelodyFocusRange = (rootStoreToken: RootStoreToken) => {
+  const focus = getMelodyFocusIndex(rootStoreToken);
+  const focusLock = getMelodyFocusLockIndex(rootStoreToken);
   if (focusLock === -1) return [focus, focus] as const;
   return focus < focusLock ? [focus, focusLock] as const : [focusLock, focus] as const;
 };
 
-export const isMelodyFocusRangeIndex = (lastStore: StoreProps, index: number) => {
-  const [start, end] = getMelodyFocusRange(lastStore);
-  return isMelodyMode(lastStore) && start <= index && end >= index;
+export const isMelodyFocusRangeIndex = (rootStoreToken: RootStoreToken, index: number) => {
+  const [start, end] = getMelodyFocusRange(rootStoreToken);
+  return isMelodyMode(rootStoreToken) && start <= index && end >= index;
 };
 
-export const getMelodyCurrentBeatRect = (lastStore: StoreProps) => {
-  const note = getCurrentMelodyTargetNote(lastStore);
+export const getMelodyCurrentBeatRect = (rootStoreToken: RootStoreToken) => {
+  const note = getCurrentMelodyTargetNote(rootStoreToken);
   const side = calcMelodyBeatSide(note);
   const beatWidth = getEnvBeatWidth();
   const [left, width] = [side.pos, side.len].map((v) => v * beatWidth);
   return { left, width };
 };
 
-export const getMelodyScrollLimitProps = (lastStore: StoreProps) => {
+export const getMelodyScrollLimitProps = (rootStoreToken: RootStoreToken) => {
   return getTimelineGridScrollLimitProps();
 };
 
-export const getMelodyCursorMiddle = (lastStore: StoreProps) => {
-  const { left, width } = getMelodyCurrentBeatRect(lastStore);
+export const getMelodyCursorMiddle = (rootStoreToken: RootStoreToken) => {
+  const { left, width } = getMelodyCurrentBeatRect(rootStoreToken);
   return left + width / 2;
 };
 
-export const getMelodyNoteTonality = (lastStore: StoreProps, note: MelodyNote) => {
+export const getMelodyNoteTonality = (rootStoreToken: RootStoreToken, note: MelodyNote) => {
   const beatSide = calcMelodyBeatSide(note);
-  return getBaseCacheFromBeat(lastStore, beatSide.pos)?.scoreBase.tonality;
+  return getBaseCacheFromBeat(rootStoreToken, beatSide.pos)?.scoreBase.tonality;
 };
 
-export const isMelodyCursorVisible = (lastStore: StoreProps, isPreview: boolean) => {
-  return isMelodyMode(lastStore) && !isPreview && getMelodyFocusIndex(lastStore) === -1;
+export const isMelodyCursorVisible = (rootStoreToken: RootStoreToken, isPreview: boolean) => {
+  return isMelodyMode(rootStoreToken) && !isPreview && getMelodyFocusIndex(rootStoreToken) === -1;
 };
 
-export const getShadeMelodyTracks = (lastStore: StoreProps) => {
-  const currentTrackIndex = getCurrentMelodyTrackIndex(lastStore);
+export const getShadeMelodyTracks = (rootStoreToken: RootStoreToken) => {
+  const currentTrackIndex = getCurrentMelodyTrackIndex(rootStoreToken);
   const isHarmonizeMode = getModeState() === "harmonize";
 
-  return getScoreTracks(lastStore)
+  return getScoreTracks(rootStoreToken)
     .map((track, trackIndex) => ({ track, trackIndex }))
     .filter(({ trackIndex }) => trackIndex !== currentTrackIndex || isHarmonizeMode);
 };
 
-export const getShadeMelodyTrack = (lastStore: StoreProps, trackIndex: number) => {
-  return getScoreTrack(lastStore, trackIndex);
+export const getShadeMelodyTrack = (rootStoreToken: RootStoreToken, trackIndex: number) => {
+  return getScoreTrack(rootStoreToken, trackIndex);
 };
 
 export const getShadeMelodyNote = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   trackIndex: number,
   noteIndex: number,
 ) => {
-  return getShadeMelodyTrack(lastStore, trackIndex)?.notes[noteIndex];
+  return getShadeMelodyTrack(rootStoreToken, trackIndex)?.notes[noteIndex];
 };
+

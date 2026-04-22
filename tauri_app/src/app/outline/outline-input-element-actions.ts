@@ -5,7 +5,7 @@ import type {
   OutlineElement,
 } from "../../domain/outline/outline-types";
 import { getOutlineElements } from "../../state/project-data/outline-project-data";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import type { OutlineActions } from "./outline-actions";
 
 export const insertOutlineChordElement = (
@@ -48,17 +48,17 @@ export const insertOutlineModulateElement = (
 };
 
 type RemoveOutlineFocusElementParams = {
-  lastStore: StoreProps;
+  rootStoreToken: RootStoreToken;
   outlineActions: OutlineActions;
   element: OutlineElement;
 };
 
 export const removeOutlineFocusElementIfAllowed = ({
-  lastStore,
+  rootStoreToken,
   outlineActions,
   element,
 }: RemoveOutlineFocusElementParams) => {
-  const sectionCount = getOutlineElements(lastStore).filter(
+  const sectionCount = getOutlineElements(rootStoreToken).filter(
     (item) => item.type === "section",
   ).length;
   const isLastSection = element.type === "section" && sectionCount === 1;

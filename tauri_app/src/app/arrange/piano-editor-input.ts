@@ -15,23 +15,23 @@ import {
   getTimelineCurrentChordCache,
 } from "../../state/cache-state/timeline-cache";
 import { createOutlineActions } from "../outline/outline-actions";
-import type { StoreUtil } from "../../state/root-store";
+import type { CommitContext } from "../../state/root-store";
 import MusicTheory from "../../domain/theory/music-theory";
 import {
   clearOutlineArrangeState,
   getOutlineArrangeState,
 } from "../../state/session-state/outline-arrange-store";
 
-const useInputPianoEditor = (storeUtil: StoreUtil) => {
-  const { lastStore, commit } = storeUtil;
-  const reducerOutline = createOutlineActions(lastStore);
-  const { recalculate } = createCacheActions(lastStore);
+const useInputPianoEditor = (commitContext: CommitContext) => {
+  const { lastStore: rootStoreToken, commit } = commitContext;
+  const reducerOutline = createOutlineActions(rootStoreToken);
+  const { recalculate } = createCacheActions(rootStoreToken);
 
   const control = (eventKey: string) => {
     const arrange = getOutlineArrangeState();
     if (arrange == null) throw new Error();
 
-    const editor = getPianoArrangeEditor(lastStore);
+    const editor = getPianoArrangeEditor(rootStoreToken);
 
     switch (editor.phase) {
       case "edit":
@@ -39,9 +39,9 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
           switch (eventKey) {
             case "w":
               {
-                const arrTrack = getCurrentArrangeTrack(lastStore);
-                const chord = getTimelineCurrentChordCache(lastStore);
-                const base = getTimelineCurrentBaseCache(lastStore);
+                const arrTrack = getCurrentArrangeTrack(rootStoreToken);
+                const chord = getTimelineCurrentChordCache(rootStoreToken);
+                const base = getTimelineCurrentBaseCache(rootStoreToken);
                 if (chord == undefined || base == undefined) throw new Error();
                 const ts = base.scoreBase.ts;
                 arrange.finder = createPianoArrangeFinder({
@@ -60,7 +60,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
             backing.cursorX = -1;
             editor.control = "record";
             commit();
-            adjustPianoEditorColumnScroll(lastStore);
+            adjustPianoEditorColumnScroll(rootStoreToken);
           };
 
           /**
@@ -240,7 +240,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                   if (backing.cursorX > 0) {
                     backing.cursorX--;
                     commit();
-                    adjustPianoEditorColumnScroll(lastStore);
+                    adjustPianoEditorColumnScroll(rootStoreToken);
                   }
                 }
                 break;
@@ -249,7 +249,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                   if (backing.cursorX < cols.length - 1) {
                     backing.cursorX++;
                     commit();
-                    adjustPianoEditorColumnScroll(lastStore);
+                    adjustPianoEditorColumnScroll(rootStoreToken);
                   }
                 }
                 break;
@@ -437,7 +437,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                   backing.cursorX--;
                   adjustRange();
                   commit();
-                  adjustPianoEditorColumnScroll(lastStore);
+                  adjustPianoEditorColumnScroll(rootStoreToken);
                 }
                 break;
               case "ArrowRight":
@@ -445,7 +445,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                   backing.cursorX++;
                   adjustRange();
                   commit();
-                  adjustPianoEditorColumnScroll(lastStore);
+                  adjustPianoEditorColumnScroll(rootStoreToken);
                 }
                 break;
               case "a":
@@ -520,7 +520,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
     const arrange = getOutlineArrangeState();
     if (arrange == null) throw new Error();
 
-    const editor = getPianoArrangeEditor(lastStore);
+    const editor = getPianoArrangeEditor(rootStoreToken);
     const callbacks: InputCallbacks = {};
 
     callbacks.holdShift = () => {
@@ -576,7 +576,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
     const arrange = getOutlineArrangeState();
     if (arrange == null) throw new Error();
 
-    const editor = getPianoArrangeEditor(lastStore);
+    const editor = getPianoArrangeEditor(rootStoreToken);
 
     const compiledChord = arrange.target.compiledChord;
     const scoreBase = arrange.target.scoreBase;
@@ -585,7 +585,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
     const chordSeq = arrange.target.chordSeq;
 
     // 繝代ち繝ｼ繝ｳ縺ｮ逋ｻ骭ｲ
-    const arrTrack = getCurrentArrangeTrack(lastStore);
+    const arrTrack = getCurrentArrangeTrack(rootStoreToken);
     const pianoLib = arrTrack.pianoLib;
     if (pianoLib == undefined) throw new Error();
 

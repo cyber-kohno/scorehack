@@ -1,29 +1,25 @@
 import { get, writable } from "svelte/store";
 
-namespace ProjectFileStore {
-  export type Handle = {
-    path: string;
-    name: string;
-  };
+export type ProjectFileHandle = {
+  path: string;
+  name: string;
+};
 
-  export type Props = {
-    score?: Handle;
-  };
+export type ProjectFileState = {
+  score?: ProjectFileHandle;
+};
 
-  export const INITIAL: Props = {};
-}
+export const INITIAL_PROJECT_FILE_STATE: ProjectFileState = {};
 
-export default ProjectFileStore;
-
-export const projectFileStore = writable<ProjectFileStore.Props>(
-  ProjectFileStore.INITIAL,
+export const projectFileStore = writable<ProjectFileState>(
+  INITIAL_PROJECT_FILE_STATE,
 );
 
 export const getProjectFileState = () => get(projectFileStore);
 
 export const getScoreFileHandle = () => getProjectFileState().score;
 
-export const setScoreFileHandle = (score: ProjectFileStore.Handle) => {
+export const setScoreFileHandle = (score: ProjectFileHandle) => {
   projectFileStore.update((state) => ({
     ...state,
     score,
@@ -31,5 +27,5 @@ export const setScoreFileHandle = (score: ProjectFileStore.Handle) => {
 };
 
 export const clearProjectFileState = () => {
-  projectFileStore.set(ProjectFileStore.INITIAL);
+  projectFileStore.set(INITIAL_PROJECT_FILE_STATE);
 };

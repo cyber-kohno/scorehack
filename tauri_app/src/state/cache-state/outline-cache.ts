@@ -1,4 +1,4 @@
-﻿import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 import {
   getOutlineFrameRef,
   getOutlineScrollLimitProps,
@@ -10,20 +10,20 @@ import {
   getOutlineTailPosition,
 } from "./cache-store";
 
-export const getCurrentOutlineElementCache = (lastStore: StoreProps) => {
+export const getCurrentOutlineElementCache = (rootStoreToken: RootStoreToken) => {
   const focus = getOutlineFocusState().focus;
-  return getElementCaches(lastStore)[focus];
+  return getElementCaches(rootStoreToken)[focus];
 };
 
-export const getCurrentOutlineBaseCache = (lastStore: StoreProps) => {
-  const element = getCurrentOutlineElementCache(lastStore);
+export const getCurrentOutlineBaseCache = (rootStoreToken: RootStoreToken) => {
+  const element = getCurrentOutlineElementCache(rootStoreToken);
   if (element == undefined) return undefined;
-  return getBaseCaches(lastStore)[element.baseSeq];
+  return getBaseCaches(rootStoreToken)[element.baseSeq];
 };
 
-export const getVisibleOutlineElementCaches = (lastStore: StoreProps) => {
+export const getVisibleOutlineElementCaches = (rootStoreToken: RootStoreToken) => {
   const elementSeq = getOutlineFocusState().focus;
-  const elementCaches = getElementCaches(lastStore);
+  const elementCaches = getElementCaches(rootStoreToken);
   const limitProps = getOutlineScrollLimitProps();
   if (limitProps == null) return [];
 
@@ -35,13 +35,14 @@ export const getVisibleOutlineElementCaches = (lastStore: StoreProps) => {
   );
 };
 
-export const getOutlineTailPos = (lastStore: StoreProps) => {
-  return getOutlineTailPosition(lastStore);
+export const getOutlineTailPos = (rootStoreToken: RootStoreToken) => {
+  return getOutlineTailPosition(rootStoreToken);
 };
 
-export const getCurrentOutlineTop = (lastStore: StoreProps) => {
-  const element = getCurrentOutlineElementCache(lastStore);
+export const getCurrentOutlineTop = (rootStoreToken: RootStoreToken) => {
+  const element = getCurrentOutlineElementCache(rootStoreToken);
   const outlineRef = getOutlineFrameRef();
   if (element == undefined || outlineRef == undefined) return null;
   return element.outlineTop - outlineRef.scrollTop;
 };
+

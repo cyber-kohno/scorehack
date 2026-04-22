@@ -1,13 +1,13 @@
 ﻿import { createTerminalActions } from "../../app/terminal/terminal-actions";
 import { createTerminalHelper } from "../../app/terminal/terminal-helper";
 import { adjustHelperScroll } from "../../app/terminal/terminal-scroll";
-import type { StoreUtil } from "../../state/root-store";
+import type { CommitContext } from "../../state/root-store";
 
-const useInputTerminal = (storeUtil: StoreUtil) => {
-  const { lastStore, commit } = storeUtil;
+const useInputTerminal = (commitContext: CommitContext) => {
+  const { lastStore: rootStoreToken, commit } = commitContext;
 
-  const terminalActions = createTerminalActions(lastStore);
-  const { build: buildHelper } = createTerminalHelper(lastStore);
+  const terminalActions = createTerminalActions(rootStoreToken);
+  const { build: buildHelper } = createTerminalHelper(rootStoreToken);
 
   const commitTerminalChange = ({
     rebuildHelper = false,
@@ -20,7 +20,7 @@ const useInputTerminal = (storeUtil: StoreUtil) => {
       buildHelper();
     }
     if (adjustHelper) {
-      adjustHelperScroll(lastStore);
+      adjustHelperScroll(rootStoreToken);
     }
     commit();
   };

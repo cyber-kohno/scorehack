@@ -1,4 +1,4 @@
-import type StoreMelody from "../melody/melody-store";
+import type { MelodyNorm } from "../melody/melody-types";
 
 namespace PianoBackingStore {
   export interface DataProps {
@@ -29,7 +29,7 @@ namespace PianoBackingStore {
 
   export type PedalState = 0 | 1 | 2;
 
-  export interface Col extends StoreMelody.Norm {
+  export interface Col extends MelodyNorm {
     dot?: number;
     pedal: PedalState;
   }

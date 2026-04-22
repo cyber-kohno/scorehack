@@ -1,14 +1,14 @@
-import type ProjectFileStore from "../../state/session-state/project-file-store";
+import type { ProjectFileHandle } from "../../state/session-state/project-file-store";
 import {
   getScoreFileHandle,
   setScoreFileHandle,
 } from "../../state/session-state/project-file-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import { saveScoreFilePath } from "../../infra/tauri/dialog";
 import { writeUtf8TextFile } from "../../infra/tauri/fs";
 import { getFileName, gzipToBase64 } from "./project-file-codec";
 
-export type ProjectIoHandle = ProjectFileStore.Handle;
+export type ProjectIoHandle = ProjectFileHandle;
 
 export interface ProjectIoCallbacks {
   success: (handle: ProjectIoHandle) => void;
@@ -22,11 +22,12 @@ const toHandle = (path: string): ProjectIoHandle => ({
 });
 
 export const saveProject = async (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   plainData: string,
   extension: string,
   callbacks: ProjectIoCallbacks,
 ) => {
+  void rootStoreToken;
   try {
     const scoreHandle = getScoreFileHandle();
     if (scoreHandle) {

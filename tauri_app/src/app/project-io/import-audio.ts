@@ -1,4 +1,4 @@
-import type StoreMelody from "../../domain/melody/melody-store";
+import type { MelodyAudioTrack } from "../../domain/melody/melody-types";
 import { openMp3FilePath } from "../../infra/tauri/dialog";
 import { readBinaryFile } from "../../infra/tauri/fs";
 import { getFileName, uint8ArrayToBase64 } from "./project-file-codec";
@@ -10,7 +10,7 @@ const toHandle = (path: string): ProjectIoHandle => ({
 });
 
 export const importAudio = async (
-  track: StoreMelody.AudioTrack,
+  track: MelodyAudioTrack,
   success: (handle: ProjectIoHandle) => void,
   cancel: () => void,
 ) => {

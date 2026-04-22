@@ -8,17 +8,17 @@ import {
   OUTLINE_DOMM_VALUES,
   type OutlineDataModulate,
 } from "../../../domain/outline/outline-types";
-import type { StoreProps } from "../../../state/root-store";
+import type { RootStoreToken } from "../../../state/root-store";
 import { createCacheActions } from "../../cache/cache-actions";
 import useReducerTermianl from "../terminal-reducer";
 
-const useBuilderModulate = (lastStore: StoreProps) => {
-  const reducer = useReducerTermianl(lastStore);
+const useBuilderModulate = (rootStoreToken: RootStoreToken) => {
+  const reducer = useReducerTermianl(rootStoreToken);
   const terminal = reducer.getTerminal();
   const logger = createTerminalLogger(terminal);
 
-  const { recalculate } = createCacheActions(lastStore);
-  const reducerOutline = createOutlineActions(lastStore);
+  const { recalculate } = createCacheActions(rootStoreToken);
+  const reducerOutline = createOutlineActions(rootStoreToken);
 
   const get = (): TerminalCommand[] => {
     const defaultProps = createTerminalCommandDefault("modulate");

@@ -1,12 +1,12 @@
 ﻿import Layout from "../../styles/tokens/layout-tokens";
 import StorePianoBacking from "../../domain/arrange/piano-backing-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import { getArrangePianoRefs } from "../../state/session-state/arrange-ref-store";
 import { smoothScrollLeft } from "../viewport/scroll-actions";
 import { getPianoArrangeEditor } from "./arrange-state";
 
-export const adjustPianoEditorColumnScroll = (lastStore: StoreProps) => {
-  const backing = getPianoArrangeEditor(lastStore).backing;
+export const adjustPianoEditorColumnScroll = (rootStoreToken: RootStoreToken) => {
+  const backing = getPianoArrangeEditor(rootStoreToken).backing;
   const pianoRef = getArrangePianoRefs();
   if (
     pianoRef.col == undefined ||
@@ -34,5 +34,5 @@ export const adjustPianoEditorColumnScroll = (lastStore: StoreProps) => {
     0,
   );
   const left = currMiddle - width / 2;
-  smoothScrollLeft(lastStore, [pianoRef.col, pianoRef.table, pianoRef.pedal], left);
+  smoothScrollLeft(rootStoreToken, [pianoRef.col, pianoRef.table, pianoRef.pedal], left);
 };

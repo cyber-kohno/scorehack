@@ -1,4 +1,4 @@
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import { setScoreFileHandle } from "../../state/session-state/project-file-store";
 import { resetTrackRefGroups } from "../../state/session-state/track-ref-session";
 import { openScoreFilePath } from "../../infra/tauri/dialog";
@@ -14,12 +14,12 @@ const toHandle = (path: string): ProjectIoHandle => ({
 });
 
 export const loadProject = async (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   success: (handle: ProjectIoHandle) => void,
   cancel: () => void,
 ) => {
-  const { recalculate } = createCacheActions(lastStore);
-  const { setProjectData, getScoreTracks } = createProjectDataActions(lastStore);
+  const { recalculate } = createCacheActions(rootStoreToken);
+  const { setProjectData, getScoreTracks } = createProjectDataActions(rootStoreToken);
 
   try {
     const path = await openScoreFilePath();

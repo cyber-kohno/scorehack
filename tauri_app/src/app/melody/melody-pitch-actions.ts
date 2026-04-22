@@ -26,7 +26,7 @@ export const moveMelodyPitchRange = ({
 export const getNextScalePitch = (
   pitchIndex: number,
   dir: -1 | 1,
-  tonality: number[],
+  tonality: MusicTheory.Tonality,
 ) => {
   while (true) {
     pitchIndex += dir;
@@ -40,7 +40,7 @@ export const getNextScalePitch = (
 type MoveScaleLockedMelodyPitchParams = {
   note: StoreMelody.Note;
   dir: -1 | 1;
-  tonality: number[];
+  tonality: MusicTheory.Tonality;
   maxPitch: number;
   onPitchMoved: (note: StoreMelody.Note) => void;
   onPreviewPitch: (pitchIndex: number) => void;
@@ -66,7 +66,7 @@ export const moveScaleLockedMelodyPitch = ({
 type MoveScaleLockedMelodyPitchRangeParams = {
   targets: StoreMelody.Note[];
   dir: -1 | 1;
-  tonality: number[];
+  tonality: MusicTheory.Tonality;
   onPitchMoved: () => void;
 };
 

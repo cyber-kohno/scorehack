@@ -1,7 +1,7 @@
 ﻿import type { InputCallbacks } from "../../state/session-state/input-store";
 import useInputMelody from "../melody/melody-input";
 import useInputOutline from "../outline/outline-input";
-import type { StoreProps, StoreUtil } from "../../state/root-store";
+import type { CommitContext, RootStoreToken } from "../../state/root-store";
 import {
   getShellMode,
   isArrangeInUse,
@@ -12,9 +12,9 @@ import {
   hasHoldInput,
   setInputHold,
   switchMode,
-  type InputHoldKey,
 } from "./root-control";
 import { getInputStateStore } from "../../state/session-state/input-store";
+import type { InputHoldKey } from "../../state/session-state/keyboard-session";
 
 const HOLD_KEY_MAP: Partial<Record<string, InputHoldKey>> = {
   e: "holdE",
@@ -28,9 +28,10 @@ const HOLD_KEY_MAP: Partial<Record<string, InputHoldKey>> = {
 };
 
 const applyHoldCallbacks = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   callbacks: InputCallbacks,
 ) => {
+  void rootStoreToken;
   const input = getInputStateStore();
   Object.keys(callbacks).some((key) => {
     const holdKey = key as keyof typeof input;
@@ -57,27 +58,27 @@ const getRootHoldCallbacks = (eventKey: string): InputCallbacks => {
   return callbacks;
 };
 
-export const createKeyboardRouter = (storeUtil: StoreUtil) => {
-  const { lastStore, commit } = storeUtil;
-  const terminalActions = createTerminalActions(lastStore);
-  const inputOutline = useInputOutline(storeUtil);
-  const inputMelody = useInputMelody(storeUtil);
+export const createKeyboardRouter = (commitContext: CommitContext) => {
+  const { lastStore: rootStoreToken, commit } = commitContext;
+  const terminalActions = createTerminalActions(rootStoreToken);
+  const inputOutline = useInputOutline(commitContext);
+  const inputMelody = useInputMelody(commitContext);
 
   const updateHold = (eventKey: string, isDown: boolean) => {
     const holdKey = HOLD_KEY_MAP[eventKey];
     if (holdKey == null) return;
-    setInputHold(lastStore, holdKey, isDown);
+    setInputHold(rootStoreToken, holdKey, isDown);
     commit();
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
     const eventKey = event.key;
-    const mode = getShellMode(lastStore);
-    const isUseArrange = isArrangeInUse(lastStore);
+    const mode = getShellMode(rootStoreToken);
+    const isUseArrange = isArrangeInUse(rootStoreToken);
 
-    if (!hasHoldInput(lastStore)) {
+    if (!hasHoldInput(rootStoreToken)) {
       if (terminalActions.isUse()) {
-        useInputTerminal(storeUtil).control(eventKey);
+        useInputTerminal(commitContext).control(eventKey);
         commit();
         return;
       }
@@ -85,7 +86,7 @@ export const createKeyboardRouter = (storeUtil: StoreUtil) => {
       switch (eventKey) {
         case "r": {
           if (!isUseArrange) {
-            switchMode(lastStore);
+            switchMode(rootStoreToken);
             commit();
           }
           break;
@@ -112,15 +113,15 @@ export const createKeyboardRouter = (storeUtil: StoreUtil) => {
       return;
     }
 
-    applyHoldCallbacks(lastStore, getRootHoldCallbacks(eventKey));
+    applyHoldCallbacks(rootStoreToken, getRootHoldCallbacks(eventKey));
 
     switch (mode) {
       case "harmonize": {
-        applyHoldCallbacks(lastStore, inputOutline.getHoldCallbacks(eventKey));
+        applyHoldCallbacks(rootStoreToken, inputOutline.getHoldCallbacks(eventKey));
         break;
       }
       case "melody": {
-        applyHoldCallbacks(lastStore, inputMelody.getHoldCallbacks(eventKey));
+        applyHoldCallbacks(rootStoreToken, inputMelody.getHoldCallbacks(eventKey));
         break;
       }
     }
@@ -135,6 +136,5 @@ export const createKeyboardRouter = (storeUtil: StoreUtil) => {
     onKeyUp,
   };
 };
-
 
 

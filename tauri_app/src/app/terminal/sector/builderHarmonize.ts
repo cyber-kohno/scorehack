@@ -13,19 +13,23 @@ import {
   validatePreviewInstrumentName,
 } from "../../../state/session-state/preview-store";
 import StorePianoEditor from "../../../domain/arrange/piano-editor-store";
-import { createStoreUtil, type StoreProps } from "../../../state/root-store";
+import {
+  createCommitContext,
+  type CommitContext,
+  type RootStoreToken,
+} from "../../../state/root-store";
 import useReducerTermianl from "../terminal-reducer";
 
-const useBuilderHarmonize = (lastStore: StoreProps) => {
-  const storeUtil = createStoreUtil(lastStore);
-  const { commit } = storeUtil;
-  const reducer = useReducerTermianl(lastStore);
+const useBuilderHarmonize = (rootStoreToken: RootStoreToken) => {
+  const commitContext: CommitContext = createCommitContext(rootStoreToken);
+  const { commit } = commitContext;
+  const reducer = useReducerTermianl(rootStoreToken);
   const terminal = reducer.getTerminal();
-  const { isLoadSoundFont, loadSoundFont } = createPlaybackActions(storeUtil);
-  const { getArrangeTracks } = createProjectDataActions(lastStore);
+  const { isLoadSoundFont, loadSoundFont } = createPlaybackActions(commitContext);
+  const { getArrangeTracks } = createProjectDataActions(rootStoreToken);
 
   const { changeHarmonizeTrack, getCurrHarmonizeTrack } =
-    createOutlineActions(lastStore);
+    createOutlineActions(rootStoreToken);
 
   const logger = createTerminalLogger(terminal);
   const lsh = () => {

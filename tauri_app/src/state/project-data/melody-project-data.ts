@@ -2,8 +2,7 @@
   MelodyAudioTrack,
   MelodyScoreTrack,
 } from "../../domain/melody/melody-types";
-import type { StoreProps } from "../root-store";
-import { getProjectData } from "./project-data-store";
+import type { RootStoreToken } from "../root-store";
 import {
   getAudioTrackState,
   setAudioTrackState,
@@ -13,38 +12,46 @@ import {
   setScoreTrackState,
 } from "../session-state/score-track-store";
 
-export const getScoreTracks = (lastStore: StoreProps): MelodyScoreTrack[] => {
+export const getScoreTracks = (
+  rootStoreToken: RootStoreToken,
+): MelodyScoreTrack[] => {
+  void rootStoreToken;
   return getScoreTrackState();
 };
 
 export const getScoreTrack = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   index: number,
 ): MelodyScoreTrack | undefined => {
-  return getScoreTracks(lastStore)[index];
+  return getScoreTracks(rootStoreToken)[index];
 };
 
 export const setScoreTracks = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   tracks: MelodyScoreTrack[],
 ): void => {
+  void rootStoreToken;
   setScoreTrackState(tracks);
 };
 
-export const getAudioTracks = (lastStore: StoreProps): MelodyAudioTrack[] => {
+export const getAudioTracks = (
+  rootStoreToken: RootStoreToken,
+): MelodyAudioTrack[] => {
+  void rootStoreToken;
   return getAudioTrackState();
 };
 
 export const getAudioTrack = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   index: number,
 ): MelodyAudioTrack | undefined => {
-  return getAudioTracks(lastStore)[index];
+  return getAudioTracks(rootStoreToken)[index];
 };
 
 export const setAudioTracks = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   tracks: MelodyAudioTrack[],
 ): void => {
+  void rootStoreToken;
   setAudioTrackState(tracks);
 };

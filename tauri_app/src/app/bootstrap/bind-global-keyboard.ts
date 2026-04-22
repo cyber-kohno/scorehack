@@ -1,15 +1,15 @@
 import { get, type Writable } from "svelte/store";
-import { createStoreUtil, type StoreProps } from "../../state/root-store";
+import { createCommitContext, type RootStoreToken } from "../../state/root-store";
 import { createKeyboardRouter } from "../shell/keyboard-router";
 
-export const bindGlobalKeyboard = (store: Writable<StoreProps>) => {
+export const bindGlobalKeyboard = (store: Writable<RootStoreToken>) => {
   const onKeyDown = (event: KeyboardEvent) => {
-    const { onKeyDown } = createKeyboardRouter(createStoreUtil(get(store)));
+    const { onKeyDown } = createKeyboardRouter(createCommitContext(get(store)));
     onKeyDown(event);
   };
 
   const onKeyUp = (event: KeyboardEvent) => {
-    const { onKeyUp } = createKeyboardRouter(createStoreUtil(get(store)));
+    const { onKeyUp } = createKeyboardRouter(createCommitContext(get(store)));
     onKeyUp(event);
   };
 
@@ -21,3 +21,4 @@ export const bindGlobalKeyboard = (store: Writable<StoreProps>) => {
     window.removeEventListener("keyup", onKeyUp, { capture: true });
   };
 };
+

@@ -1,6 +1,6 @@
 import type StoreArrange from "../../domain/arrange/arrange-store";
 import type { OutlineElementType } from "../../domain/outline/outline-types";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import useReducerTermianl from "./terminal-reducer";
 import useBuilderChord from "./sector/builderChord";
 import useBuilderCommon from "./sector/builderCommon";
@@ -36,18 +36,18 @@ export const createDefaultCommandProps = (
   callback: () => [],
 });
 
-export const createCommandRegistry = (lastStore: StoreProps) => {
-  const reducer = useReducerTermianl(lastStore);
+export const createCommandRegistry = (rootStoreToken: RootStoreToken) => {
+  const reducer = useReducerTermianl(rootStoreToken);
   const terminal = reducer.getTerminal();
 
-  const builderCommon = useBuilderCommon(lastStore);
-  const builderHarmonize = useBuilderHarmonize(lastStore);
-  const builderInit = useBuilderInit(lastStore);
-  const builderSection = useBuilderSection(lastStore);
-  const builderChord = useBuilderChord(lastStore);
-  const builderMelody = useBuilderMelody(lastStore);
-  const builderModulate = useBuilderModulate(lastStore);
-  const builderPianoEditor = useBuilderPianoEditor(lastStore);
+  const builderCommon = useBuilderCommon(rootStoreToken);
+  const builderHarmonize = useBuilderHarmonize(rootStoreToken);
+  const builderInit = useBuilderInit(rootStoreToken);
+  const builderSection = useBuilderSection(rootStoreToken);
+  const builderChord = useBuilderChord(rootStoreToken);
+  const builderMelody = useBuilderMelody(rootStoreToken);
+  const builderModulate = useBuilderModulate(rootStoreToken);
+  const builderPianoEditor = useBuilderPianoEditor(rootStoreToken);
 
   const buildAvailableFunctions = () => {
     const items: CommandFunc[] = [];

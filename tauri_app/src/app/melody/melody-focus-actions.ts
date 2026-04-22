@@ -1,19 +1,23 @@
 import StoreMelody from "../../domain/melody/melody-store";
+import type {
+  MelodyNote,
+  MelodyScoreTrack,
+} from "../../domain/melody/melody-types";
 import type { MelodyFocusState } from "../../state/session-state/melody-focus-store";
 
 export const isMelodyCursorFocus = (focusState: MelodyFocusState) =>
   focusState.focus === -1;
 
 export const getFocusedMelodyNote = (
-  track: StoreMelody.ScoreTrack,
+  track: MelodyScoreTrack,
   focusState: MelodyFocusState,
 ) => track.notes[focusState.focus];
 
 type MoveMelodyFocusParams = {
-  track: StoreMelody.ScoreTrack;
+  track: MelodyScoreTrack;
   focusState: MelodyFocusState;
   dir: -1 | 1;
-  onFocusMoved: (note: StoreMelody.Note) => void;
+  onFocusMoved: (note: MelodyNote) => void;
 };
 
 export const moveMelodyFocus = ({
@@ -34,10 +38,10 @@ export const moveMelodyFocus = ({
 };
 
 type MoveMelodyPitchParams = {
-  note: StoreMelody.Note;
+  note: MelodyNote;
   dir: number;
   maxPitch: number;
-  onPitchMoved: (note: StoreMelody.Note) => void;
+  onPitchMoved: (note: MelodyNote) => void;
   onPreviewPitch: (pitchIndex: number) => void;
 };
 

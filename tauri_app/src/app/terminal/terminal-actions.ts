@@ -1,8 +1,8 @@
 import useReducerTerminal from "./terminal-reducer";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 
-export const createTerminalActions = (lastStore: StoreProps) => {
-  const reducer = useReducerTerminal(lastStore);
+export const createTerminalActions = (rootStoreToken: RootStoreToken) => {
+  const reducer = useReducerTerminal(rootStoreToken);
 
   return {
     isUse: reducer.isUse,

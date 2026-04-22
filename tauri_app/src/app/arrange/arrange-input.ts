@@ -1,5 +1,5 @@
 import type { InputCallbacks } from "../../state/session-state/input-store";
-import type { StoreUtil } from "../../state/root-store";
+import type { CommitContext } from "../../state/root-store";
 import {
   clearOutlineArrangeState,
   getOutlineArrangeState,
@@ -7,11 +7,11 @@ import {
 import useInputGuitarEditor from "./guitar-editor-input";
 import useInputPianoEditor from "./piano-editor-input";
 
-const useInputArrange = (storeUtil: StoreUtil) => {
-    const { commit } = storeUtil;
+const useInputArrange = (commitContext: CommitContext) => {
+    const { commit } = commitContext;
 
-    const inputPianoEditor = useInputPianoEditor(storeUtil);
-    const inputGuitarEditor = useInputGuitarEditor(storeUtil);
+    const inputPianoEditor = useInputPianoEditor(commitContext);
+    const inputGuitarEditor = useInputGuitarEditor(commitContext);
 
     const control = (eventKey: string) => {
         const arrange = getOutlineArrangeState();

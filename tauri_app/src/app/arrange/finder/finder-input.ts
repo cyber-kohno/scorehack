@@ -12,22 +12,22 @@ import {
   clearOutlineArrangeState,
   getOutlineArrangeState,
 } from "../../../state/session-state/outline-arrange-store";
-import type { StoreUtil } from "../../../state/root-store";
+import type { CommitContext } from "../../../state/root-store";
 
-const useInputFinder = (storeUtil: StoreUtil) => {
-    const { lastStore, commit } = storeUtil;
-    const { recalculate } = createCacheActions(lastStore);
+const useInputFinder = (commitContext: CommitContext) => {
+    const { lastStore: rootStoreToken, commit } = commitContext;
+    const { recalculate } = createCacheActions(rootStoreToken);
 
     const control = (eventKey: string) => {
         const arrange = getOutlineArrangeState();
         if (arrange == null) throw new Error();
-        const finder = getPianoArrangeFinder(lastStore);
+        const finder = getPianoArrangeFinder(rootStoreToken);
 
         // const isEditor = arrange?.editor;
 
-        const arrTrack = getCurrentArrangeTrack(lastStore);
+        const arrTrack = getCurrentArrangeTrack(rootStoreToken);
 
-        const element = getCurrentOutlineElementCache(lastStore);
+        const element = getCurrentOutlineElementCache(rootStoreToken);
         if (element == undefined) throw new Error();
         const chordSeq = element.chordSeq;
         if (chordSeq === -1) throw new Error();
@@ -64,7 +64,7 @@ const useInputFinder = (storeUtil: StoreUtil) => {
             const usageBkg = finder.list[finder.cursor.backing];
             const bkgPattNo = usageBkg.bkgPatt;
             const sndsPattNo = usageBkg.voics[finder.cursor.sounds];
-            const lib = getCurrentPianoLibrary(lastStore);
+            const lib = getCurrentPianoLibrary(rootStoreToken);
             const bkgPatt = lib.backingPatterns.find(patt => patt.no === bkgPattNo);
             if (bkgPatt == undefined) throw new Error();
             const sndsPatt = lib.soundsPatterns.find(patt => patt.no === sndsPattNo);

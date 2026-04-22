@@ -5,17 +5,17 @@ import {
 import { createTerminalLogger } from "../terminal-logger";
 import { createOutlineActions } from "../../outline/outline-actions";
 import MusicTheory from "../../../domain/theory/music-theory";
-import type { StoreProps } from "../../../state/root-store";
+import type { RootStoreToken } from "../../../state/root-store";
 import { createCacheActions } from "../../cache/cache-actions";
 import useReducerTermianl from "../terminal-reducer";
 
-const useBuilderInit = (lastStore: StoreProps) => {
-  const reducer = useReducerTermianl(lastStore);
+const useBuilderInit = (rootStoreToken: RootStoreToken) => {
+  const reducer = useReducerTermianl(rootStoreToken);
   const terminal = reducer.getTerminal();
   const logger = createTerminalLogger(terminal);
 
-  const { recalculate } = createCacheActions(lastStore);
-  const reducerOutline = createOutlineActions(lastStore);
+  const { recalculate } = createCacheActions(rootStoreToken);
+  const reducerOutline = createOutlineActions(rootStoreToken);
 
   const VALID_SCALES = MusicTheory.KEY12_MAJOR_SCALE_LIST.map(
     (i) => i + "major",

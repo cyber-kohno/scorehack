@@ -1,13 +1,17 @@
 <script lang="ts">
   import StoreMelody from "../../../domain/melody/melody-store";
+  import type {
+    MelodyNorm,
+    MelodyNote,
+  } from "../../../domain/melody/melody-types";
   import { envStore } from "../../../state/session-state/env-store";
 
   type Type = "4div" | "8div" | "16div" | "4div3t" | "8div3t";
 
-  export let note: StoreMelody.Note;
+  export let note: MelodyNote;
 
   $: norms = (() => {
-    const norms: StoreMelody.Norm[] = [];
+    const norms: MelodyNorm[] = [];
     const n = note;
     let pos = n.pos;
     const tail = n.pos + n.len;
@@ -65,7 +69,7 @@
     return norms;
   })();
 
-  const buildType = (norm: StoreMelody.Norm) =>
+  const buildType = (norm: MelodyNorm) =>
     `${norm.div * 4}div${!norm.tuplets ? "" : norm.tuplets + "t"}` as Type;
 </script>
 

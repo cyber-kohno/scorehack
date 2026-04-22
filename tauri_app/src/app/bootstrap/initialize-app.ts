@@ -1,17 +1,22 @@
 import { createCacheActions } from "../cache/cache-actions";
-import { createStoreUtil, type StoreProps, type StoreUtil } from "../../state/root-store";
+import {
+  createCommitContext,
+  type CommitContext,
+  type RootStoreToken,
+} from "../../state/root-store";
 import { applyStaticLayoutVariables } from "./apply-layout-variables";
 
-export const initializeApp = (storeUtil: StoreUtil) => {
-  const { lastStore, commit } = storeUtil;
-  const { recalculate } = createCacheActions(lastStore);
+export const initializeApp = (commitContext: CommitContext) => {
+  const { lastStore: rootStoreToken, commit } = commitContext;
+  const { recalculate } = createCacheActions(rootStoreToken);
 
   applyStaticLayoutVariables();
   recalculate();
   commit();
 };
 
-export const initializeAppFromStore = (lastStore: StoreProps) => {
-  initializeApp(createStoreUtil(lastStore));
+export const initializeAppFromStore = (rootStoreToken: RootStoreToken) => {
+  initializeApp(createCommitContext(rootStoreToken));
 };
+
 

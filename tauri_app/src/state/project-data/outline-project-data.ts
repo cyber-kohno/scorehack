@@ -1,43 +1,47 @@
 ﻿import type { OutlineElement } from "../../domain/outline/outline-types";
-import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 import {
   getOutlineElementState,
   setOutlineElementState,
 } from "../session-state/outline-element-store";
 
-export const getOutlineElements = (lastStore: StoreProps): OutlineElement[] => {
+export const getOutlineElements = (
+  rootStoreToken: RootStoreToken,
+): OutlineElement[] => {
+  void rootStoreToken;
   return getOutlineElementState();
 };
 
 export const getOutlineElement = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   index: number,
 ): OutlineElement | undefined => {
-  return getOutlineElements(lastStore)[index];
+  return getOutlineElements(rootStoreToken)[index];
 };
 
-export const getOutlineElementCount = (lastStore: StoreProps): number => {
-  return getOutlineElements(lastStore).length;
+export const getOutlineElementCount = (rootStoreToken: RootStoreToken): number => {
+  return getOutlineElements(rootStoreToken).length;
 };
 
 export const setOutlineElements = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   elements: OutlineElement[],
 ): void => {
+  void rootStoreToken;
   setOutlineElementState(elements);
 };
 
 export const insertOutlineElementAt = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   index: number,
   element: OutlineElement,
 ): void => {
-  getOutlineElements(lastStore).splice(index, 0, element);
+  getOutlineElements(rootStoreToken).splice(index, 0, element);
 };
 
 export const removeOutlineElementAt = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   index: number,
 ): void => {
-  getOutlineElements(lastStore).splice(index, 1);
+  getOutlineElements(rootStoreToken).splice(index, 1);
 };

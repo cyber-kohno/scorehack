@@ -12,11 +12,10 @@ import {
 } from "../../state/session-state/outline-focus-store";
 import { getOutlineElements } from "../../state/project-data/outline-project-data";
 import { isPlaybackActive } from "../../state/ui-state/playback-ui-store";
-import type { StoreUtil } from "../../state/root-store";
+import type { CommitContext } from "../../state/root-store";
 import type {
   OutlineDataChord,
 } from "../../domain/outline/outline-types";
-import MusicTheory from "../../domain/theory/music-theory";
 import useInputFinder from "../arrange/finder/finder-input";
 import useInputArrange from "../arrange/arrange-input";
 import {
@@ -33,17 +32,24 @@ import {
   insertOutlineSectionElement,
   removeOutlineFocusElementIfAllowed,
 } from "./outline-input-element-actions";
+import {
+  modOutlineChordBeat,
+  modOutlineChordEat,
+  modOutlineChordKey,
+  modOutlineChordSymbol,
+  setOutlineChordDegreeFromScaleIndex,
+} from "./outline-input-chord-actions";
 
-const useInputOutline = (storeUtil: StoreUtil) => {
-  const { lastStore, commit } = storeUtil;
+const useInputOutline = (commitContext: CommitContext) => {
+  const { lastStore: rootStoreToken, commit } = commitContext;
 
-  const reducerOutline = createOutlineActions(lastStore);
-  const { recalculate } = createCacheActions(lastStore);
+  const reducerOutline = createOutlineActions(rootStoreToken);
+  const { recalculate } = createCacheActions(rootStoreToken);
   const element = reducerOutline.getCurrentElement();
-  const inputArrange = useInputArrange(storeUtil);
-  const inputFinder = useInputFinder(storeUtil);
+  const inputArrange = useInputArrange(commitContext);
+  const inputFinder = useInputFinder(commitContext);
 
-  const { startPreview, stopPreview } = createPlaybackActions(storeUtil);
+  const { startPreview, stopPreview } = createPlaybackActions(commitContext);
 
   const isPreview = isPlaybackActive();
 
@@ -52,8 +58,8 @@ const useInputOutline = (storeUtil: StoreUtil) => {
   };
 
   const commitAfterOutlineScroll = () => {
-    adjustTimelineScrollXFromOutline(lastStore);
-    adjustOutlineScroll(lastStore);
+    adjustTimelineScrollXFromOutline(rootStoreToken);
+    adjustOutlineScroll(rootStoreToken);
     commit();
   };
 
@@ -64,8 +70,8 @@ const useInputOutline = (storeUtil: StoreUtil) => {
 
   const commitAfterRecalculateAndOutlineScroll = () => {
     recalculate();
-    adjustTimelineScrollXFromOutline(lastStore);
-    adjustOutlineScroll(lastStore);
+    adjustTimelineScrollXFromOutline(rootStoreToken);
+    adjustOutlineScroll(rootStoreToken);
     commit();
   };
 
@@ -115,7 +121,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
       case "Delete":
         {
           const removed = removeOutlineFocusElementIfAllowed({
-            lastStore,
+            rootStoreToken,
             outlineActions: reducerOutline,
             element,
           });
@@ -125,28 +131,28 @@ const useInputOutline = (storeUtil: StoreUtil) => {
 
       case "ArrowUp":
         moveOutlineInputFocus({
-          lastStore,
+          rootStoreToken,
           dir: -1,
           onMoved: commitAfterOutlineScroll,
         });
         break;
       case "ArrowDown":
         moveOutlineInputFocus({
-          lastStore,
+          rootStoreToken,
           dir: 1,
           onMoved: commitAfterOutlineScroll,
         });
         break;
       case "ArrowLeft":
         moveOutlineInputSectionFocus({
-          lastStore,
+          rootStoreToken,
           dir: -1,
           onMoved: commitAfterOutlineScroll,
         });
         break;
       case "ArrowRight":
         moveOutlineInputSectionFocus({
-          lastStore,
+          rootStoreToken,
           dir: 1,
           onMoved: commitAfterOutlineScroll,
         });
@@ -159,18 +165,13 @@ const useInputOutline = (storeUtil: StoreUtil) => {
       case "6":
       case "7":
         {
-          // if (isLock) break;
-          // const element = reducerOutline.getCurrentElement();
-          // if (element.type === 'chord') {
           if (isChord) {
-            const chordData: OutlineDataChord = { ...element.data };
             const scaleIndex = Number(eventKey) - 1;
-            const diatonic = MusicTheory.getDiatonicDegreeChord(
-              "major",
+            setOutlineChordDegreeFromScaleIndex(
+              reducerOutline,
+              element.data,
               scaleIndex,
             );
-            chordData.degree = diatonic;
-            reducerOutline.setChordData(chordData);
             commitAfterRecalculate();
           }
         }
@@ -209,7 +210,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
 
     const elementType = reducerOutline.getCurrentElement().type;
 
-    const elements = getOutlineElements(lastStore);
+    const elements = getOutlineElements(rootStoreToken);
     const focus = getOutlineFocusState().focus;
     const element = elements[focus];
     callbacks.holdC = () => {
@@ -219,37 +220,8 @@ const useInputOutline = (storeUtil: StoreUtil) => {
             const data = element.data as OutlineDataChord;
 
             const modSymbol = (dir: "prev" | "next" | "lower" | "upper") => {
-              if (data.degree == undefined) return;
-              const symbol = data.degree.symbol;
-              const symbolProps = MusicTheory.getSymbolProps(symbol);
-
-              let temp: MusicTheory.ChordSymol | undefined = undefined;
-
-              switch (dir) {
-                case "prev":
-                  {
-                    temp = MusicTheory.getSameLevelSymbol(symbol, -1);
-                  }
-                  break;
-                case "next":
-                  {
-                    temp = MusicTheory.getSameLevelSymbol(symbol, 1);
-                  }
-                  break;
-                case "lower":
-                  {
-                    temp = symbolProps.lower;
-                  }
-                  break;
-                case "upper":
-                  {
-                    temp = symbolProps.upper;
-                  }
-                  break;
-              }
-
-              if (temp != undefined) {
-                data.degree.symbol = temp;
+              const changed = modOutlineChordSymbol(data, dir);
+              if (changed) {
                 commitAfterRecalculate();
               }
             };
@@ -290,33 +262,21 @@ const useInputOutline = (storeUtil: StoreUtil) => {
              * @param dir
              */
             const modKey = (dir: -1 | 1) => {
-              let isBlank = false;
-              if (chordData.degree == undefined) {
-                const diatonic = MusicTheory.getDiatonicDegreeChord("major", 0);
-                chordData.degree = diatonic;
-                isBlank = true;
-              }
-              let temp = MusicTheory.getDegree12Index(chordData.degree);
-              if (!isBlank) {
-                temp += dir;
-              }
-
-              if (isBlank || (temp >= 0 && temp <= 11)) {
-                const degree12 = MusicTheory.getDegree12Props(temp, dir === -1);
-                chordData.degree = {
-                  symbol: chordData.degree.symbol,
-                  ...degree12,
-                };
+              const changed = modOutlineChordKey(chordData, dir);
+              if (changed) {
                 recalculate();
               }
               commitOutlineChange();
             };
 
             const modBeat = (dir: -1 | 1) => {
-              const temp = chordData.beat + dir;
-              if (temp >= 1 && temp <= 4) chordData.beat = temp;
-              recalculate();
-              commitAfterOutlineScroll();
+              const changed = modOutlineChordBeat(chordData, dir);
+              if (changed) {
+                recalculate();
+                commitAfterOutlineScroll();
+                return;
+              }
+              commitOutlineChange();
             };
             switch (eventKey) {
               case "ArrowLeft":
@@ -345,14 +305,11 @@ const useInputOutline = (storeUtil: StoreUtil) => {
        * @param dir
        */
       const modEat = (dir: -1 | 1) => {
-        let temp = data.eat;
-        temp += dir;
-
-        if (temp >= -2 && temp <= 2) {
-          data.eat = temp;
+        const changed = modOutlineChordEat(data, dir);
+        if (changed) {
           reducerOutline.setChordData(data);
           recalculate();
-          adjustTimelineScrollXFromOutline(lastStore);
+          adjustTimelineScrollXFromOutline(rootStoreToken);
         }
         commitOutlineChange();
       };
@@ -373,7 +330,7 @@ const useInputOutline = (storeUtil: StoreUtil) => {
        */
       const moveRange = (dir: -1 | 1) => {
         moveOutlineInputRangeFocus({
-          lastStore,
+          rootStoreToken,
           dir,
           onMoved: commitAfterOutlineScroll,
         });

@@ -20,23 +20,27 @@ import {
   PREVIEW_INSTRUMENT_NAMES,
   validatePreviewInstrumentName,
 } from "../../../state/session-state/preview-store";
-import { createStoreUtil, type StoreProps } from "../../../state/root-store";
+import {
+  createCommitContext,
+  type CommitContext,
+  type RootStoreToken,
+} from "../../../state/root-store";
 import useReducerTermianl from "../terminal-reducer";
 
-const useBuilderMelody = (lastStore: StoreProps) => {
-  const storeUtil = createStoreUtil(lastStore);
-  const { commit } = storeUtil;
-  const reducer = useReducerTermianl(lastStore);
+const useBuilderMelody = (rootStoreToken: RootStoreToken) => {
+  const commitContext: CommitContext = createCommitContext(rootStoreToken);
+  const { commit } = commitContext;
+  const reducer = useReducerTermianl(rootStoreToken);
   const terminal = reducer.getTerminal();
-  const { changeScoreTrack, getCurrScoreTrack } = createMelodyActions(lastStore);
-  const { getScoreTracks, getAudioTracks } = createProjectDataActions(lastStore);
-  const { isLoadSoundFont, loadSoundFont } = createPlaybackActions(storeUtil);
+  const { changeScoreTrack, getCurrScoreTrack } = createMelodyActions(rootStoreToken);
+  const { getScoreTracks, getAudioTracks } = createProjectDataActions(rootStoreToken);
+  const { isLoadSoundFont, loadSoundFont } = createPlaybackActions(commitContext);
 
   const logger = createTerminalLogger(terminal);
 
   const get = (): TerminalCommand[] => {
     const defaultProps = createTerminalCommandDefault("melody");
-    const projectIo = createProjectIoService(lastStore);
+    const projectIo = createProjectIoService(rootStoreToken);
 
     const lss = () => {
       const func = terminal.availableFuncs.find((f) => f.funcKey === "lss");
@@ -250,7 +254,7 @@ const useBuilderMelody = (lastStore: StoreProps) => {
             changeScoreTrack(nextIndex);
             logger.outputInfo(`Active track changed. [${prev} -> ${arg0}]`);
             reducer.updateTarget();
-            resetScoreTrackRefs(lastStore);
+            resetScoreTrackRefs();
             lss();
           } catch {
             logger.outputError(`The destination track does not exist. [${nextIndex}]`);

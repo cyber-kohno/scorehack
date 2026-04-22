@@ -1,6 +1,6 @@
 ﻿import type StoreCache from "../../state/cache-state/cache-store";
 import type { OutlineDataChord } from "../../domain/outline/outline-types";
-import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 import MusicTheory from "../../domain/theory/music-theory";
 import { getInputHoldValue } from "../session-state/input-store";
 import { getModeState } from "../session-state/mode-store";
@@ -14,23 +14,24 @@ import {
   getVisibleOutlineElementCaches,
 } from "../cache-state/outline-cache";
 
-export const getOutlineFocus = (lastStore: StoreProps) => {
+export const getOutlineFocus = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   return getOutlineFocusState().focus;
 };
 
 export const getCurrentOutlineElementCache = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
 ): StoreCache.ElementCache | undefined => {
-  return getCurrentOutlineElementCacheFromCache(lastStore);
+  return getCurrentOutlineElementCacheFromCache(rootStoreToken);
 };
 
-export const getCurrentOutlineScoreBase = (lastStore: StoreProps) => {
-  return getCurrentOutlineBaseCache(lastStore)?.scoreBase ?? null;
+export const getCurrentOutlineScoreBase = (rootStoreToken: RootStoreToken) => {
+  return getCurrentOutlineBaseCache(rootStoreToken)?.scoreBase ?? null;
 };
 
-export const getOutlineHeaderInfo = (lastStore: StoreProps) => {
-  const scoreBase = getCurrentOutlineScoreBase(lastStore);
-  const elementCache = getCurrentOutlineElementCache(lastStore);
+export const getOutlineHeaderInfo = (rootStoreToken: RootStoreToken) => {
+  const scoreBase = getCurrentOutlineScoreBase(rootStoreToken);
+  const elementCache = getCurrentOutlineElementCache(rootStoreToken);
   if (scoreBase == null || elementCache == undefined) return null;
 
   return {
@@ -41,14 +42,14 @@ export const getOutlineHeaderInfo = (lastStore: StoreProps) => {
   };
 };
 
-export const getVisibleOutlineElements = (lastStore: StoreProps) => {
-  return getVisibleOutlineElementCaches(lastStore);
+export const getVisibleOutlineElements = (rootStoreToken: RootStoreToken) => {
+  return getVisibleOutlineElementCaches(rootStoreToken);
 };
 
-export const isOutlineChordSelectorVisible = (lastStore: StoreProps) => {
-  const element = getCurrentOutlineElementCache(lastStore);
+export const isOutlineChordSelectorVisible = (rootStoreToken: RootStoreToken) => {
+  const element = getCurrentOutlineElementCache(rootStoreToken);
   if (element == undefined) return false;
-  const projectElement = getOutlineElement(lastStore, getOutlineFocus(lastStore));
+  const projectElement = getOutlineElement(rootStoreToken, getOutlineFocus(rootStoreToken));
   if (projectElement == undefined) return false;
 
   return (
@@ -60,7 +61,7 @@ export const isOutlineChordSelectorVisible = (lastStore: StoreProps) => {
   );
 };
 
-export const getOutlineTailPos = (lastStore: StoreProps) => {
-  return getOutlineTailPosFromCache(lastStore);
+export const getOutlineTailPos = (rootStoreToken: RootStoreToken) => {
+  return getOutlineTailPosFromCache(rootStoreToken);
 };
 

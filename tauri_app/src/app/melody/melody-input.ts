@@ -23,7 +23,7 @@ import {
   getMelodyOverlapState,
   setMelodyOverlapState,
 } from "../../state/session-state/melody-overlap-store";
-import type { StoreUtil } from "../../state/root-store";
+import type { CommitContext } from "../../state/root-store";
 import { playMelodyPreviewPitch } from "./melody-audition";
 import {
   copyFocusedMelodyNotes,
@@ -53,12 +53,12 @@ import {
   moveMelodyNoteRangeHorizontally,
 } from "./melody-horizontal-actions";
 
-const useInputMelody = (storeUtil: StoreUtil) => {
-  const { lastStore, commit } = storeUtil;
+const useInputMelody = (commitContext: CommitContext) => {
+  const { lastStore: rootStoreToken, commit } = commitContext;
 
-  const reducerOutline = createOutlineActions(lastStore);
-  const reducerMelody = useReducerMelody(lastStore);
-  const { startPreview, stopPreview } = createPlaybackActions(storeUtil);
+  const reducerOutline = createOutlineActions(rootStoreToken);
+  const reducerMelody = useReducerMelody(rootStoreToken);
+  const { startPreview, stopPreview } = createPlaybackActions(commitContext);
 
   const melodyFocus = getMelodyFocusState();
   const melodyClipboard = getMelodyClipboardState();
@@ -68,20 +68,20 @@ const useInputMelody = (storeUtil: StoreUtil) => {
   };
 
   const commitAfterPitchChange = (note: StoreMelody.Note) => {
-    adjustTimelineScrollYFromMelodyNote(lastStore, note);
+    adjustTimelineScrollYFromMelodyNote(rootStoreToken, note);
     commit();
   };
 
   const commitAfterHorizontalMelodyChange = (note: StoreMelody.Note) => {
-    adjustTimelineScrollXFromMelodyNote(lastStore, note);
-    adjustOutlineScroll(lastStore);
+    adjustTimelineScrollXFromMelodyNote(rootStoreToken, note);
+    adjustOutlineScroll(rootStoreToken);
     commit();
   };
 
   const commitAfterCursorMove = (cursor: StoreMelody.Note) => {
-    adjustTimelineScrollXFromMelodyNote(lastStore, cursor);
+    adjustTimelineScrollXFromMelodyNote(rootStoreToken, cursor);
     reducerOutline.syncChordSeqFromNote(cursor);
-    adjustOutlineScroll(lastStore);
+    adjustOutlineScroll(rootStoreToken);
     reducerMelody.judgeOverlap();
     commit();
   };
@@ -96,7 +96,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
       dir,
       maxPitch: Layout.pitch.NUM - 1,
       onPreviewPitch: (pitchIndex) =>
-        playMelodyPreviewPitch(lastStore, pitchIndex),
+        playMelodyPreviewPitch(rootStoreToken, pitchIndex),
       onPitchMoved: commitAfterPitchChange,
     });
   };
@@ -109,8 +109,8 @@ const useInputMelody = (storeUtil: StoreUtil) => {
       dir,
       onFocusMoved: (note) => {
         reducerOutline.syncChordSeqFromNote(note);
-        adjustTimelineScrollXFromMelodyNote(lastStore, note);
-        adjustTimelineScrollYFromMelodyNote(lastStore, note);
+        adjustTimelineScrollXFromMelodyNote(rootStoreToken, note);
+        adjustTimelineScrollYFromMelodyNote(rootStoreToken, note);
       },
     });
   };
@@ -118,7 +118,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
   const isPreview = isPlaybackActive();
 
   const control = (eventKey: string) => {
-    const cursor = getMelodyCursorState(lastStore);
+    const cursor = getMelodyCursorState(rootStoreToken);
 
     const changeCursorDiv = (div: number) => {
       const prev = cursor.norm.div;
@@ -150,7 +150,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
         const [tempPos, tempLen] = [temp, cursor.len].map((size) =>
           StoreMelody.calcBeat(cursor.norm, size),
         );
-        const tailBeatNote = getBeatNoteTail(lastStore);
+        const tailBeatNote = getBeatNoteTail(rootStoreToken);
         if (tempPos < 0 || tempPos + tempLen > tailBeatNote) return;
         cursor.pos = temp;
         commitAfterCursorMove(cursor);
@@ -185,7 +185,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
           if (!getMelodyOverlapState()) {
             reducerMelody.addNoteFromCursor();
             reducerMelody.focusInNearNote(1);
-            playMelodyPreviewPitch(lastStore, getFocusNote().pitch);
+            playMelodyPreviewPitch(rootStoreToken, getFocusNote().pitch);
             commitMelodyChange();
           }
           break;
@@ -209,7 +209,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
         moveFocus(dir);
         melodyFocus.focusLock = -1;
         const note = getFocusNote();
-        playMelodyPreviewPitch(lastStore, note.pitch);
+        playMelodyPreviewPitch(rootStoreToken, note.pitch);
         commitMelodyChange();
       };
 
@@ -256,8 +256,8 @@ const useInputMelody = (storeUtil: StoreUtil) => {
 
             const note = getFocusNote();
             reducerOutline.syncChordSeqFromNote(note);
-            adjustTimelineScrollXFromMelodyNote(lastStore, note);
-            playMelodyPreviewPitch(lastStore, note.pitch);
+            adjustTimelineScrollXFromMelodyNote(rootStoreToken, note);
+            playMelodyPreviewPitch(rootStoreToken, note.pitch);
             commitMelodyChange();
           }
           break;
@@ -280,7 +280,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
 
   const getHoldCallbacks = (eventKey: string): InputCallbacks => {
     const callbacks: InputCallbacks = {};
-    const cursor = getMelodyCursorState(lastStore);
+    const cursor = getMelodyCursorState(rootStoreToken);
     const notes = reducerMelody.getCurrScoreTrack().notes;
 
     const moveLen = (n: StoreMelody.Note, len: StoreMelody.Note) => {
@@ -402,7 +402,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
             focusState: melodyFocus,
             trackNotes: focusNotes,
             onLengthChanged: (changedNote) => {
-              adjustTimelineScrollXFromMelodyNote(lastStore, changedNote);
+              adjustTimelineScrollXFromMelodyNote(rootStoreToken, changedNote);
             },
           });
           if (scaled) {
@@ -454,7 +454,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
               end,
               criteria,
               dir,
-              beatNoteTail: getBeatNoteTail(lastStore),
+              beatNoteTail: getBeatNoteTail(rootStoreToken),
               move: (note) => {
                 moveLen(note, { ...criteria, pos: dir });
               },
@@ -479,7 +479,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
             cursor,
             dir,
             trackNotes: notes,
-            beatNoteTail: getBeatNoteTail(lastStore),
+            beatNoteTail: getBeatNoteTail(rootStoreToken),
             onMoved: () => {
               commitMelodyChange();
             },
@@ -497,7 +497,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
     };
 
     callbacks.holdC = () => {
-      const tonality = getTimelineCurrentBaseCache(lastStore)?.scoreBase.tonality;
+      const tonality = getTimelineCurrentBaseCache(rootStoreToken)?.scoreBase.tonality;
       if (tonality == undefined) return;
 
       const movePitchLockScale = (note: StoreMelody.Note, dir: -1 | 1) => {
@@ -507,7 +507,7 @@ const useInputMelody = (storeUtil: StoreUtil) => {
           tonality,
           maxPitch: Layout.pitch.NUM - 1,
           onPreviewPitch: (pitchIndex) =>
-            playMelodyPreviewPitch(lastStore, pitchIndex),
+            playMelodyPreviewPitch(rootStoreToken, pitchIndex),
           onPitchMoved: commitAfterPitchChange,
         });
       };

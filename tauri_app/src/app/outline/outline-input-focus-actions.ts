@@ -3,7 +3,7 @@ import {
   setOutlineFocusLock,
 } from "../../state/session-state/outline-focus-store";
 import { getOutlineArrangeState } from "../../state/session-state/outline-arrange-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import {
   moveOutlineFocus,
   moveOutlineSectionFocus,
@@ -23,38 +23,38 @@ export const isOutlineArrangeInputActive = () =>
   isOutlineArrangeFinderActive() || isOutlineArrangeEditorActive();
 
 type MoveOutlineInputFocusParams = {
-  lastStore: StoreProps;
+  rootStoreToken: RootStoreToken;
   dir: -1 | 1;
   onMoved: () => void;
 };
 
 export const moveOutlineInputFocus = ({
-  lastStore,
+  rootStoreToken,
   dir,
   onMoved,
 }: MoveOutlineInputFocusParams) => {
   setOutlineFocusLock(-1);
-  moveOutlineFocus(lastStore, dir);
+  moveOutlineFocus(rootStoreToken, dir);
   onMoved();
 };
 
 export const moveOutlineInputSectionFocus = ({
-  lastStore,
+  rootStoreToken,
   dir,
   onMoved,
 }: MoveOutlineInputFocusParams) => {
   setOutlineFocusLock(-1);
-  moveOutlineSectionFocus(lastStore, dir);
+  moveOutlineSectionFocus(rootStoreToken, dir);
   onMoved();
 };
 
 export const moveOutlineInputRangeFocus = ({
-  lastStore,
+  rootStoreToken,
   dir,
   onMoved,
 }: MoveOutlineInputFocusParams) => {
   const outlineFocus = getOutlineFocusState();
   if (outlineFocus.focusLock === -1) setOutlineFocusLock(outlineFocus.focus);
-  moveOutlineFocus(lastStore, dir);
+  moveOutlineFocus(rootStoreToken, dir);
   onMoved();
 };

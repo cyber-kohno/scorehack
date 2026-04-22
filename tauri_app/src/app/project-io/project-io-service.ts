@@ -1,26 +1,26 @@
-import type StoreMelody from "../../domain/melody/melody-store";
-import type { StoreProps } from "../../state/root-store";
+import type { MelodyAudioTrack } from "../../domain/melody/melody-types";
+import type { RootStoreToken } from "../../state/root-store";
 import { getProjectData } from "../../state/project-data/project-data-store";
 import { exportMidi } from "./export-midi";
 import { importAudio } from "./import-audio";
 import { loadProject } from "./load-project";
 import { saveProject, type ProjectIoCallbacks } from "./save-project";
 
-export const createProjectIoService = (lastStore: StoreProps) => {
+export const createProjectIoService = (rootStoreToken: RootStoreToken) => {
   const saveScoreFile = (callbacks: ProjectIoCallbacks) => {
-    const plainData = JSON.stringify(getProjectData(lastStore));
-    return saveProject(lastStore, plainData, "sch", callbacks);
+    const plainData = JSON.stringify(getProjectData(rootStoreToken));
+    return saveProject(rootStoreToken, plainData, "sch", callbacks);
   };
 
   const loadScoreFile = (
     success: ProjectIoCallbacks["success"],
     cancel: ProjectIoCallbacks["cancel"],
   ) => {
-    return loadProject(lastStore, success, cancel);
+    return loadProject(rootStoreToken, success, cancel);
   };
 
   const loadMp3 = (
-    track: StoreMelody.AudioTrack,
+    track: MelodyAudioTrack,
     success: ProjectIoCallbacks["success"],
     cancel: ProjectIoCallbacks["cancel"],
   ) => {

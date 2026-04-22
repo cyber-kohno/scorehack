@@ -74,3 +74,10 @@
   - `commitAfterRecalculate()`
   - `commitAfterRecalculateAndOutlineScroll()`
 - これにより、`outline` では「単純更新」「focus移動 + scroll」「recalculateのみ」「recalculate + scroll」の違いが読み取りやすくなった
+
+## 2026-04-23 commit の位置づけ
+現状の `CommitContext.commit()` は、必要な store だけを選んで更新する最終形ではない。
+役割としては、分割済みの dedicated store 群を旧来の「1回の確定点」でそろえるための互換同期バリアである。
+
+このため、今の commit は多少広く通知してでも挙動を安定させる方を優先している。
+今後 selective update に進める場合も、一気に置き換えるのではなく feature 単位で touch 範囲を絞るのが前提になる。

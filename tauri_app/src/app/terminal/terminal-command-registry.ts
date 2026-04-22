@@ -5,7 +5,7 @@ import {
   type CommandFuncArg,
   type CommandFuncDefault,
 } from "./terminal-command-registry-util";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 
 export type TerminalCommandArg = CommandFuncArg;
 export type TerminalCommandDefault = CommandFuncDefault;
@@ -15,6 +15,6 @@ export const createTerminalCommandDefault = (sector: string) => {
   return createDefaultCommandProps(sector);
 };
 
-export const createTerminalCommandRegistry = (lastStore: StoreProps) => {
-  return createCommandRegistry(lastStore);
+export const createTerminalCommandRegistry = (rootStoreToken: RootStoreToken) => {
+  return createCommandRegistry(rootStoreToken);
 };

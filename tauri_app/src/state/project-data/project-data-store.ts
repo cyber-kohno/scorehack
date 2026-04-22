@@ -2,7 +2,7 @@
 import type { MelodyScoreTrack } from "../../domain/melody/melody-types";
 import type { OutlineElement } from "../../domain/outline/outline-types";
 import type StoreArrange from "../../domain/arrange/arrange-store";
-import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 import {
   getAudioTrackState,
   setAudioTrackState,
@@ -27,7 +27,10 @@ export type ProjectDataSnapshot = {
   arrange: StoreArrange.DataProps;
 };
 
-export const getProjectData = (lastStore: StoreProps): ProjectDataSnapshot => {
+export const getProjectData = (
+  rootStoreToken: RootStoreToken,
+): ProjectDataSnapshot => {
+  void rootStoreToken;
   return {
     elements: getOutlineElementState(),
     scoreTracks: getScoreTrackState(),
@@ -37,9 +40,10 @@ export const getProjectData = (lastStore: StoreProps): ProjectDataSnapshot => {
 };
 
 export const setProjectData = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   nextData: ProjectDataSnapshot,
 ): void => {
+  void rootStoreToken;
   const { elements, scoreTracks, audioTracks, arrange } = nextData;
   setOutlineElementState(elements);
   setScoreTrackState(scoreTracks);

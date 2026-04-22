@@ -1,9 +1,9 @@
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import useReducerTermianl from "./terminal-reducer";
 import { createTerminalHelperInitial } from "../../state/session-state/terminal-store";
 
-const useCommandHelper = (lastStore: StoreProps) => {
-    const terminalReducer = useReducerTermianl(lastStore);
+const useCommandHelper = (rootStoreToken: RootStoreToken) => {
+    const terminalReducer = useReducerTermianl(rootStoreToken);
 
     const build = () => {
         const terminal = terminalReducer.getTerminal();

@@ -1,5 +1,5 @@
 import Layout from "../../styles/tokens/layout-tokens";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import { getBeatSumWidth } from "../../state/cache-state/cache-store";
 
 const setCustomProps = (customProps: { key: string; value: string }[]) => {
@@ -73,8 +73,8 @@ export const applyStaticLayoutVariables = () => {
   ]);
 };
 
-export const applyDynamicLayoutVariables = (lastStore: StoreProps) => {
-  const beatSum = getBeatSumWidth(lastStore);
+export const applyDynamicLayoutVariables = (rootStoreToken: RootStoreToken) => {
+  const beatSum = getBeatSumWidth(rootStoreToken);
 
   setCustomProps([{ key: "--beat-sum", value: `${beatSum}px` }]);
 };

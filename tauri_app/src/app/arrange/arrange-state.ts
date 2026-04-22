@@ -2,7 +2,7 @@ import ArrangeLibrary from "../../domain/arrange/arrange-library";
 import StorePianoEditor from "../../domain/arrange/piano-editor-store";
 import type StoreArrange from "../../domain/arrange/arrange-store";
 import type StoreCache from "../../state/cache-state/cache-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import type MusicTheory from "../../domain/theory/music-theory";
 import { getOutlineTrackIndex } from "../../state/session-state/outline-track-store";
 import { getOutlineArrangeState } from "../../state/session-state/outline-arrange-store";
@@ -14,32 +14,33 @@ export type ArrangeFinderProps = {
   arrTrack: StoreArrange.Track;
 };
 
-export const getActiveArrange = (lastStore: StoreProps) => {
+export const getActiveArrange = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   const arrange = getOutlineArrangeState();
   if (arrange == null) throw new Error();
   return arrange;
 };
 
-export const getCurrentArrangeTrack = (lastStore: StoreProps) => {
-  const track = getArrangeTrack(lastStore, getOutlineTrackIndex());
+export const getCurrentArrangeTrack = (rootStoreToken: RootStoreToken) => {
+  const track = getArrangeTrack(rootStoreToken, getOutlineTrackIndex());
   if (track == undefined) throw new Error();
   return track;
 };
 
-export const getPianoArrangeEditor = (lastStore: StoreProps) => {
-  const arrange = getActiveArrange(lastStore);
+export const getPianoArrangeEditor = (rootStoreToken: RootStoreToken) => {
+  const arrange = getActiveArrange(rootStoreToken);
   if (arrange.method !== "piano" || arrange.editor == undefined) throw new Error();
   return arrange.editor as StorePianoEditor.Props;
 };
 
-export const getPianoArrangeFinder = (lastStore: StoreProps) => {
-  const arrange = getActiveArrange(lastStore);
+export const getPianoArrangeFinder = (rootStoreToken: RootStoreToken) => {
+  const arrange = getActiveArrange(rootStoreToken);
   if (arrange.method !== "piano" || arrange.finder == undefined) throw new Error();
   return arrange.finder as ArrangeLibrary.PianoArrangeFinder;
 };
 
-export const getCurrentPianoLibrary = (lastStore: StoreProps) => {
-  const track = getCurrentArrangeTrack(lastStore);
+export const getCurrentPianoLibrary = (rootStoreToken: RootStoreToken) => {
+  const track = getCurrentArrangeTrack(rootStoreToken);
   if (track.method === "piano" && track.pianoLib != undefined) {
     return track.pianoLib as StorePianoEditor.Lib;
   }

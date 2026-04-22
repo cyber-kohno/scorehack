@@ -1,6 +1,6 @@
 ﻿import MusicTheory from "../../domain/theory/music-theory";
 import type StoreCache from "../../state/cache-state/cache-store";
-import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 import { getEnvBeatWidth } from "../session-state/env-store";
 import { getModeState } from "../session-state/mode-store";
 import { getOutlineFocusState } from "../session-state/outline-focus-store";
@@ -18,32 +18,41 @@ import {
   getTimelineHeaderScrollLimitProps as getTimelineHeaderViewportScrollLimitProps,
 } from "../session-state/timeline-viewport-store";
 
-export const getTimelineHeaderScrollLimitProps = (lastStore: StoreProps) => {
+export const getTimelineHeaderScrollLimitProps = (
+  rootStoreToken: RootStoreToken,
+) => {
+  void rootStoreToken;
   return getTimelineHeaderViewportScrollLimitProps();
 };
 
-export const getTimelineGridScrollLimitProps = (lastStore: StoreProps) => {
+export const getTimelineGridScrollLimitProps = (
+  rootStoreToken: RootStoreToken,
+) => {
+  void rootStoreToken;
   return getTimelineGridViewportScrollLimitProps();
 };
 
-export const isTimelineMelodyMode = (lastStore: StoreProps) => {
+export const isTimelineMelodyMode = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   return getModeState() === "melody";
 };
 
-export const getTimelineOutlineFocus = (lastStore: StoreProps) => {
+export const getTimelineOutlineFocus = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   return getOutlineFocusState().focus;
 };
 
-export const getTimelineBeatWidth = (lastStore: StoreProps) => {
+export const getTimelineBeatWidth = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   return getEnvBeatWidth();
 };
 
-export const getTimelinePianoInfo = (lastStore: StoreProps) => {
-  const element = getTimelineFocusElementCache(lastStore);
+export const getTimelinePianoInfo = (rootStoreToken: RootStoreToken) => {
+  const element = getTimelineFocusElementCache(rootStoreToken);
   if (element == undefined || element.type !== "chord") return null;
 
-  const chordCache = getTimelineCurrentChordCache(lastStore);
-  const base = getTimelineCurrentBaseCache(lastStore);
+  const chordCache = getTimelineCurrentChordCache(rootStoreToken);
+  const base = getTimelineCurrentBaseCache(rootStoreToken);
   if (chordCache == undefined || base == undefined) return null;
 
   const tonality = base.scoreBase.tonality;
@@ -59,9 +68,9 @@ export const getTimelinePianoInfo = (lastStore: StoreProps) => {
   };
 };
 
-export const getTimelineFocusInfo = (lastStore: StoreProps) => {
-  const elementCache = getTimelineFocusElementCache(lastStore);
-  const chordCaches = getTimelineChordCaches(lastStore);
+export const getTimelineFocusInfo = (rootStoreToken: RootStoreToken) => {
+  const elementCache = getTimelineFocusElementCache(rootStoreToken);
+  const chordCaches = getTimelineChordCaches(rootStoreToken);
   if (elementCache == undefined) {
     return { left: 0, width: 20, isChord: false };
   }
@@ -87,19 +96,19 @@ export const getTimelineFocusInfo = (lastStore: StoreProps) => {
   return { left, width, isChord };
 };
 
-export const getTimelineTailMarginLeft = (lastStore: StoreProps) => {
-  const chordCaches = getTimelineChordCaches(lastStore);
+export const getTimelineTailMarginLeft = (rootStoreToken: RootStoreToken) => {
+  const chordCaches = getTimelineChordCaches(rootStoreToken);
   if (chordCaches.length === 0) return 0;
   const chordCache = chordCaches[chordCaches.length - 1];
   return chordCache.viewPosLeft + chordCache.viewPosWidth;
 };
 
 export const getVisibleTimelineChordCaches = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   scrollLimitProps: ScrollLimitProps,
 ) => {
-  const focusPos = getTimelineFocusPos(lastStore);
-  return getTimelineChordCaches(lastStore).filter((chordCache) => {
+  const focusPos = getTimelineFocusPos(rootStoreToken);
+  return getTimelineChordCaches(rootStoreToken).filter((chordCache) => {
     const middle = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;
     return (
       Math.abs(scrollLimitProps.scrollMiddleX - middle) <
@@ -123,7 +132,7 @@ type TimelineDiff = {
 };
 
 export const getTimelineProgressItems = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   scrollLimitProps: ScrollLimitProps,
 ) => {
   const chordList: {
@@ -137,8 +146,8 @@ export const getTimelineProgressItems = (
     tempo?: TimelineDiff;
   }[] = [];
 
-  const focusPos = getTimelineFocusPos(lastStore);
-  getTimelineChordCaches(lastStore).forEach((chordCache) => {
+  const focusPos = getTimelineFocusPos(rootStoreToken);
+  getTimelineChordCaches(rootStoreToken).forEach((chordCache) => {
     const x = chordCache.viewPosLeft;
     const middle = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;
     if (

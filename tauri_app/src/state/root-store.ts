@@ -23,19 +23,21 @@ import { touchScoreTrackState } from "./session-state/score-track-store";
 import { touchOutlineElementState } from "./session-state/outline-element-store";
 import { touchCacheState } from "./cache-state/cache-store";
 
-export type StoreProps = Record<string, never>;
+export type RootStoreToken = Record<string, never>;
 
-const store = writable<StoreProps>({});
+const store = writable<RootStoreToken>({});
 
-export type StoreUtil = {
-  lastStore: StoreProps;
+export type CommitContext = {
+  lastStore: RootStoreToken;
   commit: () => void;
 };
 
-export const createStoreUtil = (lastStore: StoreProps): StoreUtil => {
+export const createCommitContext = (lastStore: RootStoreToken): CommitContext => {
   return {
     lastStore,
     commit: () => {
+      // 現段階の commit は selective update ではなく、
+      // 分割済み state を旧来の「1回の確定点」でそろえるための互換同期バリア。
       store.set(lastStore);
       touchTerminalState();
       touchPreviewState();

@@ -3,11 +3,11 @@ import {
   type TerminalCommand,
 } from "../terminal-command-registry";
 import MusicTheory from "../../../domain/theory/music-theory";
-import type { StoreProps } from "../../../state/root-store";
+import type { RootStoreToken } from "../../../state/root-store";
 import useReducerTermianl from "../terminal-reducer";
 
-const useBuilderChord = (lastStore: StoreProps) => {
-    const reducer = useReducerTermianl(lastStore);
+const useBuilderChord = (rootStoreToken: RootStoreToken) => {
+    const reducer = useReducerTermianl(rootStoreToken);
     const terminal = reducer.getTerminal();
 
     const get = (): TerminalCommand[] => {

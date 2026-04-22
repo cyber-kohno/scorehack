@@ -1,4 +1,4 @@
-import type { StoreProps } from "../../state/root-store";
+﻿import type { RootStoreToken } from "../../state/root-store";
 import {
   getViewportTimerKeys,
   type ViewportTimerKey,
@@ -24,11 +24,12 @@ const clearRelatedTimers = (
 };
 
 const smoothScroll = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   refs: HTMLElement[],
   target: "scrollLeft" | "scrollTop",
   nextValue: number,
 ) => {
+  void rootStoreToken;
   const timerKeys = getViewportTimerKeys();
   const getTargetKey = clearRelatedTimers(timerKeys, refs, target);
 
@@ -47,17 +48,17 @@ const smoothScroll = (
 };
 
 export const smoothScrollLeft = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   refs: HTMLElement[],
   nextValue: number,
 ) => {
-  smoothScroll(lastStore, refs, "scrollLeft", nextValue);
+  smoothScroll(rootStoreToken, refs, "scrollLeft", nextValue);
 };
 
 export const smoothScrollTop = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   refs: HTMLElement[],
   nextValue: number,
 ) => {
-  smoothScroll(lastStore, refs, "scrollTop", nextValue);
+  smoothScroll(rootStoreToken, refs, "scrollTop", nextValue);
 };

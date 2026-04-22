@@ -1,4 +1,4 @@
-import useReducerMelody from "../melody/melody-reducer";
+﻿import useReducerMelody from "../melody/melody-reducer";
 import {
   adjustOutlineScroll,
   adjustTimelineScrollXFromOutline,
@@ -9,7 +9,7 @@ import SoundFont, { type InstrumentName } from "soundfont-player";
 import StoreMelody from "../../domain/melody/melody-store";
 import StoreCache from "../../state/cache-state/cache-store";
 import { base64ToBlob } from "../project-io/project-file-codec";
-import type { StoreProps, StoreUtil } from "../../store/store";
+import type { CommitContext, RootStoreToken } from "../../state/root-store";
 import StorePianoEditor from "../../domain/arrange/piano-editor-store";
 import PianoArrangePreviewUtil from "./piano-arrange-preview-util";
 import {
@@ -137,7 +137,8 @@ namespace PreviewUtil {
     };
   };
 
-  export const useReducer = (lastStore: StoreProps) => {
+  export const useReducer = (rootStoreToken: RootStoreToken) => {
+    void rootStoreToken;
     const isLoadSoundFont = (sfName: InstrumentName) => {
       const items = getLoadedSoundFonts();
       return items.find((c) => c.instrumentName === sfName) != undefined;
@@ -153,13 +154,13 @@ namespace PreviewUtil {
     };
   };
 
-  export const useUpdater = (storeUtil: StoreUtil) => {
-    const { lastStore, commit } = storeUtil;
+  export const useUpdater = (commitContext: CommitContext) => {
+    const { lastStore: rootStoreToken, commit } = commitContext;
     const { getOutlineElements, getScoreTracks, getAudioTracks, getArrangeData } =
-      createProjectDataActions(lastStore);
-    const chordCaches = getPlaybackChordCaches(lastStore);
-    const elementCaches = getPlaybackElementCaches(lastStore);
-    const baseCaches = getPlaybackBaseCaches(lastStore);
+      createProjectDataActions(rootStoreToken);
+    const chordCaches = getPlaybackChordCaches(rootStoreToken);
+    const elementCaches = getPlaybackElementCaches(rootStoreToken);
+    const baseCaches = getPlaybackBaseCaches(rootStoreToken);
 
     const startTest = (option: Option) => {
       const melodyFocus = getMelodyFocusState();
@@ -167,7 +168,7 @@ namespace PreviewUtil {
       const scoreTracks = getScoreTracks();
       const audioTracks = getAudioTracks();
       const preview = getPreviewState();
-      const { getCurrScoreTrack } = useReducerMelody(lastStore);
+      const { getCurrScoreTrack } = useReducerMelody(rootStoreToken);
 
       const containsLayer = (...targets: LayerTargetMode[]) => {
         return targets.includes(option.target);
@@ -193,7 +194,7 @@ namespace PreviewUtil {
           case "melody": {
             const note =
               melodyFocus.focus === -1
-                ? getMelodyCursorState(lastStore)
+                ? getMelodyCursorState(rootStoreToken)
                 : getCurrScoreTrack().notes[melodyFocus.focus];
             const timelineLeft = StoreMelody.calcBeat(note.norm, note.pos);
             const curChord = chordCaches[elementCaches[elementSeq].chordSeq];
@@ -311,7 +312,7 @@ namespace PreviewUtil {
       // 開始・終了時刻を決める。
       const startTime = getPlaybackTimeFromBeat(baseCaches, timelineStart);
       const endTime = (() => {
-        const tailChordCache = getPlaybackTailChordCache(lastStore);
+        const tailChordCache = getPlaybackTailChordCache(rootStoreToken);
         if (tailChordCache == undefined) return 0;
         return tailChordCache.startTime + tailChordCache.sustainTime;
       })();
@@ -364,13 +365,13 @@ namespace PreviewUtil {
         const posBeat = getPlaybackBeatFromTime(baseCaches, preview.progressTime);
         setPlaybackLinePos(posBeat);
 
-        const chord = getChordCacheFromBeat(lastStore, posBeat);
+        const chord = getChordCacheFromBeat(rootStoreToken, posBeat);
         if (chord == undefined) return;
 
         if (getOutlineFocusState().focus !== chord.elementSeq) {
           setOutlineFocus(chord.elementSeq);
-          adjustTimelineScrollXFromOutline(lastStore);
-          adjustOutlineScroll(lastStore);
+          adjustTimelineScrollXFromOutline(rootStoreToken);
+          adjustOutlineScroll(rootStoreToken);
         }
 
         commit();
@@ -386,7 +387,7 @@ namespace PreviewUtil {
     };
 
     const stopTest = () => {
-      const { syncCursorFromElementSeq } = useReducerMelody(lastStore);
+      const { syncCursorFromElementSeq } = useReducerMelody(rootStoreToken);
 
       // 再生用 timer / interval を全停止して、描画状態も初期化する。
       const preview = getPreviewState();
@@ -422,3 +423,4 @@ namespace PreviewUtil {
   };
 }
 export default PreviewUtil;
+

@@ -1,4 +1,3 @@
-import type StoreMelody from "../melody/melody-store";
 import StoreArrange from "./arrange-store";
 import type ArrangeLibrary from "./arrange-library";
 import StorePianoBacking from "./piano-backing-store";

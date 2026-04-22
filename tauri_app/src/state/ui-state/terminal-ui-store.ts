@@ -5,39 +5,39 @@
 } from "../session-state/terminal-store";
 import { getTerminalStateStore } from "../session-state/terminal-store";
 
-import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 
 export const getTerminalState = (): TerminalState | null => {
   return getTerminalStateStore();
 };
 
 export const getTerminalOutputs = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
 ): TerminalOutputBlock[] => {
-  void lastStore;
+  void rootStoreToken;
   return getTerminalState()?.outputs ?? [];
 };
 
 export const getTerminalHelper = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
 ): TerminalHelperProps | null => {
-  void lastStore;
+  void rootStoreToken;
   return getTerminalState()?.helper ?? null;
 };
 
-export const isTerminalWaiting = (lastStore: StoreProps) => {
-  void lastStore;
+export const isTerminalWaiting = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   return getTerminalState()?.wait ?? false;
 };
 
-export const getTerminalTargetPrompt = (lastStore: StoreProps) => {
-  void lastStore;
+export const getTerminalTargetPrompt = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   const target = getTerminalState()?.target ?? "";
   return `$${target}>`;
 };
 
-export const getTerminalCommandSegments = (lastStore: StoreProps) => {
-  void lastStore;
+export const getTerminalCommandSegments = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   const terminal = getTerminalState();
   if (terminal == null) return ["", ""] as const;
 

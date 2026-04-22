@@ -40,9 +40,10 @@ import {
   setOutlineFocus,
   setOutlineFocusLock,
 } from "../../state/session-state/outline-focus-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 
-const useReducerOutline = (lastStore: StoreProps) => {
+const useReducerOutline = (rootStoreToken: RootStoreToken) => {
+  const lastStore = rootStoreToken;
   const {
     getOutlineElement,
     getOutlineElements,

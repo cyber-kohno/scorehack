@@ -7,18 +7,22 @@ import { createTerminalLogger } from "../terminal-logger";
 import { createProjectDataActions } from "../../project-data/project-data-actions";
 import { createProjectIoService } from "../../project-io/project-io-service";
 import { validatePreviewInstrumentName } from "../../../state/session-state/preview-store";
-import { createStoreUtil, type StoreProps } from "../../../state/root-store";
+import {
+  createCommitContext,
+  type CommitContext,
+  type RootStoreToken,
+} from "../../../state/root-store";
 import useReducerTermianl from "../terminal-reducer";
 
-const useBuilderCommon = (lastStore: StoreProps) => {
-  const storeUtil = createStoreUtil(lastStore);
-  const { commit } = storeUtil;
-  const reducer = useReducerTermianl(lastStore);
+const useBuilderCommon = (rootStoreToken: RootStoreToken) => {
+  const commitContext: CommitContext = createCommitContext(rootStoreToken);
+  const { commit } = commitContext;
+  const reducer = useReducerTermianl(rootStoreToken);
   const terminal = reducer.getTerminal();
-  const { loadSoundFont } = createPlaybackActions(storeUtil);
-  const projectData = createProjectDataActions(lastStore);
+  const { loadSoundFont } = createPlaybackActions(commitContext);
+  const projectData = createProjectDataActions(rootStoreToken);
 
-  const projectIo = createProjectIoService(lastStore);
+  const projectIo = createProjectIoService(rootStoreToken);
   const logger = createTerminalLogger(terminal);
 
   const get = (props: {

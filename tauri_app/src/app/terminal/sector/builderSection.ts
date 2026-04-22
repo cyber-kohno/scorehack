@@ -4,12 +4,12 @@ import {
 } from "../terminal-command-registry";
 import { createTerminalLogger } from "../terminal-logger";
 import { createOutlineActions } from "../../outline/outline-actions";
-import type { StoreProps } from "../../../state/root-store";
+import type { RootStoreToken } from "../../../state/root-store";
 import { createCacheActions } from "../../cache/cache-actions";
 import useReducerTermianl from "../terminal-reducer";
 
-const useBuilderSection = (lastStore: StoreProps) => {
-  const reducer = useReducerTermianl(lastStore);
+const useBuilderSection = (rootStoreToken: RootStoreToken) => {
+  const reducer = useReducerTermianl(rootStoreToken);
   const terminal = reducer.getTerminal();
   const logger = createTerminalLogger(terminal);
 
@@ -22,8 +22,8 @@ const useBuilderSection = (lastStore: StoreProps) => {
         usage: "Change the section name.",
         args: [],
         callback: (args) => {
-          const { getCurrentSectionData, renameSectionData } = createOutlineActions(lastStore);
-          const { recalculate } = createCacheActions(lastStore);
+          const { getCurrentSectionData, renameSectionData } = createOutlineActions(rootStoreToken);
+          const { recalculate } = createCacheActions(rootStoreToken);
 
           const prev = getCurrentSectionData().name;
           const next = args[0];

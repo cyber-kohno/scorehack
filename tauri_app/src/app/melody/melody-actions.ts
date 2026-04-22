@@ -1,8 +1,8 @@
 import useReducerMelody from "./melody-reducer";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 
-export const createMelodyActions = (lastStore: StoreProps) => {
-  const reducer = useReducerMelody(lastStore);
+export const createMelodyActions = (rootStoreToken: RootStoreToken) => {
+  const reducer = useReducerMelody(rootStoreToken);
 
   return {
     syncCursorFromElementSeq: reducer.syncCursorFromElementSeq,

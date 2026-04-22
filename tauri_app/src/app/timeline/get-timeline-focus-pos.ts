@@ -1,9 +1,9 @@
-import type { StoreProps } from "../../state/root-store";
+﻿import type { RootStoreToken } from "../../state/root-store";
 import { getTimelineFocusChordCache } from "../../state/cache-state/timeline-cache";
 
-export const getTimelineFocusPos = (lastStore: StoreProps) => {
+export const getTimelineFocusPos = (rootStoreToken: RootStoreToken) => {
   let pos = 0;
-  const chordCache = getTimelineFocusChordCache(lastStore);
+  const chordCache = getTimelineFocusChordCache(rootStoreToken);
   if (chordCache != undefined) {
     pos = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;
   }

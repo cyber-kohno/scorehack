@@ -1,4 +1,4 @@
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import { createMelodyActions } from "../melody/melody-actions";
 import { createProjectDataActions } from "../project-data/project-data-actions";
 import { createTerminalCommandRegistry } from "./terminal-command-registry";
@@ -12,11 +12,11 @@ import { getModeState } from "../../state/session-state/mode-store";
 import { getOutlineFocusState } from "../../state/session-state/outline-focus-store";
 import { getOutlineArrangeState } from "../../state/session-state/outline-arrange-store";
 
-const useReducerTermianl = (lastStore: StoreProps) => {
+const useReducerTermianl = (rootStoreToken: RootStoreToken) => {
   const isUse = () => getTerminalStateStore() != null;
 
-  const { getCurrScoreTrack } = createMelodyActions(lastStore);
-  const projectData = createProjectDataActions(lastStore);
+  const { getCurrScoreTrack } = createMelodyActions(rootStoreToken);
+  const projectData = createProjectDataActions(rootStoreToken);
 
   const updateTarget = () => {
     const terminal = getTerminal();
@@ -62,7 +62,7 @@ const useReducerTermianl = (lastStore: StoreProps) => {
       helper: null,
     });
     updateTarget();
-    createTerminalCommandRegistry(lastStore).buildAvailableFunctions();
+    createTerminalCommandRegistry(rootStoreToken).buildAvailableFunctions();
   };
 
   const close = () => {

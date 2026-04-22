@@ -1,4 +1,4 @@
-import type StoreMelody from "../../domain/melody/melody-store";
+import type { MelodyScoreTrack } from "../../domain/melody/melody-types";
 import type { MelodyFocusState } from "../../state/session-state/melody-focus-store";
 
 type ChangeMelodyFocusSideParams = {
@@ -38,7 +38,7 @@ export const moveMelodyFocusRange = ({
 };
 
 type RemoveFocusedMelodyNoteParams = {
-  track: StoreMelody.ScoreTrack;
+  track: MelodyScoreTrack;
   focusState: MelodyFocusState;
 };
 

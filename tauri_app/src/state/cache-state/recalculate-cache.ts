@@ -1,4 +1,4 @@
-﻿import Layout from "../../styles/tokens/layout-tokens";
+import Layout from "../../styles/tokens/layout-tokens";
 import {
   OUTLINE_MARGIN_HEAD,
   type OutlineDataChord,
@@ -13,10 +13,10 @@ import { getArrangeTracks } from "../project-data/arrange-project-data";
 import { getOutlineElements } from "../project-data/outline-project-data";
 import { setCache } from "./cache-store";
 import type StoreCache from "../../state/cache-state/cache-store";
-import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 
-export const recalculateCache = (lastStore: StoreProps) => {
-  const elements = getOutlineElements(lastStore);
+export const recalculateCache = (rootStoreToken: RootStoreToken) => {
+  const elements = getOutlineElements(rootStoreToken);
   const beatWidth = getEnvBeatWidth();
 
   const baseCaches: StoreCache.BaseCache[] = [];
@@ -120,7 +120,7 @@ export const recalculateCache = (lastStore: StoreProps) => {
         };
 
         const arrs: string[] = [];
-        getArrangeTracks(lastStore).forEach((track) => {
+        getArrangeTracks(rootStoreToken).forEach((track) => {
           const relation = track.relations.find((r) => r.chordSeq === lastChordSeq);
           if (relation != undefined) arrs.push(track.name);
         });
@@ -285,4 +285,5 @@ export const recalculateCache = (lastStore: StoreProps) => {
     outlineTailPos,
   });
 };
+
 

@@ -1,23 +1,24 @@
-﻿import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 import {
   getBaseCaches,
   getChordCaches,
   getElementCaches,
 } from "./cache-store";
 
-export const getPlaybackBaseCaches = (lastStore: StoreProps) => {
-  return getBaseCaches(lastStore);
+export const getPlaybackBaseCaches = (rootStoreToken: RootStoreToken) => {
+  return getBaseCaches(rootStoreToken);
 };
 
-export const getPlaybackChordCaches = (lastStore: StoreProps) => {
-  return getChordCaches(lastStore);
+export const getPlaybackChordCaches = (rootStoreToken: RootStoreToken) => {
+  return getChordCaches(rootStoreToken);
 };
 
-export const getPlaybackElementCaches = (lastStore: StoreProps) => {
-  return getElementCaches(lastStore);
+export const getPlaybackElementCaches = (rootStoreToken: RootStoreToken) => {
+  return getElementCaches(rootStoreToken);
 };
 
-export const getPlaybackTailChordCache = (lastStore: StoreProps) => {
-  const chordCaches = getPlaybackChordCaches(lastStore);
+export const getPlaybackTailChordCache = (rootStoreToken: RootStoreToken) => {
+  const chordCaches = getPlaybackChordCaches(rootStoreToken);
   return chordCaches[chordCaches.length - 1];
 };
+

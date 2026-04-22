@@ -1,13 +1,13 @@
 import StorePianoEditor from "../../domain/arrange/piano-editor-store";
 import { createProjectDataActions } from "../project-data/project-data-actions";
 import { getElementCaches } from "../../state/cache-state/cache-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 
 export const shiftOutlineArrangeRelationsAfterChordInsert = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   lastChordSeq: number,
 ) => {
-  const { getArrangeTracks } = createProjectDataActions(lastStore);
+  const { getArrangeTracks } = createProjectDataActions(rootStoreToken);
   const tracks = getArrangeTracks();
   tracks.forEach((track) => {
     track.relations.forEach((relation) => {
@@ -19,12 +19,12 @@ export const shiftOutlineArrangeRelationsAfterChordInsert = (
 };
 
 export const canRemoveOutlineRange = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   startIndex: number,
   endIndex: number,
 ) => {
   if (startIndex === endIndex) return true;
-  const elementCaches = getElementCaches(lastStore);
+  const elementCaches = getElementCaches(rootStoreToken);
   for (let i = startIndex; i <= endIndex; i++) {
     if (elementCaches[i].type !== "chord") {
       return false;
@@ -34,10 +34,10 @@ export const canRemoveOutlineRange = (
 };
 
 export const removeOutlineArrangeRelationsForChord = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   chordSeq: number,
 ) => {
-  const { getArrangeTracks } = createProjectDataActions(lastStore);
+  const { getArrangeTracks } = createProjectDataActions(rootStoreToken);
   const tracks = getArrangeTracks();
   tracks.forEach((track) => {
     const deleteIndex = track.relations.findIndex(
@@ -56,9 +56,9 @@ export const removeOutlineArrangeRelationsForChord = (
 };
 
 export const getOutlineChordSeqAtElementIndex = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   index: number,
 ) => {
-  const elementCaches = getElementCaches(lastStore);
+  const elementCaches = getElementCaches(rootStoreToken);
   return elementCaches[index].chordSeq;
 };

@@ -1,4 +1,4 @@
-﻿import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 import { getOutlineFocusState } from "../session-state/outline-focus-store";
 import {
   getBaseCaches,
@@ -6,33 +6,34 @@ import {
   getElementCaches,
 } from "./cache-store";
 
-export const getTimelineFocusElementCache = (lastStore: StoreProps) => {
+export const getTimelineFocusElementCache = (rootStoreToken: RootStoreToken) => {
   const focus = getOutlineFocusState().focus;
-  return getElementCaches(lastStore)[focus];
+  return getElementCaches(rootStoreToken)[focus];
 };
 
-export const getTimelineFocusChordCache = (lastStore: StoreProps) => {
-  const element = getTimelineFocusElementCache(lastStore);
+export const getTimelineFocusChordCache = (rootStoreToken: RootStoreToken) => {
+  const element = getTimelineFocusElementCache(rootStoreToken);
   if (element == undefined || element.lastChordSeq === -1) return undefined;
-  return getChordCaches(lastStore)[element.lastChordSeq];
+  return getChordCaches(rootStoreToken)[element.lastChordSeq];
 };
 
-export const getTimelineCurrentChordCache = (lastStore: StoreProps) => {
-  const element = getTimelineFocusElementCache(lastStore);
+export const getTimelineCurrentChordCache = (rootStoreToken: RootStoreToken) => {
+  const element = getTimelineFocusElementCache(rootStoreToken);
   if (element == undefined || element.chordSeq === -1) return undefined;
-  return getChordCaches(lastStore)[element.chordSeq];
+  return getChordCaches(rootStoreToken)[element.chordSeq];
 };
 
-export const getTimelineCurrentBaseCache = (lastStore: StoreProps) => {
-  const element = getTimelineFocusElementCache(lastStore);
+export const getTimelineCurrentBaseCache = (rootStoreToken: RootStoreToken) => {
+  const element = getTimelineFocusElementCache(rootStoreToken);
   if (element == undefined) return undefined;
-  return getBaseCaches(lastStore)[element.baseSeq];
+  return getBaseCaches(rootStoreToken)[element.baseSeq];
 };
 
-export const getTimelineBaseCaches = (lastStore: StoreProps) => {
-  return getBaseCaches(lastStore);
+export const getTimelineBaseCaches = (rootStoreToken: RootStoreToken) => {
+  return getBaseCaches(rootStoreToken);
 };
 
-export const getTimelineChordCaches = (lastStore: StoreProps) => {
-  return getChordCaches(lastStore);
+export const getTimelineChordCaches = (rootStoreToken: RootStoreToken) => {
+  return getChordCaches(rootStoreToken);
 };
+

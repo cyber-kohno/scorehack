@@ -1,5 +1,5 @@
 ﻿import { get, writable } from "svelte/store";
-import type { StoreProps } from "../root-store";
+import type { RootStoreToken } from "../root-store";
 import type {
   OutlineDataInit,
   OutlineElement,
@@ -110,53 +110,53 @@ export const touchCacheState = () => {
   cacheStateStore.set(getCacheStateStore());
 };
 
-export const getBaseCaches = (lastStore: StoreProps) => {
-  void lastStore;
+export const getBaseCaches = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   return getCache().baseCaches;
 };
 
-export const getChordCaches = (lastStore: StoreProps) => {
-  void lastStore;
+export const getChordCaches = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   return getCache().chordCaches;
 };
 
-export const getElementCaches = (lastStore: StoreProps) => {
-  void lastStore;
+export const getElementCaches = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   return getCache().elementCaches;
 };
 
-export const getOutlineTailPosition = (lastStore: StoreProps) => {
-  void lastStore;
+export const getOutlineTailPosition = (rootStoreToken: RootStoreToken) => {
+  void rootStoreToken;
   return getCache().outlineTailPos;
 };
 
-export const isCacheStandby = (lastStore: StoreProps) => {
-  return getElementCaches(lastStore).length === 0;
+export const isCacheStandby = (rootStoreToken: RootStoreToken) => {
+  return getElementCaches(rootStoreToken).length === 0;
 };
 
-export const getBeatSumWidth = (lastStore: StoreProps) => {
-  return getChordCaches(lastStore).reduce(
+export const getBeatSumWidth = (rootStoreToken: RootStoreToken) => {
+  return getChordCaches(rootStoreToken).reduce(
     (total, chordCache) => total + chordCache.viewPosWidth,
     0,
   );
 };
 
-export const getBeatNoteTail = (lastStore: StoreProps) => {
-  const chordCaches = getChordCaches(lastStore);
+export const getBeatNoteTail = (rootStoreToken: RootStoreToken) => {
+  const chordCaches = getChordCaches(rootStoreToken);
   const tail = chordCaches[chordCaches.length - 1];
   return tail.startBeatNote + tail.lengthBeatNote;
 };
 
-export const getBaseCacheFromBeat = (lastStore: StoreProps, pos: number) => {
-  return getBaseCaches(lastStore).find(
+export const getBaseCacheFromBeat = (rootStoreToken: RootStoreToken, pos: number) => {
+  return getBaseCaches(rootStoreToken).find(
     (baseCache) =>
       baseCache.startBeatNote <= pos &&
       pos < baseCache.startBeatNote + baseCache.lengthBeatNote,
   );
 };
 
-export const getChordCacheFromBeat = (lastStore: StoreProps, pos: number) => {
-  return getChordCaches(lastStore).find(
+export const getChordCacheFromBeat = (rootStoreToken: RootStoreToken, pos: number) => {
+  return getChordCaches(rootStoreToken).find(
     (chordCache) =>
       chordCache.startBeatNote <= pos &&
       pos < chordCache.startBeatNote + chordCache.lengthBeatNote,

@@ -1,8 +1,8 @@
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import { recalculateCache } from "../../state/cache-state/recalculate-cache";
 
-export const createCacheActions = (lastStore: StoreProps) => {
+export const createCacheActions = (rootStoreToken: RootStoreToken) => {
   return {
-    recalculate: () => recalculateCache(lastStore),
+    recalculate: () => recalculateCache(rootStoreToken),
   };
 };

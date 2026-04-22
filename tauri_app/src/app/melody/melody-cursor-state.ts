@@ -3,19 +3,25 @@ import {
   getMelodyCursorStore,
   setMelodyCursorStore,
 } from "../../state/session-state/melody-cursor-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 
-export const getMelodyCursorState = (lastStore: StoreProps): MelodyNote => {
+export const getMelodyCursorState = (
+  rootStoreToken: RootStoreToken,
+): MelodyNote => {
+  void rootStoreToken;
   return getMelodyCursorStore();
 };
 
-export const copyMelodyCursorState = (lastStore: StoreProps): MelodyNote => {
-  return JSON.parse(JSON.stringify(getMelodyCursorState(lastStore)));
+export const copyMelodyCursorState = (
+  rootStoreToken: RootStoreToken,
+): MelodyNote => {
+  return JSON.parse(JSON.stringify(getMelodyCursorState(rootStoreToken)));
 };
 
 export const replaceMelodyCursorState = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   note: MelodyNote,
 ) => {
+  void rootStoreToken;
   setMelodyCursorStore(JSON.parse(JSON.stringify(note)));
 };

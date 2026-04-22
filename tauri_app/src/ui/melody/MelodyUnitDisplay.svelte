@@ -1,7 +1,8 @@
 <script lang="ts">
   import StoreMelody from "../../domain/melody/melody-store";
+  import type { MelodyNote } from "../../domain/melody/melody-types";
 
-  export let note!: StoreMelody.Note;
+  export let note!: MelodyNote;
 
   $: unit = StoreMelody.getUnitText(note);
 </script>

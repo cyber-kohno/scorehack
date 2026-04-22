@@ -7,10 +7,10 @@ import {
   getOutlineTrackIndex,
   setOutlineTrackIndex,
 } from "../../state/session-state/outline-track-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 
-export const moveOutlineFocus = (lastStore: StoreProps, val: number) => {
-  const { getOutlineElements } = createProjectDataActions(lastStore);
+export const moveOutlineFocus = (rootStoreToken: RootStoreToken, val: number) => {
+  const { getOutlineElements } = createProjectDataActions(rootStoreToken);
   const focus = getOutlineFocusState().focus;
   const length = getOutlineElements().length;
   const next = focus + val;
@@ -19,8 +19,8 @@ export const moveOutlineFocus = (lastStore: StoreProps, val: number) => {
   }
 };
 
-export const moveOutlineSectionFocus = (lastStore: StoreProps, dir: -1 | 1) => {
-  const { getOutlineElements } = createProjectDataActions(lastStore);
+export const moveOutlineSectionFocus = (rootStoreToken: RootStoreToken, dir: -1 | 1) => {
+  const { getOutlineElements } = createProjectDataActions(rootStoreToken);
   const elements = getOutlineElements();
 
   let tempFocus = getOutlineFocusState().focus;
@@ -40,17 +40,17 @@ export const moveOutlineSectionFocus = (lastStore: StoreProps, dir: -1 | 1) => {
 };
 
 export const changeOutlineHarmonizeTrack = (
-  lastStore: StoreProps,
+  rootStoreToken: RootStoreToken,
   nextIndex: number,
 ) => {
-  const { getArrangeTracks } = createProjectDataActions(lastStore);
+  const { getArrangeTracks } = createProjectDataActions(rootStoreToken);
   const tracks = getArrangeTracks();
   if (tracks[nextIndex] == undefined) throw new Error();
   setOutlineTrackIndex(nextIndex);
 };
 
-export const getCurrentOutlineHarmonizeTrack = (lastStore: StoreProps) => {
-  const { getArrangeTrack } = createProjectDataActions(lastStore);
+export const getCurrentOutlineHarmonizeTrack = (rootStoreToken: RootStoreToken) => {
+  const { getArrangeTrack } = createProjectDataActions(rootStoreToken);
   const track = getArrangeTrack(getOutlineTrackIndex());
   if (track == undefined) throw new Error();
   return track;

@@ -4,7 +4,7 @@ import type {
   MelodyScoreTrack,
 } from "../../domain/melody/melody-types";
 import type StoreArrange from "../../domain/arrange/arrange-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 import {
   getProjectData,
   setProjectData,
@@ -31,33 +31,35 @@ import {
   setScoreTracks,
 } from "../../state/project-data/melody-project-data";
 
-export const createProjectDataActions = (lastStore: StoreProps) => {
+export const createProjectDataActions = (rootStoreToken: RootStoreToken) => {
   return {
-    getProjectData: () => getProjectData(lastStore),
+    getProjectData: () => getProjectData(rootStoreToken),
     setProjectData: (nextData: ReturnType<typeof getProjectData>) =>
-      setProjectData(lastStore, nextData),
+      setProjectData(rootStoreToken, nextData),
 
-    getOutlineElements: () => getOutlineElements(lastStore),
-    getOutlineElement: (index: number) => getOutlineElement(lastStore, index),
+    getOutlineElements: () => getOutlineElements(rootStoreToken),
+    getOutlineElement: (index: number) => getOutlineElement(rootStoreToken, index),
     setOutlineElements: (elements: OutlineElement[]) =>
-      setOutlineElements(lastStore, elements),
+      setOutlineElements(rootStoreToken, elements),
     insertOutlineElementAt: (index: number, element: OutlineElement) =>
-      insertOutlineElementAt(lastStore, index, element),
+      insertOutlineElementAt(rootStoreToken, index, element),
     removeOutlineElementAt: (index: number) =>
-      removeOutlineElementAt(lastStore, index),
+      removeOutlineElementAt(rootStoreToken, index),
 
-    getScoreTracks: () => getScoreTracks(lastStore),
-    getScoreTrack: (index: number) => getScoreTrack(lastStore, index),
-    setScoreTracks: (tracks: MelodyScoreTrack[]) => setScoreTracks(lastStore, tracks),
+    getScoreTracks: () => getScoreTracks(rootStoreToken),
+    getScoreTrack: (index: number) => getScoreTrack(rootStoreToken, index),
+    setScoreTracks: (tracks: MelodyScoreTrack[]) =>
+      setScoreTracks(rootStoreToken, tracks),
 
-    getAudioTracks: () => getAudioTracks(lastStore),
-    getAudioTrack: (index: number) => getAudioTrack(lastStore, index),
-    setAudioTracks: (tracks: MelodyAudioTrack[]) => setAudioTracks(lastStore, tracks),
+    getAudioTracks: () => getAudioTracks(rootStoreToken),
+    getAudioTrack: (index: number) => getAudioTrack(rootStoreToken, index),
+    setAudioTracks: (tracks: MelodyAudioTrack[]) =>
+      setAudioTracks(rootStoreToken, tracks),
 
-    getArrangeTracks: () => getArrangeTracks(lastStore),
-    getArrangeData: () => getArrangeData(lastStore),
-    getArrangeTrack: (index: number) => getArrangeTrack(lastStore, index),
+    getArrangeTracks: () => getArrangeTracks(rootStoreToken),
+    getArrangeData: () => getArrangeData(rootStoreToken),
+    getArrangeTrack: (index: number) => getArrangeTrack(rootStoreToken, index),
     setArrangeTracks: (tracks: StoreArrange.Track[]) =>
-      setArrangeTracks(lastStore, tracks),
+      setArrangeTracks(rootStoreToken, tracks),
   };
 };

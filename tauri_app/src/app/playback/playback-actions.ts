@@ -1,10 +1,10 @@
 import PreviewUtil from "./preview-util";
-import type { StoreUtil } from "../../state/root-store";
+import type { CommitContext } from "../../state/root-store";
 
-export const createPlaybackActions = (storeUtil: StoreUtil) => {
-  const { lastStore } = storeUtil;
-  const reducer = PreviewUtil.useReducer(lastStore);
-  const updater = PreviewUtil.useUpdater(storeUtil);
+export const createPlaybackActions = (commitContext: CommitContext) => {
+  const { lastStore: rootStoreToken } = commitContext;
+  const reducer = PreviewUtil.useReducer(rootStoreToken);
+  const updater = PreviewUtil.useUpdater(commitContext);
 
   return {
     isLoadSoundFont: reducer.isLoadSoundFont,

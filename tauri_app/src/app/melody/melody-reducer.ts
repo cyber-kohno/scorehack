@@ -29,9 +29,10 @@ import {
   setMelodyFocus,
 } from "../../state/session-state/melody-focus-store";
 import { setMelodyOverlapState } from "../../state/session-state/melody-overlap-store";
-import type { StoreProps } from "../../state/root-store";
+import type { RootStoreToken } from "../../state/root-store";
 
-const useReducerMelody = (lastStore: StoreProps) => {
+const useReducerMelody = (rootStoreToken: RootStoreToken) => {
+  const lastStore = rootStoreToken;
   const { syncChordSeqFromNote } = createOutlineActions(lastStore);
   const { getScoreTrack, getScoreTracks } = createProjectDataActions(lastStore);
   const melodyFocus = getMelodyFocusState();
