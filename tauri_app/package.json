@@ -1,7 +1,7 @@
 {
-  "name": "svelte-test",
+  "name": "scorehack-tauri",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,7 +22,6 @@
     "vite": "^5.4.10"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "@tauri-apps/plugin-fs": "^2.5.0",
     "@types/wicg-file-system-access": "^2023.10.6",

@@ -1,0 +1,20 @@
+import { writable } from "svelte/store";
+import ControlState from "./state/control-state";
+import DataState from "./state/data/data-state";
+import FileState from "./state/file-state";
+import InputState from "./state/input-state";
+import PlaybackState from "./state/playback-state";
+import TerminalState from "./state/terminal-state";
+import DerivedState from "./state/derived-state";
+import RefState from "./state/ref-state";
+import SettingsState from "./state/settings-state";
+
+export const controlStore = writable<ControlState.Value>(ControlState.INITIAL);
+export const dataStore = writable<DataState.Value>(DataState.INITIAL);
+export const fileStore = writable<FileState.Value>(FileState.INITIAL);
+export const inputStore = writable<InputState.Value>(InputState.INITIAL);
+export const playbackStore = writable<PlaybackState.Value>(PlaybackState.INITIAL);
+export const terminalStore = writable<TerminalState.Value | null>(null);
+export const derivedStore = writable<DerivedState.Value>(DerivedState.INITIAL);
+export const refStore = writable<RefState.Value>(RefState.INITIAL);
+export const settingsStore = writable<SettingsState.Value>(SettingsState.INITIAL);
