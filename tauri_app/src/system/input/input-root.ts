@@ -10,7 +10,7 @@ import useInputTerminal from "./inputTerminal";
 
 const useInputRoot = (storeUtil: StoreUtil) => {
     const { lastStore, commit } = storeUtil;
-    const reducerRoot = useReducerRoot(lastStore);
+    const reducerRoot = useReducerRoot();
     const reducerTerminal = useReducerTerminal(lastStore);
 
     const inputOutline = useInputOutline(storeUtil);

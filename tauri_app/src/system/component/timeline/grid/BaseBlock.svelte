@@ -8,13 +8,14 @@
   import store from "../../../store/store";
   import MusicTheory from "../../../domain/theory/music-theory";
   import useMelodySelector from "../../../service/melody/melody-selector";
+    import useRootSelector from "../../../service/common/root-selector";
 
   type PitchType = "tonic" | "other" | "scale";
 
   export let baseCache: DerivedState.BaseCache;
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
-  $: reducerRoot = useReducerRoot($store);
+  $: rootSelector = useRootSelector();
   $: reducerMelody = useMelodyUpdater();
   $: melodySelector = useMelodySelector($controlStore, $dataStore);
 
@@ -29,7 +30,7 @@
       width: number;
     }[] = [];
     const cnt = baseCache.lengthBeat * beatDiv16Count;
-    const focusPos = reducerRoot.getTimelineFocusPos();
+    const focusPos = rootSelector.getTimelineFocusPos();
     for (let i = 0; i < cnt; i++) {
       const left = (beatWidth / beatDiv16Count) * i;
       const absLeft = baseCache.viewPosLeft + left;
