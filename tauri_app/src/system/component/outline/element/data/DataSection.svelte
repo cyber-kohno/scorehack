@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type OutlineState from "../../../../store/state/data/outline-state";
+    import type ElementState from "../../../../store/state/data/element-state";
 
-  export let data!: OutlineState.DataSection;
+  export let data!: ElementState.DataSection;
 </script>
 
 <div class="label">{data.name}</div>

@@ -1,5 +1,7 @@
-import MusicTheory from "../../domain/theory/music-theory";
-import type OutlineState from "./data/outline-state";
+import type ChordTheory from "../../domain/theory/chord-theory";
+import type RhythmTheory from "../../domain/theory/rhythm-theory";
+import type TonalityTheory from "../../domain/theory/tonality-theory";
+import type ElementState from "./data/element-state";
 
 namespace DerivedState {
 
@@ -31,7 +33,7 @@ namespace DerivedState {
         viewPosWidth: number;
     }
     export interface BaseCache extends BeatRange {
-        scoreBase: OutlineState.DataInit;
+        scoreBase: ElementState.DataInit;
         startBar: number;
         baseSeq: number;
     }
@@ -47,16 +49,25 @@ namespace DerivedState {
         sectionStart?: string;
         modulate?: ModulateCache;
         tempo?: TempoCache;
+        ts?: TSCache;
         arrs: string[];
+
+        error?: {
+            straddle: boolean;
+        }
     }
 
     export interface ModulateCache {
-        prev: MusicTheory.Tonality;
-        next: MusicTheory.Tonality;
+        prev: TonalityTheory.Tonality;
+        next: TonalityTheory.Tonality;
     }
     export interface TempoCache {
         prev: number;
         next: number;
+    }
+    export interface TSCache {
+        prev: RhythmTheory.TimeSignature;
+        next: RhythmTheory.TimeSignature;
     }
 
     export interface BeatCache {
@@ -74,11 +85,11 @@ namespace DerivedState {
     })
 
     export type CompiledChord = {
-        chord: MusicTheory.KeyChordProps;
-        structs: MusicTheory.ChordStruct[];
+        chord: ChordTheory.KeyChordProps;
+        structs: ChordTheory.ChordStruct[];
     };
 
-    export interface ElementCache extends OutlineState.Element {
+    export interface ElementCache extends ElementState.Element {
         elementSeq: number;
         chordSeq: number;
         baseSeq: number;
@@ -90,6 +101,7 @@ namespace DerivedState {
 
         modulate?: ModulateCache;
         tempo?: TempoCache;
+        ts?: TSCache;
     }
 }
 export default DerivedState;

@@ -1,25 +1,22 @@
 <script lang="ts">
-  import ContextUtil from "../../../store/contextUtil";
   import MelodyState from "../../../store/state/data/melody-state";
-  import { controlStore, dataStore } from "../../../store/global-store";
-  import store from "../../../store/store";
-  import useReducerCache from "../../../service/derived/reducerCache";
-  import useMelodySelector from "../../../service/melody/melody-selector";
+  import { controlStore, dataStore, derivedStore, playbackStore, settingsStore } from "../../../store/global-store";  import useMelodySelector from "../../../service/melody/melody-selector";
+  import useDerivedSelector from "../../../service/derived/derived-selector";
 
-  $: reduerCache = useReducerCache($store);
-  $: melodySelctor = useMelodySelector($controlStore, $dataStore);
+  $: derivedSelector = useDerivedSelector($derivedStore, $controlStore);
+  $: melodySelctor = useMelodySelector({ control: $controlStore, data: $dataStore });
 
-  $: focusInfo = reduerCache.getFocusInfo();
+  $: focusInfo = derivedSelector.getFocusInfo();
 
   $: [noteLeft, noteWidth] = (() => {
     const notes = melodySelctor.getCurrScoreTrack().notes;
     const melody = $controlStore.melody;
     const note = melody.focus === -1 ? melody.cursor : notes[melody.focus];
     const side = MelodyState.calcBeatSide(note);
-    return [side.pos, side.len].map((v) => v * $store.settings.beatWidth);
+    return [side.pos, side.len].map((v) => v * $settingsStore.beatWidth);
   })();
   $: isMelodyMode = $controlStore.mode === "melody";
-  const isPreview = ContextUtil.get('isPreview');
+  $: isPreview = $playbackStore.timerKeys != null;
 </script>
 
 {#if focusInfo.isChord}
@@ -30,7 +27,7 @@
     data-isChord={focusInfo.isChord}
   ></div>
 {/if}
-{#if isMelodyMode && !$isPreview()}
+{#if isMelodyMode && !isPreview}
   <div class="note" style:left="{noteLeft}px" style:width="{noteWidth}px"></div>
 {/if}
 

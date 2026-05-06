@@ -1,30 +1,26 @@
 import { get } from "svelte/store";
-import type StoreInput from "../store/state/input-state";
-import useReducerRoot from "../service/common/root-updater";
-import useReducerTerminal from "../service/terminal/reducerTerminal";
-import { controlStore, terminalStore } from "../store/global-store";
-import type { StoreProps, StoreUtil } from "../store/store";
+import type InputState from "../store/state/input-state";
+import { controlStore, inputStore, playbackStore, terminalStore } from "../store/global-store";
 import useInputMelody from "./input-melody";
-import useInputOutline from "./inputOutline";
-import useInputTerminal from "./inputTerminal";
+import useInputOutline from "./input-outline";
+import useInputTerminal from "./input-terminal";
+import StoreUtil from "../service/common/store-util";
+import createTerminalActions from "../actions/terminal/terminal-actions";
+import FileUtil from "../infra/file/fileUtil";
+import { createToast } from "../service/common/toast-service";
+import ToastState from "../store/state/toast-state";
 
-const useInputRoot = (storeUtil: StoreUtil) => {
-    const { lastStore, commit } = storeUtil;
-    const reducerRoot = useReducerRoot();
-    const reducerTerminal = useReducerTerminal(lastStore);
+const useInputRoot = () => {
+    const terminalActions = createTerminalActions();
 
-    const inputOutline = useInputOutline(storeUtil);
-    const inputMelody = useInputMelody(storeUtil);
-
-    const control = get(controlStore);
-    const terminal = get(terminalStore);
-    lastStore.control = control;
+    const inputOutline = useInputOutline();
+    const inputMelody = useInputMelody();
+    const isTerminalActive = () => get(terminalStore) != null;
 
     const controlKeyHold = (eventKey: string, isDown: boolean) => {
 
-        const set = (key: keyof StoreProps['input'], isDown: boolean) => {
-            reducerRoot.setInputHold(key, isDown);
-            commit();
+        const set = (key: keyof InputState.Value, isDown: boolean) => {
+            StoreUtil.setInputHold(key, isDown);
         };
         switch (eventKey) {
             case "e": { set('holdE', isDown) } break;
@@ -38,12 +34,13 @@ const useInputRoot = (storeUtil: StoreUtil) => {
         }
     }
 
-    const setHoldControl = (callbacks: StoreInput.Callbacks) => {
+    const setHoldControl = (callbacks: InputState.Callbacks) => {
+        const input = get(inputStore);
 
         Object.keys(callbacks).some(key => {
-            const holdKey = key as keyof typeof lastStore.input; // キーをタイプアサーションして型を指定
+            const holdKey = key as keyof typeof input; // キーをタイプアサーションして型を指定
             const callback = callbacks[holdKey];
-            if (lastStore.input[holdKey] && callback != undefined) {
+            if (input[holdKey] && callback != undefined) {
                 callback();
                 // 1つでも処理したらループを抜ける。
                 return 1;
@@ -52,39 +49,40 @@ const useInputRoot = (storeUtil: StoreUtil) => {
     }
 
     const controlKeyDown = (e: KeyboardEvent) => {
+        const input = get(inputStore);
+
+        const control = get(controlStore);
         const eventKey = e.key;
+        const normalizedKey = eventKey.toLowerCase();
 
         const mode = control.mode;
 
         const isUseArrange = control.outline.arrange != null;
+        const isPlayback = get(playbackStore).timerKeys != null;
+        if (e.ctrlKey && normalizedKey === "s") e.preventDefault();
 
-        if (!reducerRoot.hasHold()) {
-            if (terminal) {
-                const inputTerminal = useInputTerminal(storeUtil);
+        if (!StoreUtil.hasHold(input)) {
+            if (isTerminalActive()) {
+                const inputTerminal = useInputTerminal();
                 inputTerminal.control(eventKey);
-                commit();
                 return;
             }
 
-            switch (eventKey) {
-                case 'r': {
-                    if (isUseArrange) break;
-                    reducerRoot.switchMode();
-                    commit();
-                } break;
-                case 't': {
-                    reducerTerminal.open();
-                    commit();
-                } break;
+            if (!isPlayback) {
+                switch (eventKey) {
+                    case 'r': {
+                        if (isUseArrange) break;
+                        StoreUtil.switchMode();
+                    } break;
+                    case 't': {
+                        terminalActions.open();
+                    } break;
+                }
             }
 
             switch (mode) {
-                case 'harmonize': {
-                    inputOutline.control(eventKey);
-                } break;
-                case 'melody': {
-                    inputMelody.control(eventKey);
-                } break;
+                case 'harmonize': inputOutline.control(eventKey); break;
+                case 'melody': inputMelody.control(eventKey); break;
             }
 
             controlKeyHold(e.key, true);
@@ -111,8 +109,38 @@ const useInputRoot = (storeUtil: StoreUtil) => {
 
     //     return callbacks;
     // }
-    const getHoldCallbacks = (eventKey: string): StoreInput.Callbacks => {
-        const callbacks: StoreInput.Callbacks = {};
+    const getHoldCallbacks = (eventKey: string): InputState.Callbacks => {
+        const callbacks: InputState.Callbacks = {};
+
+        callbacks.holdCtrl = () => {
+            if (get(playbackStore).timerKeys != null) return;
+
+            switch (eventKey.toLowerCase()) {
+                case "s": {
+                    const fileUtil = FileUtil.getUtil();
+                    fileUtil.saveScoreFile({
+                        success: (handle) => {
+                            createToast({
+                                ...ToastState.INITIAL,
+                                x: 12,
+                                y: 48,
+                                width: 280,
+                                text: `Saved. [${handle.name}]`,
+                            });
+                        },
+                        cancel: () => {
+                            createToast({
+                                ...ToastState.INITIAL,
+                                x: 12,
+                                y: 48,
+                                width: 280,
+                                text: "Save canceled.",
+                            });
+                        },
+                    });
+                } break;
+            }
+        };
 
         callbacks.holdE = () => {
 

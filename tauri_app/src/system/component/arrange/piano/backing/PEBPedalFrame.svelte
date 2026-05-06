@@ -1,9 +1,8 @@
 <script lang="ts">
-  import ContextUtil from "../../../../store/contextUtil";
-  import store from "../../../../store/store";
-
-  const bp = ContextUtil.get("backingProps");
-  const editor = ContextUtil.get("pianoEditor");
+  import { refStore } from "../../../../store/global-store";
+  import { getPianoBacking, getPianoEditor } from "../piano-editor-context";
+  const bp = getPianoBacking();
+  const editor = getPianoEditor();
   $: backing = $bp.backing;
 
   $: layer = backing.layers[0];
@@ -17,7 +16,7 @@
     );
   };
 
-  $: pianoRef = $store.ref.arrange.piano;
+  $: pianoRef = $refStore.arrange.piano;
 </script>
 
 <div class="wrap" bind:this={pianoRef.pedal}>

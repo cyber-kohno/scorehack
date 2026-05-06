@@ -1,25 +1,25 @@
 <script lang="ts">
-  import { controlStore } from "../../store/global-store";
-  import store from "../../store/store";
-  import MusicTheory from "../../domain/theory/music-theory";
-  import useReducerCache from "../../service/derived/reducerCache";
+  import { controlStore, derivedStore } from "../../store/global-store";
+  import RhythmTheory from "../../domain/theory/rhythm-theory";
+  import TonalityTheory from "../../domain/theory/tonality-theory";
+    import useDerivedSelector from "../../service/derived/derived-selector";
 
-  $: reducerCache = useReducerCache($store);
+  $: derivedSelector = useDerivedSelector($derivedStore, $controlStore);
 
-  $: scoreBase = reducerCache.getCurBase().scoreBase;
+  $: scoreBase = derivedSelector.getCurBase().scoreBase;
 
-  $: elementCache = $store.cache.elementCaches[$controlStore.outline.focus];
+  $: elementCache = $derivedStore.elementCaches[$controlStore.outline.focus];
 </script>
 
 {#if scoreBase !== null}
   <div class="wrap">
     <div class="record">
       <div class="title">scale:</div>
-      <div class="value">{MusicTheory.getScaleName(scoreBase.tonality)}</div>
+      <div class="value">{TonalityTheory.getScaleName(scoreBase.tonality)}</div>
     </div>
     <div class="record">
       <div class="title">ts:</div>
-      <div class="value">{MusicTheory.getTSName(scoreBase.ts)}</div>
+      <div class="value">{RhythmTheory.formatTS(scoreBase.ts)}</div>
     </div>
     <div class="record">
       <div class="title">tempo:</div>

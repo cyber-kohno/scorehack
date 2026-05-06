@@ -1,10 +1,9 @@
 <script lang="ts">
+  import { refStore } from "../../../../../store/global-store";
   import { onMount } from "svelte";
   import APFinderVoicItem from "./APFinderVoicItem.svelte";
   import type PianoEditorState from "../../../../../store/state/data/arrange/piano/piano-editor-state";
   import type ArrangeLibrary from "../../../../../store/state/data/arrange/arrange-library";
-  import store from "../../../../../store/store";
-
   export let finder: ArrangeLibrary.PianoArrangeFinder;
   export let sndsPatts: PianoEditorState.SoundsPattern[];
   export let isRecordFocus: boolean;
@@ -14,7 +13,7 @@
   let ref: HTMLElement | null = null; // 要素の参照を保存
   onMount(() => {
     if (ref != null) {
-      const finderRefs = $store.ref.arrange.finder;
+      const finderRefs = $refStore.arrange.finder;
 
       let instance = finderRefs.records.find((r) => r.seq === backingIndex);
 

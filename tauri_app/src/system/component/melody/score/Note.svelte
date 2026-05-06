@@ -1,98 +1,68 @@
 <script lang="ts">
+  import { onDestroy, onMount } from "svelte";
   import Layout from "../../../layout/layout-constant";
   import MelodyState from "../../../store/state/data/melody-state";
   import type RefState from "../../../store/state/ref-state";
-  import store from "../../../store/store";
-  import MusicTheory from "../../../domain/theory/music-theory";
+  import TonalityTheory from "../../../domain/theory/tonality-theory";
   import Factors from "./Factors.svelte";
-  import ContextUtil from "../../../store/contextUtil";
   import UnitDisplay from "../UnitDisplay.svelte";
-  import useMelodyUpdater from "../../../service/melody/melody-updater";
-  import { controlStore, dataStore } from "../../../store/global-store";
-  import useReducerCache from "../../../service/derived/reducerCache";
-  import useMelodySelector from "../../../service/melody/melody-selector";
+  import { getNoteDisplayUnit, getProtrusionHeight } from "./note-display-util";
+  import type ElementState from "../../../store/state/data/element-state";
 
   export let note: MelodyState.Note;
   export let index: number;
   export let scrollLimitProps: RefState.ScrollLimitProps;
   export let cursorMiddle: number;
-
-  const isPreview = ContextUtil.get("isPreview");
+  export let beatWidth: number;
+  export let isPlayback: boolean;
+  export let isCriteria: boolean;
+  export let operation: OperationStatus;
+  export let cursor: MelodyState.Note;
+  export let scoreBase: ElementState.DataInit;
+  export let registerEffectRef: (index: number, ref: HTMLElement | null) => void;
 
   type OperationStatus =
-    | "move" // 移勁E
-    | "len" // 長ぁE
-    | "scale" // スケール縛り音程移勁E
-    | "range" // 篁E��選抁E
-    | "octave" // オクターブ音程移勁E
-    | "preview" // プレビュー中
-    | "focus" // フォーカスの基溁E
-    | "none"; // なぁE
+    | "move" // 移動
+    | "len" // 長さ
+    | "scale" // スケール縛り音程移動
+    | "range" // 範囲選択
+    | "octave" // オクターブ音程移動
+    | "playback" // プレビュー中
+    | "focus" // フォーカスの基準
+    | "none"; // なし
 
   let ref: HTMLElement | null = null;
-  $: {
-    if (ref != null) {
-      const trackIndex = $controlStore.melody.trackIndex;
-      const refs = $store.ref.trackArr[trackIndex];
 
-      let instance = refs.find((r) => r.seq === index);
-      if (instance == undefined) {
-        instance = { seq: index, ref };
-        refs.push(instance);
-      } else instance.ref = ref;
-    }
-  }
+  onMount(() => {
+    registerEffectRef(index, ref);
+  });
 
-  $: tonality = (() => {
-    const { getBaseFromBeat } = useReducerCache($store);
-    return getBaseFromBeat(MelodyState.calcBeat(note.norm, note.pos)).scoreBase
-      .tonality;
-  })();
+  onDestroy(() => {
+    registerEffectRef(index, null);
+  });
 
-  $: [isDisp, left, scaleIndex, width] = (() => {
+  $: tonality = scoreBase.tonality;
+  $: protrusionHeight = getProtrusionHeight(getNoteDisplayUnit(note, scoreBase.ts));
+
+  $: [isDisp, left, scaleDegreeLabel, width] = (() => {
     const beatSide = MelodyState.calcBeatSide(note);
     const [left, width] = [beatSide.pos, beatSide.len].map(
-      (v) => v * $store.settings.beatWidth,
+      (v) => v * beatWidth,
     );
     const middle = left + width / 2;
     const isDisp =
       Math.abs(scrollLimitProps.scrollMiddleX - middle) <=
         scrollLimitProps.rectWidth ||
       Math.abs(cursorMiddle - middle) <= scrollLimitProps.rectWidth;
-    const scaleIndex = (note.pitch - tonality.key12) % 12;
-    return [isDisp, left, scaleIndex, width];
+    const scaleIndex = TonalityTheory.getKeyIndex(note.pitch, tonality.key12);
+    const scaleDegreeLabel = TonalityTheory.getScaleDegreeLabel(scaleIndex);
+    return [isDisp, left, scaleDegreeLabel, width];
   })();
 
   $: isScale = (() => {
-    return MusicTheory.isScale(note.pitch, tonality);
+    return TonalityTheory.isScale(note.pitch, tonality);
   })();
 
-  $: melody = $controlStore.melody;
-
-  $: isCriteria = (() => {
-    return $controlStore.mode === "melody" && melody.focus === index;
-  })();
-  $: isFocus = (() => {
-    const { getFocusRange } = useMelodySelector($controlStore, $dataStore);
-    const istRange = () => {
-      const [start, end] = getFocusRange();
-      return start <= index && end >= index;
-    };
-    return $controlStore.mode === "melody" && istRange();
-  })();
-
-  $: getOperationHighlight = (): OperationStatus => {
-    if ($isPreview()) return "preview";
-    if (!isFocus) return "focus";
-
-    const input = $store.input;
-    if (input.holdD) return "move";
-    else if (input.holdF && melody.focusLock === -1) return "len";
-    else if (input.holdC) return "scale";
-    else if (input.holdX) return "octave";
-    else if (input.holdShift || melody.focusLock !== -1) return "range";
-    return "none";
-  };
 </script>
 
 {#if isDisp}
@@ -100,7 +70,7 @@
     class="column"
     style:left="{left}px"
     style:width="{width}px"
-    data-operation={getOperationHighlight()}
+    data-operation={operation}
     data-disable={true}
   >
     <div
@@ -113,14 +83,14 @@
       style:top="{Layout.getPitchTop(note.pitch) - 2}px"
       data-isScale={isScale}
     >
-      {#if !$isPreview()}
+      {#if !isPlayback}
         {#if !isCriteria}
-          <div class="protrusion" style:height="{28 / note.norm.div}px"></div>
+          <div class="protrusion" style:height="{protrusionHeight}px"></div>
         {:else}
-          <UnitDisplay {note} />
+          <UnitDisplay note={cursor} />
         {/if}
-        <div class="info">{scaleIndex}</div>
-        <Factors {note} />
+        <div class="info">{scaleDegreeLabel}</div>
+        <Factors {note} ts={scoreBase.ts} />
       {/if}
     </div>
   </div>
@@ -136,7 +106,7 @@
     box-sizing: border-box;
     background-color: #ffffff88;
   }
-  .column[data-operation="preview"] {
+  .column[data-operation="playback"] {
     background-color: transparent;
   }
   .column[data-operation="focus"] {

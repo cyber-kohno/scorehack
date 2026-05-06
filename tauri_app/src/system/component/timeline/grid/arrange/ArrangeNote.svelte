@@ -1,10 +1,13 @@
 <script lang="ts">
-    export let note!: TimelineStore.Note;
+    import type MelodyState from "../../../../store/state/data/melody-state";
+
+    export let note!: MelodyState.Note;
 
     $: noteBean = (() => {
         const keyIndex = note.pitch;
         return {
-            ...OutlineUtil.getNoteRect(note, $store.env),
+            x: 0, y: 0, width: 0, height: 0,
+            // ...OutlineUtil.getNoteRect(note, $settingsStore.beatWidth),
             keyIndex,
         };
     })();

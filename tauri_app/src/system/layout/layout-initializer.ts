@@ -1,5 +1,5 @@
 import Layout from "./layout-constant";
-import type { StoreProps } from "../store/store";
+import type DerivedState from "../store/state/derived-state";
 
 namespace LayoutInitializer {
 
@@ -61,8 +61,8 @@ namespace LayoutInitializer {
 
         ]);
     }
-    export const initVariableProps = (lastStore: StoreProps) => {
-        const beatSum = lastStore.cache.chordCaches.reduce((total, cur) => total + cur.viewPosWidth, 0);
+    export const initVariableProps = (lastDerived: DerivedState.Value) => {
+        const beatSum = lastDerived.chordCaches.reduce((total, cur) => total + cur.viewPosWidth, 0);
         setCustomProps([
             { key: '--beat-sum', value: `${beatSum}px` },
         ]);

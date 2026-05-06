@@ -1,16 +1,15 @@
 <script lang="ts">
-  import type OutlineState from "../../../store/state/data/outline-state";
-  import { controlStore } from "../../../store/global-store";
-  import store from "../../../store/store";
-  import MusicTheory from "../../../domain/theory/music-theory";
+  import type OutlineState from "../../../store/state/data/element-state";
+  import ChordTheory from "../../../domain/theory/chord-theory";
+  import { controlStore, dataStore, derivedStore, refStore } from "../../../store/global-store";
 
   $: outline = $controlStore.outline;
 
   // $: [left, top] = (() => {
-  //   const elementRef = $store.ref.elementRefs.find(
+  //   const elementRef = $refStore.elementRefs.find(
   //     (r) => r.seq === outline.focus
   //   );
-  //   const outlineRef = $store.ref.outline;
+  //   const outlineRef = $refStore.outline;
   //   let left = 0;
   //   let top = 0;
   //   if (elementRef != undefined && outlineRef != null) {
@@ -23,9 +22,9 @@
   // })();
 
   $: [left, top] = (() => {
-    const outlineRef = $store.ref.outline;
+    const outlineRef = $refStore.outline;
     if (outlineRef != undefined) {
-      const element = $store.cache.elementCaches[$controlStore.outline.focus];
+      const element = $derivedStore.elementCaches[$controlStore.outline.focus];
       // const frameTop = outlineRef.getBoundingClientRect().top;
       const top = element.outlineTop - outlineRef.scrollTop;
       const left = 210;
@@ -35,7 +34,7 @@
   })();
 
   $: symbol = (() => {
-    const element = $store.data.elements[outline.focus];
+    const element = $dataStore.elements[outline.focus];
     const chord = element.data as OutlineState.DataChord;
     if (chord.degree == undefined)
       throw new Error("chord.degree must not be undefined.");
@@ -44,11 +43,11 @@
 
   $: [cur, lower, upper, prev, next] = (() => {
     const cur = symbol;
-    const symbolProps = MusicTheory.getSymbolProps(symbol);
+    const symbolProps = ChordTheory.getSymbolProps(symbol);
     const lower = symbolProps.lower;
     const upper = symbolProps.upper;
-    const prev = MusicTheory.getSameLevelSymbol(symbol, -1);
-    const next = MusicTheory.getSameLevelSymbol(symbol, 1);
+    const prev = ChordTheory.getSameLevelSymbol(symbol, -1);
+    const next = ChordTheory.getSameLevelSymbol(symbol, 1);
     return [cur, lower, upper, prev, next];
   })();
 

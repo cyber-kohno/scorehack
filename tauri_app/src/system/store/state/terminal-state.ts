@@ -1,4 +1,4 @@
-import type CommandRegistUtil from "../../service/terminal/commandRegistUtil";
+import type TerminalCommand from "../../service/terminal/terminal-command";
 
 namespace TerminalState {
 
@@ -8,7 +8,7 @@ namespace TerminalState {
         target: string;
         focus: number;
         wait: boolean;
-        availableFuncs: CommandRegistUtil.FuncProps[];
+        availableFuncs: TerminalCommand.Props[];
         helper: HelperProps | null;
     }
 

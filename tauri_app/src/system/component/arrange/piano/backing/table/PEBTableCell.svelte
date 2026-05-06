@@ -1,13 +1,13 @@
 <script lang="ts">
-  import ContextUtil from "../../../../../store/contextUtil";
+  import { getPianoBacking, getPianoEditor } from "../../piano-editor-context";
   import PianoBackingState from "../../../../../store/state/data/arrange/piano/piano-backing-state";
 
   export let colIndex!: number;
   export let recordIndex!: number;
   export let col!: PianoBackingState.Col;
 
-  $: editor = ContextUtil.get("pianoEditor");
-  $: bp = ContextUtil.get("backingProps");
+  const editor = getPianoEditor();
+  const bp = getPianoBacking();
   $: backing = $bp.backing;
 
   $: isEditActive = $editor.control === "notes" && $editor.phase === "edit";

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import ContextUtil from "../../../../store/contextUtil";
+  import { getPianoBacking } from "../piano-editor-context";
 
-  $: bp = ContextUtil.get("backingProps");
+  const bp = getPianoBacking();
   $: backing = $bp.backing;
   $: isActive = (i: number) => {
     return backing.layerIndex === i;

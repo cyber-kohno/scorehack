@@ -3,7 +3,7 @@
   import useMelodySelector from "../../../service/melody/melody-selector";
   import { controlStore, dataStore } from "../../../store/global-store";
 
-  $: selector = useMelodySelector($controlStore, $dataStore);
+  $: selector = useMelodySelector({ control: $controlStore, data: $dataStore });
 
   const LP = Layout.pitch;
 

@@ -1,23 +1,24 @@
 import type DerivedState from "../../derived-state";
-import type OutlineState from "../outline-state";
-import type PianoEditorState from "./piano/piano-editor-state";
+import type ElementState from "../element-state";
+import PianoEditorState from "./piano/piano-editor-state";
 
 namespace ArrangeState {
 
   export const ArrangeMedhods = ["piano", "guitar"] as const;
   export type ArrangeMedhod = (typeof ArrangeMedhods)[number];
 
+  export const createPianoTrackInitial = (name: string): Track => ({
+    name,
+    method: "piano",
+    soundFont: "",
+    volume: 10,
+    isMute: false,
+    relations: [],
+    pianoLib: PianoEditorState.createInitialLib(),
+  });
+
   export const INITIAL: DataProps = {
-    // tracks: [{
-    //     name: 'arrange0',
-    //     method: 'piano',
-    //     soundFont: '',
-    //     volume: 10,
-    //     isMute: false,
-    //     relations: [],
-    //     pianoLib: { backingPatterns: [], soundsPatterns: [], presets: [] }
-    // }],
-    tracks: [],
+    tracks: [createPianoTrackInitial("track0")],
   };
 
   export type EditorProps = {
@@ -28,7 +29,7 @@ namespace ArrangeState {
   };
 
   export type Target = {
-    scoreBase: OutlineState.DataInit;
+    scoreBase: ElementState.DataInit;
     beat: DerivedState.BeatCache;
     compiledChord: DerivedState.CompiledChord;
     chordSeq: number;

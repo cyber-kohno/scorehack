@@ -1,23 +1,22 @@
 <script lang="ts">
   import type DerivedState from "../../../store/state/derived-state";
   import type RefState from "../../../store/state/ref-state";
-  import useReducerRoot from "../../../service/common/root-updater";
-  import store from "../../../store/store";
-  import MusicTheory from "../../../domain/theory/music-theory";
+  import RhythmTheory from "../../../domain/theory/rhythm-theory";
+  import StoreUtil from "../../../service/common/store-util";
+  import { controlStore, derivedStore, settingsStore } from "../../../store/global-store";
 
   export let baseCache!: DerivedState.BaseCache;
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
-  $: barDivBeatCnt = MusicTheory.getBarDivBeatCount(baseCache.scoreBase.ts);
-  $: beatDiv16Count = MusicTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
+  $: barDivBeatCnt = RhythmTheory.getBarDivBeatCount(baseCache.scoreBase.ts);
+  $: beatDiv16Count = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
   $: barDiv16Cnt = barDivBeatCnt * beatDiv16Count;
 
-  $: beatWidth = $store.settings.beatWidth * (beatDiv16Count / 4);
-  $: left = baseCache.startBeat * beatWidth;
-  $: width = baseCache.lengthBeat * beatWidth;
+  $: beatWidth = $settingsStore.beatWidth * (beatDiv16Count / 4);
+  $: left = baseCache.viewPosLeft;
+  $: width = baseCache.viewPosWidth;
 
   $: memoriList = (() => {
-    const { getTimelineFocusPos } = useReducerRoot($store);
     // console.log(baseCache);
     const list: {
       x: number;
@@ -27,7 +26,10 @@
       bar?: number;
     }[] = [];
     const num = baseCache.lengthBeat * beatDiv16Count;
-    const focusPos = getTimelineFocusPos();
+    const focusPos = StoreUtil.getTimelineFocusPos(
+      $derivedStore,
+      $controlStore,
+    );
     for (let i = 0; i < num; i++) {
       let bar: number | undefined = undefined;
       const left = (beatWidth / beatDiv16Count) * i;

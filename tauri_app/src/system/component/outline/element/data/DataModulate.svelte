@@ -1,19 +1,24 @@
 <script lang="ts">
-  import type OutlineState from "../../../../store/state/data/outline-state";
-  import store from "../../../../store/store";
-  import MusicTheory from "../../../../domain/theory/music-theory";
+  import TonalityTheory from "../../../../domain/theory/tonality-theory";
+  import ElementState from "../../../../store/state/data/element-state";
+  import { derivedStore } from "../../../../store/global-store";
 
-  export let data!: OutlineState.DataModulate;
+  export let data: ElementState.DataModulate;
   export let elementSeq!: number;
 
-  $: [method, val, prev, next] = (() => {
-    const { elementCaches } = $store.cache;
+  const formatVal = (val: number | undefined) => {
+    if (val == undefined) return "-";
+    return val > 0 ? `+${val}` : val.toString();
+  };
+
+  $: [method, val, prev, next, isNoChange] = (() => {
+    const { elementCaches } = $derivedStore;
     const modulate = elementCaches[elementSeq].modulate;
     if (modulate == undefined)
       throw new Error("modulate must not be undefined.");
-    const prev = MusicTheory.getScaleName(modulate.prev);
-    const next = MusicTheory.getScaleName(modulate.next);
-    return [data.method, data.val ?? "-", prev, next];
+    const prev = TonalityTheory.getScaleName(modulate.prev);
+    const next = TonalityTheory.getScaleName(modulate.next);
+    return [data.method, formatVal(data.val), prev, next, prev === next];
   })();
 </script>
 
@@ -21,11 +26,11 @@
   <div class="method">
     {method}
   </div>
-  <div class="val">
+  <div class="val" data-isNoChange={isNoChange}>
     {val}
   </div>
   <div class="change">
-    {`${prev} 竊・${next}`}
+    {isNoChange ? "-" : `${prev} → ${next}`}
   </div>
 </div>
 
@@ -60,6 +65,9 @@
     font-size: 22px;
     font-weight: 600;
     color: rgb(239, 255, 236);
+  }
+  .val[data-isNoChange="true"] {
+    opacity: 0.45;
   }
   .change {
     display: inline-block;

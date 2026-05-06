@@ -1,9 +1,8 @@
 <script lang="ts">
+  import { dataStore, refStore, settingsStore } from "../../../store/global-store";
   import Layout from "../../../layout/layout-constant";
   import MelodyState from "../../../store/state/data/melody-state";
   import type RefState from "../../../store/state/ref-state";
-  import store from "../../../store/store";
-
   export let trackIndex: number;
   export let noteIndex: number;
   export let scrollLimitProps: RefState.ScrollLimitProps;
@@ -15,7 +14,7 @@
   let ref: HTMLElement | null = null;
   $: {
     if (ref != null) {
-      const refs = $store.ref.trackArr[trackIndex];
+      const refs = $refStore.trackArr[trackIndex];
 
       let instance = refs.find((r) => r.seq === noteIndex);
       if (instance == undefined) {
@@ -25,12 +24,12 @@
     }
   }
 
-  $: scoreTrack = $store.data.scoreTracks[trackIndex];
+  $: scoreTrack = $dataStore.scoreTracks[trackIndex];
   $: note = scoreTrack.notes[noteIndex];
   $: [isDisp, left, width] = (() => {
     const beatSide = MelodyState.calcBeatSide(note);
     const [left, width] = [beatSide.pos, beatSide.len].map(
-      (v) => v * $store.settings.beatWidth
+      (v) => v * $settingsStore.beatWidth
     );
     const isDisp =
       Math.abs(scrollLimitProps.scrollMiddleX - (left + width / 2)) <=

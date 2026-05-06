@@ -1,12 +1,12 @@
 <script lang="ts">
-  import type OutlineState from "../../../../store/state/data/outline-state";
-  import store from "../../../../store/store";
-  import MusicTheory from "../../../../domain/theory/music-theory";
+  import ChordTheory from "../../../../domain/theory/chord-theory";
+  import { derivedStore } from "../../../../store/global-store";
+  import type ElementState from "../../../../store/state/data/element-state";
 
-  export let data!: OutlineState.DataChord;
+  export let data!: ElementState.DataChord;
   export let elementSeq!: number;
 
-  $: chordCaches = $store.cache.chordCaches;
+  $: chordCaches = $derivedStore.chordCaches;
 
   $: chordSeq = chordCaches.findIndex((c) => c.elementSeq == elementSeq);
 
@@ -32,19 +32,19 @@
     const degree = data.degree;
     let degreeName = "-";
     if (degree != undefined) {
-      degreeName = MusicTheory.getDegreeKeyName(degree) + degree.symbol;
+      degreeName = ChordTheory.getDegreeKeyName(degree) + degree.symbol;
       if (degree.on != undefined) {
-        degreeName += ` / ${MusicTheory.getDegreeKeyName(degree.on)}`;
+        degreeName += ` / ${ChordTheory.getDegreeKeyName(degree.on)}`;
       }
     }
     return degreeName;
   })();
 
-  $: chordCache = $store.cache.chordCaches[chordSeq];
+  $: chordCache = chordCaches[chordSeq];
   $: chordName = (() => {
     const compiledChord = chordCache.compiledChord;
     if (compiledChord == undefined) return null;
-    return MusicTheory.getKeyChordName(compiledChord.chord);
+    return ChordTheory.getKeyChordName(compiledChord.chord);
   })();
 
   const TIP_BASE_WIDTH = 12;

@@ -1,53 +1,61 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import useReducerTerminal from "../../service/terminal/reducerTerminal";
-  import store from "../../store/store";
   import CommandCursor from "./CommandCursor.svelte";
   import TerminalOutput from "./TerminalOutput.svelte";
-  import useReducerRef from "../../service/common/reducerRef";
   import HelperFrame from "./HelperFrame.svelte";
+  import useScrollService from "../../service/common/scroll-service";
+  import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../store/global-store";
+  import useTerminalSelector from "../../service/terminal/terminal-selector";
 
-  $: reducer = useReducerTerminal($store);
+  $: terminal = $terminalStore;
+  $: terminalSelector = terminal == null ? null : useTerminalSelector({ terminal });
 
-  $: terminal = reducer.getTerminal();
+  $: helper = terminal?.helper;
 
-  $: helper = terminal.helper;
-
-  $: [commandLeft, commandRight] = reducer.splitCommand();
+  $: [commandLeft, commandRight] = terminalSelector?.splitCommand() ?? ["", ""];
 
   let lastScrollHeight = 0;
   onMount(() => {
-    const unsubscribe = store.subscribe(($store) => {
+    const unsubscribe = terminalStore.subscribe((terminal) => {
       setTimeout(() => {
-        const ref = $store.ref.terminal;
-        if (ref != undefined) {
-          if (lastScrollHeight !== ref.scrollHeight) {
-            const { adjustTerminalScroll } = useReducerRef($store);
+        const terminalRef = $refStore.terminal;
+        if (terminalRef != undefined) {
+          if (lastScrollHeight !== terminalRef.scrollHeight) {
+            const { adjustTerminalScroll } = useScrollService({
+              control: $controlStore,
+              data: $dataStore,
+              derived: $derivedStore,
+              ref: $refStore,
+              settings: $settingsStore,
+              terminal,
+              commitRef: () => refStore.set({ ...$refStore }),
+            });
             adjustTerminalScroll();
-            lastScrollHeight = ref.scrollHeight;
+            lastScrollHeight = terminalRef.scrollHeight;
           }
         }
       }, 0);
-      return () => {
-        unsubscribe(); // 購読の解除
-      };
     });
+
+    return () => {
+      unsubscribe();
+    };
   });
 </script>
 
 <div class="frame">
-  <div class="wrap" bind:this={$store.ref.terminal}>
+  <div class="wrap" bind:this={$refStore.terminal}>
     <div class="outputs">
-      {#each terminal.outputs as output}
+      {#each terminal?.outputs ?? [] as output}
         <TerminalOutput {output} />
       {/each}
     </div>
-    {#if !terminal.wait}
+    {#if terminal != null && !terminal.wait}
       <div class="command">
         <span class="target">{"$" + terminal.target + ">"}</span>
         <span>{commandLeft}</span><CommandCursor /><span>{commandRight}</span>
       </div>
-    {:else}
+    {:else if terminal != null}
       <!-- 待機中はカーソルの点滅のみ表示 -->
       <div class="command">
         <span><CommandCursor /></span>

@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import useReducerTerminal from "../../service/terminal/reducerTerminal";
-  import store from "../../store/store";
   import { writable } from "svelte/store";
+  import { refStore, terminalStore } from "../../store/global-store";
 
   const isDisp = writable(true);
   let timerId = -1;
@@ -20,20 +19,15 @@
   };
 
   onMount(() => {
-    const unsubscribe = store.subscribe(($store) => {
-      const reducer = useReducerTerminal($store);
+    const unsubscribe = terminalStore.subscribe((terminal) => {
+      if (terminal == null) return;
 
-      try {
-        const terminal = reducer.getTerminal();
-        const checkKey = `${terminal.outputs.length}-${terminal.focus}`;
-        // checkKeyの値が変化した場合にだけタイマーをリセット
-        if (prev !== checkKey) {
-          resetBlinkTimer();
-        }
-        prev = checkKey;
-      } catch {
-        return;
+      const checkKey = `${terminal.outputs.length}-${terminal.focus}`;
+      // checkKeyの値が変化した場合にだけタイマーをリセット
+      if (prev !== checkKey) {
+        resetBlinkTimer();
       }
+      prev = checkKey;
     });
 
     resetBlinkTimer(); // 初回のタイマー設定
@@ -45,7 +39,7 @@
   });
 </script>
 
-<div class="cursor" data-isDisp={$isDisp} bind:this={$store.ref.cursor}></div>
+<div class="cursor" data-isDisp={$isDisp} bind:this={$refStore.cursor}></div>
 
 <style>
   .cursor {

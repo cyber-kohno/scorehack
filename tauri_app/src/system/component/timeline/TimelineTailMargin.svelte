@@ -1,11 +1,10 @@
 <script lang="ts">
-  import useReducerCache from "../../service/derived/reducerCache";
-  import store from "../../store/store";
-
+  import useDerivedSelector from "../../service/derived/derived-selector";
+  import { controlStore, derivedStore, refStore } from "../../store/global-store";
   $: [left, width] = (() => {
-    const { getChordBlockRight } = useReducerCache($store);
+    const { getChordBlockRight } = useDerivedSelector($derivedStore, $controlStore);
     let width = 0;
-    const ref = $store.ref.grid;
+    const ref = $refStore.grid;
     if (ref) {
       width = ref.getBoundingClientRect().width;
     }

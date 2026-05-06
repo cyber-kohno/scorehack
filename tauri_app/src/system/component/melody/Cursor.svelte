@@ -1,15 +1,13 @@
 <script lang="ts">
   import Layout from "../../layout/layout-constant";
   import MelodyState from "../../store/state/data/melody-state";
-  import { controlStore } from "../../store/global-store";
-  import store from "../../store/store";
-  import UnitDisplay from "./UnitDisplay.svelte";
+  import { controlStore, settingsStore } from "../../store/global-store";  import UnitDisplay from "./UnitDisplay.svelte";
 
   $: noteInfo = (() => {
     const melody = $controlStore.melody;
     const cursor = melody.cursor;
     const beatSize = MelodyState.calcBeat(cursor.norm, cursor.pos);
-    const left = $store.settings.beatWidth * beatSize;
+    const left = $settingsStore.beatWidth * beatSize;
     const pitch = cursor.pitch;
     const isOverlap = melody.isOverlap;
     return { left, pitch, isOverlap };
@@ -19,7 +17,7 @@
     const melody = $controlStore.melody;
     const cursor = melody.cursor;
     const beatSize = MelodyState.calcBeat(cursor.norm, cursor.len);
-    return $store.settings.beatWidth * beatSize;
+    return $settingsStore.beatWidth * beatSize;
   })();
 </script>
 

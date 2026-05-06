@@ -1,6 +1,4 @@
-<script lang="ts">
-    import store from "../../../store/store";
-    import BaseBlock from "./BaseBlock.svelte";
+<script lang="ts">    import BaseBlock from "./BaseBlock.svelte";
     import ChordBlock from "./ChordBlock.svelte";
     import GridFocus from "./GridFocus.svelte";
     import Cursor from "../../melody/Cursor.svelte";
@@ -8,23 +6,24 @@
     import ShadeTracks from "../../melody/score/ShadeTracks.svelte";
     import ActiveTrack from "../../melody/score/ActiveTrack.svelte";
     import PreviewPosLine from "./PreviewPosLine.svelte";
-    import ContextUtil from "../../../store/contextUtil";
     import TimelineTailMargin from "../TimelineTailMargin.svelte";
-    import { controlStore } from "../../../store/global-store";
+    import { controlStore, derivedStore, playbackStore, refStore } from "../../../store/global-store";
 
-    $: cache = $store.cache;
+    $: cache = $derivedStore;
 
     $: isMelodyMode = (() => $controlStore.mode === "melody")();
 
-    const isPreview = ContextUtil.get("isPreview");
+    $: isPlayback = $playbackStore.timerKeys != null;
+    $: isArrangeEditorActive = $controlStore.outline.arrange?.editor != undefined;
+    $: isPreview = isPlayback && !isArrangeEditorActive;
     /** メロディのカーソル */
     $: isDispMelodyCursor =
-        isMelodyMode && !$isPreview() && $controlStore.melody.focus === -1;
+        isMelodyMode && !isPlayback && $controlStore.melody.focus === -1;
 
-    $: scrollLimitProps = RefState.getScrollLimitProps($store.ref.grid);
+    $: scrollLimitProps = RefState.getScrollLimitProps($refStore.grid);
 </script>
 
-<div class="wrap" data-isPreview={$isPreview()} bind:this={$store.ref.grid}>
+<div class="wrap" data-isPreview={isPreview} bind:this={$refStore.grid}>
     {#if scrollLimitProps != null}
         {#each cache.baseCaches as baseCache}
             <BaseBlock {baseCache} {scrollLimitProps} />
@@ -48,7 +47,7 @@
         <ShadeTracks />
     </div>
 
-    {#if $isPreview()}
+    {#if isPreview}
         <PreviewPosLine />
     {/if}
 </div>

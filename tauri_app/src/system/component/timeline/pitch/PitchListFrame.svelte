@@ -1,23 +1,21 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Layout from "../../../layout/layout-constant";
-  import MusicTheory from "../../../domain/theory/music-theory";
-  import { controlStore } from "../../../store/global-store";
-  import store from "../../../store/store";
-  import PitchFocus from "./PitchFocus.svelte";
+  import TonalityTheory from "../../../domain/theory/tonality-theory";
+  import { controlStore, refStore } from "../../../store/global-store";  import PitchFocus from "./PitchFocus.svelte";
 
   // let ref: HTMLElement | undefined = undefined;
-  // onMount(() => ($store.ref.pitch = ref));
+  // onMount(() => ($refStore.pitch = ref));
 
   const pitchNames = [...Array(Layout.pitch.NUM).keys()]
-    .map((v) => MusicTheory.getPitchKey(v).reverse().join(""))
+    .map((v) => TonalityTheory.getPitchKey(v).reverse().join(""))
     // 音程は低い順に下から並べる
     .reverse();
 
   $: isMelodyMode = $controlStore.mode === "melody";
 </script>
 
-<div class="wrap" bind:this={$store.ref.pitch}>
+<div class="wrap" bind:this={$refStore.pitch}>
   <div class="top-margin"></div>
   {#each pitchNames as pitch}
     <div class="item">{pitch}</div>

@@ -1,21 +1,21 @@
 <script lang="ts">
-  import ContextUtil from "../../../store/contextUtil";
-  import store from "../../../store/store";
   import ChordInfoHeader from "../ChordInfoHeader.svelte";
   import FocusableContent from "../FocusableContent.svelte";
   import BackingFrame from "./backing/PEBackingFrame.svelte";
   import PEVoicingChooser from "./voicing/PEVoicingChooser.svelte";
-  import ArrangeUtil from "../../../service/arrange/arrangeUtil";
+  import createArrangeSelector from "../../../service/arrange/arrange-selector";
   import { controlStore, dataStore } from "../../../store/global-store";
+  import { createPianoEditorContext } from "./piano-editor-context";
 
-  $: reducer = ArrangeUtil.useReducer($controlStore, $dataStore);
+  const pianoContext = createPianoEditorContext();
+
+  $: reducer = createArrangeSelector({ control: $controlStore, data: $dataStore });
   $: arrange = reducer.getArrange();
   $: editor = reducer.getPianoEditor();
 
   $: {
-    // console.log('ArrangePianoEditor');
-    ContextUtil.set('arrange', arrange);
-    ContextUtil.set('pianoEditor', editor);
+    pianoContext.arrange.set(arrange);
+    pianoContext.editor.set(editor);
   }
 </script>
 

@@ -1,11 +1,11 @@
-import MusicTheory from "../../../../domain/theory/music-theory";
+import RhythmTheory from "../../../../domain/theory/rhythm-theory";
 import type ArrangeState from "./arrange-state";
 import type PianoEditorState from "./piano/piano-editor-state";
 
 namespace ArrangeLibrary {
 
     export interface BackingCategory {
-        tsGloup: MusicTheory.TimeSignature[];
+        tsGloup: RhythmTheory.TimeSignature[];
         beat: number;
         eatHead?: number;
         eatTail?: number;
@@ -16,7 +16,7 @@ namespace ArrangeLibrary {
     export interface SearchCategory extends BackingCategory, SoundsCategory { }
 
     export type SearchRequest = {
-        ts: MusicTheory.TimeSignature;
+        ts: RhythmTheory.TimeSignature;
         beat: number;
         eatHead: number;
         eatTail: number;
@@ -74,8 +74,8 @@ namespace ArrangeLibrary {
             // console.log(cond);
             // console.log(req);
             return cond.tsGloup
-                .map(ts => MusicTheory.getTSName(ts))
-                .includes(MusicTheory.getTSName(req.ts)) &&
+                .map(ts => RhythmTheory.formatTS(ts))
+                .includes(RhythmTheory.formatTS(req.ts)) &&
                 cond.beat === req.beat &&
                 condEatHead === req.eatHead &&
                 condEatTail === req.eatTail

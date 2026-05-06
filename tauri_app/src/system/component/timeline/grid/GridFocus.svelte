@@ -1,10 +1,10 @@
 <script lang="ts">
-  import useReducerCache from "../../../service/derived/reducerCache";
-  import store from "../../../store/store";
+    import useDerivedSelector from "../../../service/derived/derived-selector";
+    import { controlStore, derivedStore } from "../../../store/global-store";
 
-  $: reduerCache = useReducerCache($store);
+  $: derivedSelector = useDerivedSelector($derivedStore, $controlStore);
 
-  $: values = reduerCache.getFocusInfo();
+  $: values = derivedSelector.getFocusInfo();
 </script>
 
 <div

@@ -1,9 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import ContextUtil from "../../../../store/contextUtil";
-  import PianoBackingState from "../../../../store/state/data/arrange/piano/piano-backing-state";
-  import store from "../../../../store/store";
-  import FocusableContent from "../../FocusableContent.svelte";
+  import PianoBackingState from "../../../../store/state/data/arrange/piano/piano-backing-state";  import FocusableContent from "../../FocusableContent.svelte";
   import LenFrame from "./PEBColFrame.svelte";
   import MeasureFrame from "./PEBMeasureFrame.svelte";
   import PedalFrame from "./PEBPedalFrame.svelte";
@@ -11,8 +8,10 @@
   import PEBTargetLayer from "./PEBTargetLayer.svelte";
   import TableFrame from "./table/PEBTableFrame.svelte";
   import Layout from "../../../../layout/layout-constant";
+  import { getPianoEditor, getPianoEditorContext } from "../piano-editor-context";
 
-  const editor = ContextUtil.get("pianoEditor");
+  const pianoContext = getPianoEditorContext();
+  const editor = getPianoEditor();
 
   $: backing = (() => {
     const backing = $editor.backing;
@@ -43,7 +42,7 @@
     return width;
   };
   $: {
-    ContextUtil.set("backingProps", {
+    pianoContext.backingProps.set({
       backing,
       getCurLayer,
       getBackLayer,

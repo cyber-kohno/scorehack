@@ -1,13 +1,14 @@
 <script lang="ts">
-  import type OutlineState from "../../../../store/state/data/outline-state";
-  import MusicTheory from "../../../../domain/theory/music-theory";
+  import RhythmTheory from "../../../../domain/theory/rhythm-theory";
+  import TonalityTheory from "../../../../domain/theory/tonality-theory";
+  import type ElementState from "../../../../store/state/data/element-state";
 
-  export let data!: OutlineState.DataInit;
+  export let data!: ElementState.DataInit;
 
   $: [keyScaleName, tsName, tempo] = (() => {
-    const keyScaleName = MusicTheory.getScaleName(data.tonality);
+    const keyScaleName = TonalityTheory.getScaleName(data.tonality);
 
-    const tsName = MusicTheory.getTSName(data.ts);
+    const tsName = RhythmTheory.formatTS(data.ts);
     return [keyScaleName, tsName, data.tempo];
   })();
 </script>

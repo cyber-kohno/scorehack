@@ -27,7 +27,7 @@ namespace PianoViewer {
         const TOP_MARGIN = props.uiParam.topMargin ?? 4;
         const BOTTOM_MARGIN = props.uiParam.bottomMargin ?? 4;
         const SCALE_COLOR = props.uiParam.scaleColor ?? '#fc5e5e88';
-        const NON_SCALE_COLOR = props.uiParam.scaleColor ?? '#fcd75e87';
+        const NON_SCALE_COLOR = props.uiParam.nonScaleColor ?? '#fcd75e87';
 
         // console.log(props.uses);
         const ctx = canvasRef.getContext('2d') as CanvasRenderingContext2D;

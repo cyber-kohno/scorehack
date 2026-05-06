@@ -1,12 +1,12 @@
 <script lang="ts">
   import Layout from "../../../../layout/layout-constant";
-  import ContextUtil from "../../../../store/contextUtil";
   import VoicingCell from "./PEVoicingCell.svelte";
+  import { getPianoArrange, getPianoEditor } from "../piano-editor-context";
 
-  const arrange = ContextUtil.get('arrange');
+  const arrange = getPianoArrange();
   $: structs = $arrange.target.compiledChord.structs;
 
-  const editor = ContextUtil.get('pianoEditor');
+  const editor = getPianoEditor();
 
   const OCTAVE_MAX = Layout.arrange.piano.VOICING_OCTAVE_MAX;
 

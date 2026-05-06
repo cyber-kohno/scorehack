@@ -1,4 +1,3 @@
-import type MelodyState from "../../melody-state";
 import ArrangeState from "../arrange-state";
 import type ArrangeLibrary from "../arrange-library";
 import PianoBackingState from "./piano-backing-state";
@@ -15,7 +14,7 @@ namespace PianoEditorState {
     voicing: Voicing;
     backing: null | PianoBackingState.EditorProps;
 
-    /** 繧ｨ繝・ぅ繧ｿ襍ｷ蜍墓凾縺ｮ繧ｽ繝ｼ繧ｹ繧剃ｿ晄戟 */
+    /** エディタ起動時のソースを保持 */
     lastSource: string;
   }
 
@@ -79,7 +78,7 @@ namespace PianoEditorState {
   export interface Unit {
     // extends ArrangeEditor.Unit {
     voicingSounds: string[];
-    layers: PianoBackingState.Layer[];
+    layers: PianoBackingState.Layer[] | null;
   }
 
   export interface BackingPattern extends ArrangeState.Pattern {
@@ -117,12 +116,12 @@ namespace PianoEditorState {
   // }
 
   /**
-   * 繧｢繝ｬ繝ｳ繧ｸ・医ヰ繝・く繝ｳ繧ｰ繝ｻ繝懊う繧ｷ繝ｳ繧ｰ・峨ヱ繧ｿ繝ｼ繝ｳ繧呈､懃ｴ｢・医↑縺代ｌ縺ｰ逋ｻ骭ｲ・峨＠縲∬ｭ伜挨騾｣逡ｪ繧定ｿ斐☆
-   * @param category 讀懃ｴ｢逕ｨ縺ｮ繧ｫ繝・ざ繝ｪ
-   * @param backing 繝舌ャ繧ｭ繝ｳ繧ｰ
-   * @param sounds 繝懊う繧ｷ繝ｳ繧ｰ
-   * @param lib 繝ｩ繧､繝悶Λ繝ｪ
-   * @returns 繧｢繝ｬ繝ｳ繧ｸ・医ヰ繝・く繝ｳ繧ｰ繝ｻ繝懊う繧ｷ繝ｳ繧ｰ・峨・隴伜挨騾｣逡ｪ縺ｮ驟榊・・亥・蜑ｲ莉｣蜈･縺ｧ菴ｿ縺・Φ螳夲ｼ・
+   * アレンジ（バッキング・ボイシング）パターンを検索（なければ登録）し、識別連番を返す
+   * @param category 検索用のカテゴリ
+   * @param backing バッキング
+   * @param sounds ボイシング
+   * @param lib ライブラリ
+   * @returns アレンジ（バッキング・ボイシング）の識別連番の配列（分割代入で使う想定）
    */
   export const registPattern = (
     category: ArrangeLibrary.SearchCategory,
@@ -133,12 +132,12 @@ namespace PianoEditorState {
     let backingPatt: BackingPattern | undefined = undefined;
     if (backing != null) {
       const backingSrc = JSON.stringify(backing);
-      // 譌｢蟄倥・繝舌ャ繧ｭ繝ｳ繧ｰ繝代ち繝ｼ繝ｳ繧呈､懃ｴ｢
+      // 既存のバッキングパターンを検索
       backingPatt = lib.backingPatterns.find((pat) => {
         const pattSrc = JSON.stringify(pat.backing);
         return backingSrc === pattSrc;
       });
-      // 譌｢蟄倥・繝代ち繝ｼ繝ｳ縺瑚ｦ九▽縺九ｉ縺ｪ縺九▲縺溷ｴ蜷医∵眠隕剰ｿｽ蜉
+      // 既存のパターンが見つからなかった場合、新規追加
       if (backingPatt == undefined) {
         const maxNo = lib.backingPatterns.reduce(
           (p, n) => (n.no > p ? n.no : p),
@@ -154,12 +153,12 @@ namespace PianoEditorState {
     }
 
     const soundsSrc = JSON.stringify(sounds);
-    // 譌｢蟄倥・讒区・髻ｳ繝代ち繝ｼ繝ｳ繧呈､懃ｴ｢
+    // 既存の構成音パターンを検索
     let soundsPatt = lib.soundsPatterns.find((pat) => {
       const pattSrc = JSON.stringify(pat.sounds);
       return soundsSrc === pattSrc;
     });
-    // 譌｢蟄倥・繝代ち繝ｼ繝ｳ縺瑚ｦ九▽縺九ｉ縺ｪ縺九▲縺溷ｴ蜷医∵眠隕剰ｿｽ蜉
+    // 既存のパターンが見つからなかった場合、新規追加
     if (soundsPatt == undefined) {
       const maxNo = lib.soundsPatterns.reduce(
         (p, n) => (n.no > p ? n.no : p),
@@ -176,8 +175,8 @@ namespace PianoEditorState {
   };
 
   /**
-   * 繧ｳ繝ｼ繝峨↓蜑ｲ繧雁ｽ薙※繧峨ｌ縺ｦ縺・ｋ繧｢繝ｬ繝ｳ繧ｸ繝代ち繝ｼ繝ｳ繧呈､懃ｴ｢縺励※霑斐☆縲・
-   * 蜑ｲ繧雁ｽ薙※繧峨ｌ縺ｦ縺・↑縺・ｴ蜷・ndefined繧定ｿ斐☆縲・
+   * コードに割り当てられているアレンジパターンを検索して返す。
+   * 割り当てられていない場合undefinedを返す。
    * @param chordSeq
    * @param track
    * @returns
@@ -191,16 +190,24 @@ namespace PianoEditorState {
 
     if (relation != undefined) {
       const pianoLib = track.pianoLib as PianoEditorState.Lib;
-      const backingPatt = pianoLib.backingPatterns.find(
-        (patt) => patt.no === relation.bkgPatt,
-      );
-      if (backingPatt == null)
-        throw new Error("backingPatt must not be undefined.");
       const soundsPatt = pianoLib.soundsPatterns.find(
         (patt) => patt.no === relation.sndsPatt,
       );
       if (soundsPatt == null)
-        throw new Error("soundsPatt must not be undefined.");
+        throw new Error("soundsPattがundefinedであってはならない。");
+
+      if (relation.bkgPatt === -1) {
+        return {
+          voicingSounds: soundsPatt.sounds,
+          layers: null,
+        };
+      }
+
+      const backingPatt = pianoLib.backingPatterns.find(
+        (patt) => patt.no === relation.bkgPatt,
+      );
+      if (backingPatt == null)
+        throw new Error("backingPattがundefinedであってはならない。");
 
       return {
         voicingSounds: soundsPatt.sounds,

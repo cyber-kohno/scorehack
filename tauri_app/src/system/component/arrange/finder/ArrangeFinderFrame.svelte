@@ -2,27 +2,28 @@
   import { onMount } from "svelte";
   import ScrollRateFrame from "../../common/ScrollRateFrame.svelte";
   import FinderConditionFrame from "./condition/FinderConditionFrame.svelte";
-  import { controlStore } from "../../../store/global-store";
-  import store, { createStoreUtil } from "../../../store/store";
+  import { controlStore, refStore } from "../../../store/global-store";
   import type ArrangeLibrary from "../../../store/state/data/arrange/arrange-library";
   import APFinderPresetItem from "./list/piano/APFinderPresetItem.svelte";
 
   let ref: HTMLElement | null = null;
 
-  $: currentStore = $store;
-
   onMount(() => {
-    const finderRefs = currentStore.ref.arrange.finder;
+    const refState = $refStore;
+    const finderRefs = refState.arrange.finder;
     if (ref != null) {
       finderRefs.frame = ref;
       const rect = ref.getClientRects()[0];
       const top = -rect.width / 2 + finder.cursor.backing * 71;
       ref.scrollTo({ top });
-      createStoreUtil(currentStore).commit();
+      refStore.set({ ...refState });
     }
 
     return () => {
+      const refState = $refStore;
+      const finderRefs = refState.arrange.finder;
       finderRefs.frame = undefined;
+      refStore.set({ ...refState });
     };
   });
 

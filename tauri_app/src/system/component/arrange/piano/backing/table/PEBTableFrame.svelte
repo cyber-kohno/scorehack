@@ -1,9 +1,11 @@
 <script>
-  import store from "../../../../../store/store";
   import PEBTableBackLayer from "./PEBTableBackLayer.svelte";
+  import { refStore } from "../../../../../store/global-store";
   import PEBTableMainLayer from "./PEBTableMainLayer.svelte.svelte";
-  $: pianoRef = $store.ref.arrange.piano;
+  $: pianoRef = $refStore.arrange.piano;
 </script>
+
+import {refStore} from "../../../../../store/global-store";
 
 <div class="wrap" bind:this={pianoRef.table}>
   <PEBTableMainLayer />

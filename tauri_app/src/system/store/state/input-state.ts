@@ -1,4 +1,4 @@
-namespace StoreInput {
+namespace InputState {
 
     export type Value = {
         holdE: boolean;
@@ -26,4 +26,4 @@ namespace StoreInput {
         [K in keyof Value]?: () => void;
     };
 }
-export default StoreInput;
+export default InputState;

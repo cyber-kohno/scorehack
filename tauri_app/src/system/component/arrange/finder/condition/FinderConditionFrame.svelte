@@ -1,6 +1,6 @@
 <script lang="ts">
   import type ArrangeLibrary from "../../../../store/state/data/arrange/arrange-library";
-  import MusicTheory from "../../../../domain/theory/music-theory";
+  import RhythmTheory from "../../../../domain/theory/rhythm-theory";
   import FinderConditionItem from "./FinderConditionItem.svelte";
 
   export let request: ArrangeLibrary.SearchRequest;
@@ -18,7 +18,7 @@
   <FinderConditionItem
     width={95}
     title={"TS"}
-    value={MusicTheory.getTSName(request.ts)}
+    value={RhythmTheory.formatTS(request.ts)}
   />
   <FinderConditionItem width={140} title={"Beat"} value={beatInfo} />
   <FinderConditionItem

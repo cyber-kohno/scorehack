@@ -1,7 +1,7 @@
 <script lang="ts">
   import type ArrangeLibrary from "../../../../../store/state/data/arrange/arrange-library";
   import type PianoEditorState from "../../../../../store/state/data/arrange/piano/piano-editor-state";
-  import ArrangeUtil from "../../../../../service/arrange/arrangeUtil";
+  import createArrangeSelector from "../../../../../service/arrange/arrange-selector";
   import APFinderBacking from "./APFinderBacking.svelte";
   import APFinderVoicsFrame from "./APFinderVoicsFrame.svelte";
   import { controlStore, dataStore } from "../../../../../store/global-store";
@@ -11,7 +11,7 @@
   export let backingIndex: number;
 
   $: [backing, sndsPatts] = (() => {
-    const { getCurTrack } = ArrangeUtil.useReducer($controlStore, $dataStore);
+    const { getCurTrack } = createArrangeSelector({ control: $controlStore, data: $dataStore });
     const lib = getCurTrack().pianoLib;
     if (lib == undefined) throw new Error();
     const bkgPatt = lib.backingPatterns.find(

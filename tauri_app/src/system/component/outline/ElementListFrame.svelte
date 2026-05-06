@@ -1,15 +1,13 @@
 <script lang="ts">
-  import OutlineState from "../../store/state/data/outline-state";
-  import RefState from "../../store/state/ref-state";
-  import { controlStore } from "../../store/global-store";
-  import store from "../../store/store";
-  import Element from "./element/Element.svelte";
+  import { controlStore, derivedStore, inputStore, refStore } from "../../store/global-store";
+    import type ElementState from "../../store/state/data/element-state";
+  import RefState from "../../store/state/ref-state";  import Element from "./element/Element.svelte";
   import ChordSelector from "./item/ChordSelector.svelte";
 
   $: dispElements = (() => {
     const elementSeq = $controlStore.outline.focus;
-    const elementCaches = $store.cache.elementCaches;
-    const limitProps = RefState.getScrollLimitProps($store.ref.outline);
+    const elementCaches = $derivedStore.elementCaches;
+    const limitProps = RefState.getScrollLimitProps($refStore.outline);
     if (limitProps == null) return [];
     // let start = elementSeq - 12;
     // if (start < 0) start = 0;
@@ -21,34 +19,34 @@
         Math.abs(
           limitProps.scrollMiddleY -
             // (el.outlineTop + StoreOutline.getElementViewHeight(el) / 2)
-            (el.outlineTop + el.viewHeight / 2)
-        ) <= limitProps.rectHeight
+            (el.outlineTop + el.viewHeight / 2),
+        ) <= limitProps.rectHeight,
     );
   })();
 
   $: isDispChordSelector = (() => {
-    const elements = $store.cache.elementCaches;
+    const elements = $derivedStore.elementCaches;
     const control = $controlStore;
     const element = elements[control.outline.focus];
     return (
       // control.melody.dialog == null &&
       control.mode === "harmonize" &&
       control.outline.arrange == null &&
-      $store.input.holdC &&
+      $inputStore.holdC &&
       element.type === "chord" &&
-      (element.data as OutlineState.DataChord).degree != undefined
+      (element.data as ElementState.DataChord).degree != undefined
     );
   })();
 </script>
 
 <div class="wrap">
-  <div class="list-main" bind:this={$store.ref.outline}>
+  <div class="list-main" bind:this={$refStore.outline}>
     {#each dispElements as element}
       <Element {element} />
     {/each}
     <div
       class="lastmargin"
-      style:top="{$store.cache.outlineTailPos}px"
+      style:top="{$derivedStore.outlineTailPos}px"
       style:height="{300}px"
     ></div>
   </div>

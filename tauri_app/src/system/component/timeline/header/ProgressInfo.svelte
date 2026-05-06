@@ -1,8 +1,9 @@
 <script lang="ts">
   import type RefState from "../../../store/state/ref-state";
-  import useReducerRoot from "../../../service/common/root-updater";
-  import store from "../../../store/store";
-  import MusicTheory from "../../../domain/theory/music-theory";
+  import TonalityTheory from "../../../domain/theory/tonality-theory";
+  import RhythmTheory from "../../../domain/theory/rhythm-theory";
+    import { controlStore, derivedStore } from "../../../store/global-store";
+    import StoreUtil from "../../../service/common/store-util";
 
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
@@ -20,10 +21,13 @@
       section?: string;
       modulate?: Diff;
       tempo?: Diff;
+      ts?: Diff;
     }[] = [];
-    const { getTimelineFocusPos } = useReducerRoot($store);
-    const focusPos = getTimelineFocusPos();
-    $store.cache.chordCaches.forEach((chordCache) => {
+    const focusPos = StoreUtil.getTimelineFocusPos(
+      $derivedStore,
+      $controlStore,
+    );
+    $derivedStore.chordCaches.forEach((chordCache) => {
       const x = chordCache.viewPosLeft;
       const middle = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;
       if (
@@ -40,22 +44,32 @@
       const section = chordCache.sectionStart;
       const modulateCache = chordCache.modulate;
       const tempoCache = chordCache.tempo;
+      const tsCache = chordCache.ts;
       if (
         section != undefined ||
         modulateCache != undefined ||
-        tempoCache != undefined
+        tempoCache != undefined ||
+        tsCache != undefined
       ) {
         let modulate: Diff | undefined = undefined;
         let tempo: Diff | undefined = undefined;
+        let ts: Diff | undefined = undefined;
         if (modulateCache != undefined) {
           modulate = {
-            prev: MusicTheory.getScaleName(modulateCache.prev),
-            next: MusicTheory.getScaleName(modulateCache.next),
+            prev: TonalityTheory.getScaleName(modulateCache.prev),
+            next: TonalityTheory.getScaleName(modulateCache.next),
           };
-        } else if (tempoCache != undefined) {
+        }
+        if (tempoCache != undefined) {
           tempo = {
             prev: tempoCache.prev.toString(),
             next: tempoCache.next.toString(),
+          };
+        }
+        if (tsCache != undefined) {
+          ts = {
+            prev: RhythmTheory.formatTS(tsCache.prev),
+            next: RhythmTheory.formatTS(tsCache.next),
           };
         }
         changeList.push({
@@ -63,6 +77,7 @@
           section,
           modulate,
           tempo,
+          ts,
         });
       }
     });
@@ -101,6 +116,11 @@
       {#if change.tempo != undefined}
         <div class="scale">
           {`${change.tempo.prev} → ${change.tempo.next}`}
+        </div>
+      {/if}
+      {#if change.ts != undefined}
+        <div class="scale">
+          {`${change.ts.prev} → ${change.ts.next}`}
         </div>
       {/if}
     </div>

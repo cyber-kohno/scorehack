@@ -1,20 +1,21 @@
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import MelodyState from "../../../store/state/data/melody-state";
-import MusicTheory from "../../../domain/theory/music-theory";
-import type PreviewUtil from "../previewUtil";
+import ChordTheory from "../../../domain/theory/chord-theory";
+import type PlaybackCacheState from "../timeline/playback-cache-state";
 
 namespace PianoArrangePlaybackUtil {
   /**
-   * アレンジのパターンユニットをノ�EチE��報に変換して返す、E
+   * アレンジのパターンユニットをノーツ情報に変換して返す。
    * @param unit
    * @param chord
    * @returns
    */
   export const convertPatternToNotes = (
     unit: PianoEditorState.Unit,
-    chord: MusicTheory.KeyChordProps,
-  ): PreviewUtil.SoundNote[] => {
-    const notes: PreviewUtil.SoundNote[] = [];
+    chord: ChordTheory.KeyChordProps,
+    option?: { sustainBeat?: number },
+  ): PlaybackCacheState.SoundNote[] => {
+    const notes: PlaybackCacheState.SoundNote[] = [];
 
     const relationStructs = calcRelationStructs(chord);
 
@@ -24,7 +25,23 @@ namespace PianoArrangePlaybackUtil {
       return (octaveIndex + struct.carryForwardOctave) * 12 + struct.key12;
     });
 
-    /** ペダル要素は0レイヤーでのみ管琁E��るため�Eースとして保持する */
+    if (unit.layers == null) {
+      const sustainBeat = option?.sustainBeat;
+      if (sustainBeat == undefined) return notes;
+
+      pitchIndexes.forEach((pitch) => {
+        notes.push({
+          norm: { div: 1 },
+          pos: 0,
+          len: sustainBeat,
+          pitch,
+          velocity: 10,
+        });
+      });
+      return notes;
+    }
+
+    /** ペダル要素は0レイヤーでのみ管理するためベースとして保持する */
     const baseCols = unit.layers[0].cols;
 
     unit.layers.forEach((l) => {
@@ -34,7 +51,7 @@ namespace PianoArrangePlaybackUtil {
         const col = l.cols[note.colIndex];
         const norm: MelodyState.Norm = col;
         const criteriaRate = 1 / norm.div / (norm.tuplets ?? 1);
-        // カラム�E�音価�E�より位置を取征E
+        // カラム（音価）より位置を取得
         const pos = l.cols.reduce((prev, cur, i) => {
           let ret = prev;
           const curRate = 1 / cur.div / (cur.tuplets ?? 1);
@@ -47,8 +64,8 @@ namespace PianoArrangePlaybackUtil {
         let len = getDotRate(col.dot);
 
         /**
-         * 基準になる�Eダルの位置惁E��を返す
-         * @returns カラム[インチE��クス、位置�E�長さ）]
+         * 基準になるペダルの位置情報を返す
+         * @returns カラム[インデックス、位置（長さ）]
          */
         const getPedalCriteria = () => {
           let curPos = 0;
@@ -67,7 +84,7 @@ namespace PianoArrangePlaybackUtil {
         const [baseColIndex, baseColPos] = getPedalCriteria();
         // console.log(`layer:${layerIndex}, ${note.colIndex}-${note.recordIndex} pedalIndex:[${baseColIndex}]`);
 
-        // ペダルが踏まれてぁE��場合、�Eダルを老E�Eした音価に上書きすめE
+        // ペダルが踏まれている場合、ペダルを考慮した音価に上書きする
         if (baseColIndex !== -1 && baseCols[baseColIndex].pedal !== 0) {
           let pedalLen = 0;
           for (let i = baseColIndex; i < baseCols.length; i++) {
@@ -75,18 +92,18 @@ namespace PianoArrangePlaybackUtil {
             const curRate = 1 / curCol.div / (curCol.tuplets ?? 1);
             const len = getDotRate(curCol.dot);
             const colLen = len * (curRate / criteriaRate);
-            // ペダル開始要素のみPOSの差刁E��老E�Eする
+            // ペダル開始要素のみPOSの差分を考慮する
             if (i === baseColIndex) {
               const adjust = pos - baseColPos;
               // console.log(`layer:${layerIndex}, ${note.colIndex}-${note.recordIndex} baseColPos:[${baseColPos}], pos:[${pos}]`);
               pedalLen += colLen - adjust;
             } else {
-              // 踏みっぱなし以外�E刁E��
+              // 踏みっぱなし以外は切る
               if (curCol.pedal !== 1) break;
               pedalLen += colLen;
             }
           }
-          // ペダルの方が長ければ上書きすめE
+          // ペダルの方が長ければ上書きする
           if (len < pedalLen) len = pedalLen;
         }
         const pitch = pitchIndexes[note.recordIndex];
@@ -106,11 +123,11 @@ namespace PianoArrangePlaybackUtil {
       case 2:
         return 1.75;
     }
-    throw new Error(`dotが想定してぁE��ぁE��ターンの値、E${dot}]`);
+    throw new Error(`dotが想定していないパターンの値。[${dot}]`);
   };
 
   /**
-   * ノ�EチE�Eソース惁E���E�文字�E�E�をオブジェクトに変換して返す
+   * ノーツのソース情報（文字列）をオブジェクトに変換して返す
    * @param src
    * @returns
    */
@@ -126,22 +143,22 @@ namespace PianoArrangePlaybackUtil {
     return { colIndex, recordIndex, velocity, delay };
   };
 
-  const calcRelationStructs = (chord: MusicTheory.KeyChordProps) => {
-    const symbolProps = MusicTheory.getSymbolProps(chord.symbol);
+  const calcRelationStructs = (chord: ChordTheory.KeyChordProps) => {
+    const symbolProps = ChordTheory.getSymbolProps(chord.symbol);
     const relationStructs: {
       /** オクターブ繰り上げ */
       carryForwardOctave: number;
       key12: number;
     }[] = symbolProps.structs.map((s) => {
       const tempPitchIndex =
-        chord.key12 + MusicTheory.getIntervalFromRelation(s);
+        chord.key12 + ChordTheory.getIntervalFromRelation(s);
       return {
         carryForwardOctave: Math.floor(tempPitchIndex / 12),
         key12: tempPitchIndex % 12,
       };
     });
     // console.log(chord);
-    // オンコードを構�E音に足ぁE
+    // オンコードを構成音に足す
     if (chord.on != undefined) {
       const on = chord.on;
       if (!relationStructs.map((r) => r.key12).includes(on.key12)) {
@@ -157,4 +174,5 @@ namespace PianoArrangePlaybackUtil {
     return relationStructs;
   };
 }
+
 export default PianoArrangePlaybackUtil;

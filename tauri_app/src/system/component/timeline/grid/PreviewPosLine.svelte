@@ -1,8 +1,7 @@
 <script lang="ts">
-  import store from "../../../store/store";
-
+  import { playbackStore, settingsStore } from "../../../store/global-store";
   $: width = 300;
-  $: pos = $store.preview.linePos * $store.settings.beatWidth - width;
+  $: pos = $playbackStore.linePos * $settingsStore.beatWidth - width;
 </script>
 
 <div class="frame">

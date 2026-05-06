@@ -1,12 +1,11 @@
 <script lang="ts">
-  import type RefState from "../../../store/state/ref-state";
-  import store from "../../../store/store";
-  import MeasureBlock from "./MeasureBlock.svelte";
+  import { derivedStore } from "../../../store/global-store";
+  import type RefState from "../../../store/state/ref-state";  import MeasureBlock from "./MeasureBlock.svelte";
   import MeasureFocus from "./MeasureFocus.svelte";
 
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
-  $: baseCaches = $store.cache.baseCaches;
+  $: baseCaches = $derivedStore.baseCaches;
 
 </script>
 

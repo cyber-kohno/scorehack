@@ -1,37 +1,49 @@
+import type TonalityTheory from "../../../domain/theory/tonality-theory";
 import Layout from "../../../layout/layout-constant";
 
 namespace MelodyState {
-
-  export type Value = {
-    trackIndex: number;
-
-    cursor: Note;
-    isOverlap: boolean;
-    focus: number;
-    focusLock: number;
-    clipboard: {
-      notes: Note[] | null;
-    };
-  };
-
-  export const INITIAL: Value = {
-    cursor: {
-      norm: { div: 1 },
-      pos: 0,
-      len: 1,
-      pitch: 42,
-    },
-    focus: -1,
-    focusLock: -1,
-    isOverlap: false,
-    trackIndex: 0,
-    clipboard: { notes: null },
-  };
 
   export interface Norm {
     div: number;
     tuplets?: number;
   }
+
+  export interface Note {
+    norm: Norm;
+    pos: number;
+    len: number;
+    pitch: number;
+  }
+
+  export interface VocalNote extends Note {
+    lyric?: string;
+  }
+
+  export interface Track {
+    name: string;
+    isMute: boolean;
+    volume: number;
+  }
+
+  export interface ScoreTrack extends Track {
+    soundFont: string;
+    notes: VocalNote[];
+  }
+  export const createMelodyTrackScoreInitial = (): ScoreTrack => {
+    return {
+      name: "track0",
+      volume: 10,
+      isMute: false,
+      notes: [],
+      soundFont: "",
+    };
+  };
+  export interface AudioTrack extends Track {
+    source: string;
+    fileName: string;
+    adjust: number;
+  }
+
 
   export const calcBeat = (norm: MelodyState.Norm, size: number) => {
     return ((1 / norm.div) * size) / (norm.tuplets ?? 1);
@@ -86,39 +98,11 @@ namespace MelodyState {
 
   export const getUnitText = (note: Note) => {
     const tuplets = note.norm.tuplets;
-    return `1/${note.norm.div * 4} ${!tuplets ? "" : ` ${tuplets}t`}`;
+    const numerator = note.len;
+    const denominator = note.norm.div * 4 * (tuplets ?? 1);
+    const fraction = `${numerator}/${denominator}`;
+    return !tuplets ? fraction : `${fraction} ${tuplets}t`;
   };
-
-  export interface Note {
-    norm: Norm;
-    pos: number;
-    len: number;
-    pitch: number;
-  }
-
-  export interface Track {
-    name: string;
-    isMute: boolean;
-    volume: number;
-  }
-  export interface ScoreTrack extends Track {
-    soundFont: string;
-    notes: Note[];
-  }
-  export const createMelodyTrackScoreInitial = (): ScoreTrack => {
-    return {
-      name: "track0",
-      volume: 10,
-      isMute: false,
-      notes: [],
-      soundFont: "",
-    };
-  };
-  export interface AudioTrack extends Track {
-    source: string;
-    fileName: string;
-    adjust: number;
-  }
 }
 
 export default MelodyState;

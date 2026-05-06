@@ -1,20 +1,21 @@
 <script lang="ts">
   import type DerivedState from "../../../store/state/derived-state";
   import type RefState from "../../../store/state/ref-state";
-  import { controlStore } from "../../../store/global-store";
-  import useReducerRoot from "../../../service/common/root-updater";
-  import store from "../../../store/store";
-  import MusicTheory from "../../../domain/theory/music-theory";
+  import { controlStore, derivedStore } from "../../../store/global-store";
+  import ChordTheory from "../../../domain/theory/chord-theory";
   import TimelineLastMargin from "../TimelineTailMargin.svelte";
+  import StoreUtil from "../../../service/common/store-util";
 
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
   $: focus = $controlStore.outline.focus;
 
   $: chordCaches = (() => {
-    const { getTimelineFocusPos } = useReducerRoot($store);
-    const focusPos = getTimelineFocusPos();
-    return $store.cache.chordCaches.filter((c) => {
+    const focusPos = StoreUtil.getTimelineFocusPos(
+      $derivedStore,
+      $controlStore,
+    );
+    return $derivedStore.chordCaches.filter((c) => {
       const middle = c.viewPosLeft + c.viewPosWidth / 2;
       return (
         Math.abs(scrollLimitProps.scrollMiddleX - middle) <
@@ -27,7 +28,7 @@
   const getChordName = (cache: DerivedState.ChordCache) => {
     const compiledChord = cache.compiledChord;
     if (compiledChord == undefined) return "-";
-    return MusicTheory.getKeyChordName(compiledChord.chord);
+    return ChordTheory.getKeyChordName(compiledChord.chord);
   };
 </script>
 
@@ -38,7 +39,11 @@
       style:left="{chordCache.viewPosLeft}px"
       style:width="{chordCache.viewPosWidth}px"
     >
-      <div class="inner" data-isFocus={focus === chordCache.elementSeq}>
+      <div
+        class="inner"
+        data-isFocus={focus === chordCache.elementSeq}
+        data-isError={chordCache.error != undefined}
+      >
         {getChordName(chordCache)}
       </div>
     </div>
@@ -76,5 +81,9 @@
 
   .inner[data-isFocus="true"] {
     background-color: #16c4b885;
+  }
+
+  .inner[data-isError="true"] {
+    background-color: #c92929d9;
   }
 </style>

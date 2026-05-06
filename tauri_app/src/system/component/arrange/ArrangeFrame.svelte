@@ -1,12 +1,12 @@
 <script lang="ts">
-  import useReducerOutline from "../../service/outline/reducerOutline";
-  import store from "../../store/store";
+  import useOutlineSelector from "../../service/outline/outline-selector";
+  import { controlStore, dataStore } from "../../store/global-store";
   import ArrangePianoEditor from "./piano/ArrangePianoEditor.svelte";
   import ArrangeStatusBar from "./status/ArrangeStatusBar.svelte";
 
-  $: reducerOutline = useReducerOutline();
+  $: outlineSelector = useOutlineSelector({ data: $dataStore, control: $controlStore });
 
-  $: track = reducerOutline.getCurrHarmonizeTrack();
+  $: track = outlineSelector.getCurrHarmonizeTrack();
 </script>
 
 <div class="frame">

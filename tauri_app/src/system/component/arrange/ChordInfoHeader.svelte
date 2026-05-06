@@ -1,22 +1,22 @@
 <script lang="ts">
   import DerivedState from "../../store/state/derived-state";
-  import ArrangeUtil from "../../service/arrange/arrangeUtil";
-  import store from "../../store/store";
-  import MusicTheory from "../../domain/theory/music-theory";
+  import createArrangeSelector from "../../service/arrange/arrange-selector";
+  import ChordTheory from "../../domain/theory/chord-theory";
+  import RhythmTheory from "../../domain/theory/rhythm-theory";
   import { controlStore, dataStore } from "../../store/global-store";
 
-  $: reducer = ArrangeUtil.useReducer($controlStore, $dataStore);
-  $: target = reducer.getArrange().target;
+  $: selector = createArrangeSelector({ control: $controlStore, data: $dataStore });
+  $: target = selector.getArrange().target;
 </script>
 
 <div class="wrap">
   <div class="item">
     <div class="label">Chord</div>
-    <div class="value">{MusicTheory.getKeyChordName(target.compiledChord.chord)}</div>
+    <div class="value">{ChordTheory.getKeyChordName(target.compiledChord.chord)}</div>
   </div>
   <div class="item">
     <div class="label">TS</div>
-    <div class="value">{MusicTheory.getTSName(target.scoreBase.ts)}</div>
+    <div class="value">{RhythmTheory.formatTS(target.scoreBase.ts)}</div>
   </div>
   <div class="item">
     <div class="label">Beat</div>

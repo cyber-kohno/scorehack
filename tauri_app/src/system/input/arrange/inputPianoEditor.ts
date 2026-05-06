@@ -1,27 +1,22 @@
 import { get } from "svelte/store";
 import Layout from "../../layout/layout-constant";
-import type ArrangeLibrary from "../../store/state/data/arrange/arrange-library";
 import type PianoBackingState from "../../store/state/data/arrange/piano/piano-backing-state";
-import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
-import type StoreInput from "../../store/state/input-state";
-import ArrangeUtil from "../../service/arrange/arrangeUtil";
-import useReducerCache from "../../service/derived/reducerCache";
-import useReducerOutline from "../../service/outline/reducerOutline";
-import useReducerRef from "../../service/common/reducerRef";
+import type InputState from "../../store/state/input-state";
+import createArrangeSelector from "../../service/arrange/arrange-selector";
+import useScrollService from "../../service/common/scroll-service";
 import { controlStore, dataStore } from "../../store/global-store";
-import type { StoreUtil } from "../../store/store";
-import MusicTheory from "../../domain/theory/music-theory";
+import createPianoArrangeActions from "../../actions/arrange/piano/piano-arrange-actions";
+import startPlaybackPianoEditor from "../../service/playback/arrange/start-playback-piano-editor";
 
-const useInputPianoEditor = (storeUtil: StoreUtil) => {
-  const { lastStore, commit } = storeUtil;
+const useInputPianoEditor = () => {
 
-  const reducerArrange = ArrangeUtil.useReducer(get(controlStore), get(dataStore));
-  const reducerRef = useReducerRef();
-  const reducerCache = useReducerCache(lastStore);
+  const pianoActions = createPianoArrangeActions();
+  const reducerArrange = createArrangeSelector({ control: get(controlStore), data: get(dataStore) });
+  const reducerRef = useScrollService();
   const controlStoreValue = get(controlStore);
-  lastStore.control = controlStoreValue;
   const outline = controlStoreValue.outline;
   const arrange = outline.arrange;
+  const updateControl = ()=> controlStore.set({...controlStoreValue});
 
   const control = (eventKey: string) => {
     if (arrange == null) throw new Error();
@@ -32,103 +27,31 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
       case "edit":
         {
           switch (eventKey) {
+            case " ":
+              {
+                startPlaybackPianoEditor();
+              }
+              break;
             case "w":
               {
-                const arrTrack = reducerArrange.getCurTrack();
-                const chord = reducerCache.getCurChord();
-                const ts = reducerCache.getCurBase().scoreBase.ts;
-                arrange.finder = ArrangeUtil.createPianoFinder({
-                  arrTrack,
-                  chordCache: chord,
-                  ts,
-                });
-                commit();
+                pianoActions.openFinderFromEditor();
               }
               break;
           }
-
-          const shiftLayer = (backing: PianoBackingState.EditorProps) => {
-            backing.layerIndex = backing.layerIndex === 0 ? 1 : 0;
-
-            backing.cursorX = -1;
-            editor.control = "record";
-            commit();
-            reducerRef.adjustPEBScrollCol();
-          };
 
           /**
            * ボイシング選択時の制御を定義
            */
           const voicingControl = () => {
-            const compiledChord = arrange.target.compiledChord;
-            const structs = compiledChord.structs;
-            let structCnt = compiledChord.structs.length;
-            const onChord = compiledChord.chord.on;
-            if (onChord != undefined) {
-              const rel = MusicTheory.getRelationFromInterval(onChord.key12);
-              if (!structs.map((s) => s.relation).includes(rel)) structCnt++;
-            }
-            const voicing = editor.voicing;
-            const OCTAVE_MAX = Layout.arrange.piano.VOICING_OCTAVE_MAX;
-            const adjustRange = () => {
-              if (voicing.cursorX < 0) voicing.cursorX = 0;
-              if (voicing.cursorY < 0) voicing.cursorY = 0;
-              if (voicing.cursorX > OCTAVE_MAX - 1)
-                voicing.cursorX = OCTAVE_MAX - 1;
-              if (voicing.cursorY > structCnt - 1)
-                voicing.cursorY = structCnt - 1;
-            };
-
             switch (eventKey) {
-              case "ArrowUp":
-                {
-                  voicing.cursorY--;
-                  adjustRange();
-                  commit();
-                }
-                break;
-              case "ArrowDown":
-                {
-                  voicing.cursorY++;
-                  adjustRange();
-                  commit();
-                }
-                break;
-              case "ArrowLeft":
-                {
-                  voicing.cursorX--;
-                  adjustRange();
-                  commit();
-                }
-                break;
-              case "ArrowRight":
-                {
-                  voicing.cursorX++;
-                  adjustRange();
-                  commit();
-                }
-                break;
-              case "a":
-                {
-                  const key = `${voicing.cursorX}.${voicing.cursorY}`;
-                  if (!voicing.items.includes(key)) {
-                    voicing.items.push(key);
-                  } else {
-                    const pos = voicing.items.findIndex((s) => s === key);
-                    voicing.items.splice(pos, 1);
-                  }
-                  voicing.items.sort((a, b) => {
-                    const [ax, ay] = a.split(".").map((s) => Number(s));
-                    const [bx, by] = b.split(".").map((s) => Number(s));
-                    return ax * 10 + ay - (bx * 10 + by);
-                  });
-                  commit();
-                }
-                break;
+              case "ArrowUp": pianoActions.moveVoicingCursor({ y: -1 }); break;
+              case "ArrowDown": pianoActions.moveVoicingCursor({ y: 1 }); break;
+              case "ArrowLeft": pianoActions.moveVoicingCursor({ x: -1 }); break;
+              case "ArrowRight": pianoActions.moveVoicingCursor({ x: 1 }); break;
+              case "a": pianoActions.toggleVoicing(); break;
               case "d":
                 {
-                  const struct = structs[voicing.cursorY];
-                  // const name = MusicTheory.getKey12FullName(struct.key12 +  voicing.cursorX + struct.carryForwardOctave);
+                  // const name = TonalityTheory.getKey12FullName(struct.key12 +  voicing.cursorX + struct.carryForwardOctave);
 
                   // const instrumentName = store.arrange.layers[outline.layerIndex].soundFont;
                   // const sf = store.soundFontCaches.find(sf => sf.instrumentName === instrumentName);
@@ -170,7 +93,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
               if (backing.cursorX === -1) return;
               const col = cols[backing.cursorX];
               col.div = div / 4;
-              commit();
+              updateControl();
             };
             /**
              * ペダルの切り替えをする
@@ -209,7 +132,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                   }
                   break;
               }
-              commit();
+              updateControl();
             };
             const toggleDot = () => {
               if (backing.cursorX === -1) return;
@@ -224,7 +147,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                   break;
               }
               // console.log(col.dot);
-              commit();
+              updateControl();
             };
 
             switch (eventKey) {
@@ -232,7 +155,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                 {
                   if (backing.cursorX > 0) {
                     backing.cursorX--;
-                    commit();
+                    updateControl();
                     reducerRef.adjustPEBScrollCol();
                   }
                 }
@@ -241,7 +164,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                 {
                   if (backing.cursorX < cols.length - 1) {
                     backing.cursorX++;
-                    commit();
+                    updateControl();
                     reducerRef.adjustPEBScrollCol();
                   }
                 }
@@ -261,7 +184,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                         layer.items[i] = `${c + 1}.${r}`;
                       }
                     });
-                    commit();
+                    updateControl();
                   }
                 }
                 break;
@@ -286,7 +209,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                     cols.splice(backing.cursorX, 1);
                     if (backing.cursorX > 0) backing.cursorX--;
                     if (cols.length === 0) backing.cursorX = -1;
-                    commit();
+                    updateControl();
                   }
                 }
                 break;
@@ -310,7 +233,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                 break;
               case "r":
                 {
-                  shiftLayer(backing);
+                  pianoActions.shiftLayer();
                 }
                 break;
             }
@@ -327,7 +250,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                 {
                   if (backing.cursorY > 0) {
                     backing.cursorY--;
-                    commit();
+                    updateControl();
                   }
                 }
                 break;
@@ -335,7 +258,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                 {
                   if (backing.cursorY < backing.recordNum - 1) {
                     backing.cursorY++;
-                    commit();
+                    updateControl();
                   }
                 }
                 break;
@@ -357,7 +280,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                         });
                       });
                     }
-                    commit();
+                    updateControl();
                   }
                 }
                 break;
@@ -384,13 +307,13 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                     backing.recordNum--;
                     if (backing.recordNum === 0) backing.cursorY = -1;
                     if (backing.cursorY > 0) backing.cursorY--;
-                    commit();
+                    updateControl();
                   }
                 }
                 break;
               case "r":
                 {
-                  shiftLayer(backing);
+                  pianoActions.shiftLayer();
                 }
                 break;
             }
@@ -415,21 +338,21 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                 {
                   backing.cursorY--;
                   adjustRange();
-                  commit();
+                  updateControl();
                 }
                 break;
               case "ArrowUp":
                 {
                   backing.cursorY++;
                   adjustRange();
-                  commit();
+                  updateControl();
                 }
                 break;
               case "ArrowLeft":
                 {
                   backing.cursorX--;
                   adjustRange();
-                  commit();
+                  updateControl();
                   reducerRef.adjustPEBScrollCol();
                 }
                 break;
@@ -437,7 +360,7 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                 {
                   backing.cursorX++;
                   adjustRange();
-                  commit();
+                  updateControl();
                   reducerRef.adjustPEBScrollCol();
                 }
                 break;
@@ -478,13 +401,13 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
                       .findIndex((i) => i === key);
                     layer.items.splice(pos, 1);
                   }
-                  commit();
+                  updateControl();
                 }
                 break;
 
               case "r":
                 {
-                  shiftLayer(backing);
+                  pianoActions.shiftLayer();
                 }
                 break;
             }
@@ -509,146 +432,48 @@ const useInputPianoEditor = (storeUtil: StoreUtil) => {
     }
   };
 
-  const getHoldCallbacks = (eventKey: string): StoreInput.Callbacks => {
+  const getHoldCallbacks = (eventKey: string): InputState.Callbacks => {
     if (arrange == null) throw new Error();
 
     const editor = reducerArrange.getPianoEditor();
-    const callbacks: StoreInput.Callbacks = {};
+    const callbacks: InputState.Callbacks = {};
 
     callbacks.holdShift = () => {
       switch (eventKey) {
         case "Enter":
-          applyArrange();
+          pianoActions.applyArrange();
           break;
       }
       if (editor.backing == null) return;
 
-      const shiftControl = (next: PianoEditorState.Control) => {
-        editor.control = next;
-        // editor.phase = 'target';
-        // PBEditor.initCursor(editor);
-        commit();
-      };
       switch (editor.control) {
         case "voicing":
           {
-            if (eventKey === "ArrowDown") shiftControl("col");
+            if (eventKey === "ArrowDown") pianoActions.shiftControl("col");
           }
           break;
         case "col":
           {
-            if (eventKey === "ArrowUp") shiftControl("voicing");
-            if (eventKey === "ArrowDown") shiftControl("notes");
-            if (eventKey === "ArrowLeft") shiftControl("record");
+            if (eventKey === "ArrowUp") pianoActions.shiftControl("voicing");
+            if (eventKey === "ArrowDown") pianoActions.shiftControl("notes");
+            if (eventKey === "ArrowLeft") pianoActions.shiftControl("record");
           }
           break;
         case "record":
           {
-            if (eventKey === "ArrowUp") shiftControl("col");
-            if (eventKey === "ArrowRight") shiftControl("notes");
+            if (eventKey === "ArrowUp") pianoActions.shiftControl("col");
+            if (eventKey === "ArrowRight") pianoActions.shiftControl("notes");
           }
           break;
         case "notes":
           {
-            if (eventKey === "ArrowUp") shiftControl("col");
-            if (eventKey === "ArrowLeft") shiftControl("record");
+            if (eventKey === "ArrowUp") pianoActions.shiftControl("col");
+            if (eventKey === "ArrowLeft") pianoActions.shiftControl("record");
           }
           break;
       }
     };
     return callbacks;
-  };
-
-  /**
-   * エディタのアレンジをコード要素に適用する
-   * @param store ストア
-   * @param update 画面再描画
-   */
-  const applyArrange = () => {
-    if (arrange == null) throw new Error();
-
-    const editor = reducerArrange.getPianoEditor();
-
-    const compiledChord = arrange.target.compiledChord;
-    const scoreBase = arrange.target.scoreBase;
-    const beatCache = arrange.target.beat;
-
-    const chordSeq = arrange.target.chordSeq;
-
-    // パターンの登録
-    const arrTrack = reducerArrange.getCurTrack();
-    const pianoLib = arrTrack.pianoLib;
-    if (pianoLib == undefined) throw new Error();
-
-    // 有効チャンネル外のノーツは削除する
-    const backing = editor.backing;
-    let backingData: PianoBackingState.DataProps | null = null;
-    if (backing != null) {
-      backing.layers.forEach((l) => {
-        l.items = l.items.filter((item) => {
-          const [x, y] = item.split(".").map((v) => Number(v));
-          return (
-            x >= 0 &&
-            x <= l.cols.length - 1 &&
-            y >= 0 &&
-            y <= editor.voicing.items.length - 1
-          );
-        });
-      });
-      backingData = {
-        layers: JSON.parse(JSON.stringify(backing.layers)),
-        recordNum: backing.recordNum,
-      };
-    }
-    const sounds = JSON.parse(JSON.stringify(editor.voicing.items));
-    // 検索用カテゴリの作成
-    const category: ArrangeLibrary.SearchCategory = {
-      beat: beatCache.num,
-      structCnt: compiledChord.structs.length,
-      tsGloup: [scoreBase.ts],
-      eatHead: beatCache.eatHead,
-      eatTail: beatCache.eatTail,
-    };
-    // 新しいパターンの場合は登録してパターンNoをそれぞれ取得
-    const [backingPattNo, soundsPattNo] = PianoEditorState.registPattern(
-      category,
-      backingData,
-      sounds,
-      pianoLib,
-    );
-
-    // コード連番と参照先ライブラリの紐付け
-    const relations = arrTrack.relations;
-    const relation = relations.find((r) => r.chordSeq === chordSeq);
-    if (relation == undefined) {
-      // 未定義の場合は新規追加
-      relations.push({
-        chordSeq,
-        bkgPatt: backingPattNo,
-        sndsPatt: soundsPattNo,
-      });
-    } else {
-      // 既定義の場合は更新
-      relation.bkgPatt = backingPattNo;
-      relation.sndsPatt = soundsPattNo;
-
-      // 紐付けが変わったことにより不参照のピアノライブラリのパターンを削除
-      PianoEditorState.deleteUnreferUnit(arrTrack);
-    }
-
-    // ダイアログを閉じる
-    outline.arrange = null;
-
-    reducerCache.calculate();
-
-    // MessageUtil.pushFadeItem(store.message.fade, {
-    //     text: 'Arrangement has been applied.',
-    //     type: 'notice',
-    //     width: 500,
-    //     x: 100, y: 100
-    // }, update);
-    // console.log(relations);
-    commit();
   };
 
   return {

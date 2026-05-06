@@ -1,8 +1,8 @@
 <script lang="ts">
-  import ContextUtil from "../../../../../store/contextUtil";
+  import { getPianoBacking } from "../../piano-editor-context";
 
   import PBNotesCell from "./PEBTableCell.svelte";
-  $: bp = ContextUtil.get("backingProps");
+  const bp = getPianoBacking();
   $: backing = $bp.backing;
   $: layer = backing.layers[backing.layerIndex];
 </script>

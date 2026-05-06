@@ -1,5 +1,5 @@
 <script lang="ts">
-  import MusicTheory from "../../../../domain/theory/music-theory";
+  import TonalityTheory from "../../../../domain/theory/tonality-theory";
 
   export let octaveIndex: number;
   export let structKey12: number;
@@ -14,7 +14,7 @@
     {#if isFocus}
       <div class="focus"></div>
     {/if}
-    {MusicTheory.getKey12FullName(structKey12 + octaveIndex * 12)}
+    {TonalityTheory.getKey12FullName(structKey12 + octaveIndex * 12)}
   </div>
 </div>
 

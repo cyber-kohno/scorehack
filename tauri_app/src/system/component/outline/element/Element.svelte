@@ -1,13 +1,12 @@
 <script lang="ts">
     import type DerivedState from "../../../store/state/derived-state";
-    import { controlStore } from "../../../store/global-store";
-    import store from "../../../store/store";
-    import FocusCover from "../../common/FocusCover.svelte";
+    import { controlStore, refStore } from "../../../store/global-store";    import FocusCover from "../../common/FocusCover.svelte";
     import DataChord from "./data/DataChord.svelte";
     import DataInit from "./data/DataInit.svelte";
     import DataModulate from "./data/DataModulate.svelte";
     import DataSection from "./data/DataSection.svelte";
     import DataTempo from "./data/DataTempo.svelte";
+    import DataTS from "./data/DataTS.svelte";
 
     export let element!: DerivedState.ElementCache;
 
@@ -16,7 +15,7 @@
     let ref: HTMLElement | null = null;
     $: {
         if (ref != null) {
-            const refs = $store.ref.elementRefs;
+            const refs = $refStore.elementRefs;
 
             let instance = refs.find((r) => r.seq === index);
             if (instance == undefined) {
@@ -57,6 +56,8 @@
         <DataModulate {data} elementSeq={index} />
     {:else if element.type === "tempo"}
         <DataTempo {data} elementSeq={index} />
+    {:else if element.type === "ts"}
+        <DataTS {data} elementSeq={index} />
     {/if}
 
     <FocusCover

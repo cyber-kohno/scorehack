@@ -1,10 +1,9 @@
 <script lang="ts">
-    import ContextUtil from "../../../../store/contextUtil";
+  import { refStore } from "../../../../store/global-store";
+    import { getPianoBacking, getPianoEditor } from "../piano-editor-context";
     import PianoBackingState from "../../../../store/state/data/arrange/piano/piano-backing-state";
-    import store from "../../../../store/store";
-
-    const editor = ContextUtil.get("pianoEditor");
-    const bp = ContextUtil.get("backingProps");
+    const editor = getPianoEditor();
+    const bp = getPianoBacking();
     $: backing = $bp.backing;
 
     $: isFocus = (index: number) => {
@@ -19,7 +18,7 @@
         return `${col.div}${".".repeat(dot)}`;
     };
 
-    $: pianoRef = $store.ref.arrange.piano;
+    $: pianoRef = $refStore.arrange.piano;
 </script>
 
 <div class="wrap" bind:this={pianoRef.col}>

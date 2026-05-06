@@ -1,79 +1,22 @@
 <script lang="ts">
+  import { settingsStore } from "../../../store/global-store";
+  import type RhythmTheory from "../../../domain/theory/rhythm-theory";
   import MelodyState from "../../../store/state/data/melody-state";
-  import store from "../../../store/store";
-
-  type Type = "4div" | "8div" | "16div" | "4div3t" | "8div3t";
+  import { splitNoteDisplayFactors, type NoteDisplayUnit } from "./note-display-util";
 
   export let note: MelodyState.Note;
+  export let ts: RhythmTheory.TimeSignature;
 
-  $: norms = (() => {
-    const norms: MelodyState.Norm[] = [];
-    const n = note;
-    let pos = n.pos;
-    const tail = n.pos + n.len;
+  $: factors = splitNoteDisplayFactors(note, ts);
 
-    let cnt = 0;
-    while (true) {
-      if (cnt > 50) throw new Error("cnt exceeded 50.");
-      if (n.norm.div === 1) {
-        if (!n.norm.tuplets) {
-          norms.push({ div: 1 });
-          pos++;
-        } else {
-          if (pos % 3 === 0 && pos + 3 <= tail) {
-            norms.push({ div: 1 });
-            pos += 3;
-          } else {
-            norms.push({ div: 1, tuplets: 3 });
-            pos++;
-          }
-        }
-      } else if (n.norm.div === 2) {
-        if (!n.norm.tuplets) {
-          if (pos % 2 === 0 && pos + 2 <= tail) {
-            norms.push({ div: 1 });
-            pos += 2;
-          } else {
-            norms.push({ div: 2 });
-            pos++;
-          }
-        } else {
-          if (pos % 3 === 0 && pos + 3 <= tail) {
-            norms.push({ div: 2 });
-            pos += 3;
-          } else {
-            norms.push({ div: 2, tuplets: 3 });
-            pos++;
-          }
-        }
-      } else if (n.norm.div === 4) {
-        if (pos % 4 === 0 && pos + 4 <= tail) {
-          norms.push({ div: 1 });
-          pos += 4;
-        } else if (pos % 2 === 0 && pos + 2 <= tail) {
-          norms.push({ div: 2 });
-          pos += 2;
-        } else {
-          norms.push({ div: 4 });
-          pos++;
-        }
-      }
-      if (pos === tail) break;
-
-      cnt++;
-    }
-    return norms;
-  })();
-
-  const buildType = (norm: MelodyState.Norm) =>
-    `${norm.div * 4}div${!norm.tuplets ? "" : norm.tuplets + "t"}` as Type;
+  const buildType = (unit: NoteDisplayUnit) => unit;
 </script>
 
-{#each norms as norm}
+{#each factors as factor}
   <div
     class="item"
-    data-type={buildType(norm)}
-    style:width="{$store.settings.beatWidth / norm.div / (norm.tuplets ?? 1)}px"
+    data-type={buildType(factor.unit)}
+    style:width="{factor.length * $settingsStore.beatWidth}px"
   ></div>
 {/each}
 
@@ -88,33 +31,26 @@
     box-sizing: border-box;
   }
 
-  .item[data-type="4div"] {
+  .item[data-type="beat"] {
     margin-top: calc(var(--factor-center) - 6px);
     height: 12px;
     border-radius: 6px;
   }
-  .item[data-type="4div3t"] {
+  .item[data-type="triplet"] {
     margin-top: calc(var(--factor-center) - 6px);
     height: 12px;
     border-radius: 6px;
     background-color: #f3717185;
     border: solid 1px #ba6c6cd2;
   }
-  .item[data-type="8div"] {
+  .item[data-type="eighth"] {
     margin-top: calc(var(--factor-center) - 5px);
     height: 10px;
     border-radius: 5px;
     background-color: #81949385;
     border: solid 1px #364040d2;
   }
-  .item[data-type="8divt3"] {
-    margin-top: calc(var(--factor-center) - 5px);
-    height: 10px;
-    border-radius: 5px;
-    background-color: #f3717185;
-    border: solid 1px #ba6c6cd2;
-  }
-  .item[data-type="16div"] {
+  .item[data-type="sixteenth"] {
     margin-top: calc(var(--factor-center) - 4px);
     height: 8px;
     border-radius: 4px;

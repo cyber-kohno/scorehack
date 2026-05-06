@@ -3,11 +3,10 @@ import pako from 'pako';
 import { get } from 'svelte/store';
 import { openMp3FilePath, openScoreFilePath, saveScoreFilePath } from '../tauri/dialog';
 import { readBinaryFile, readUtf8TextFile, writeUtf8TextFile } from '../tauri/fs';
-import { fileStore } from '../../store/global-store';
+import { dataStore, fileStore, refStore } from '../../store/global-store';
 import MelodyState from '../../store/state/data/melody-state';
 import type FileState from '../../store/state/file-state';
-import useReducerCache from '../../service/derived/reducerCache';
-import type { StoreProps } from '../../store/store';
+import recalculate from '../../service/derived/recalculate-derived';
 
 namespace FileUtil {
     const getFileName = (path: string) => {
@@ -86,7 +85,11 @@ namespace FileUtil {
         return new Blob([arrayBuffer], { type });
     }
 
-    export const getUtil = (lastStore: StoreProps) => {
+    export const getUtil = () => {
+
+        const data = get(dataStore);
+        const ref = get(refStore);
+
         const downloadMidi = (fileName: string) => {
             const track = new MidiWriter.Track();
             track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
@@ -99,7 +102,6 @@ namespace FileUtil {
         }
 
         const getSaveFile = (): string => {
-            const data = lastStore.data;
             return JSON.stringify(data);
         }
 
@@ -141,7 +143,6 @@ namespace FileUtil {
         }
 
         const loadScoreFile = (success: (handle: FileState.Handle) => void, cancel: () => void) => {
-            const { calculate } = useReducerCache(lastStore);
 
             (async () => {
                 try {
@@ -155,11 +156,11 @@ namespace FileUtil {
                     const fileContents = await readUtf8TextFile(path);
                     fileStore.set({ score: newFileHandle });
                     const text = unZip(fileContents);
-                    lastStore.data = JSON.parse(text);
-                    for (let i = 0; i < lastStore.data.scoreTracks.length; i++) {
-                        lastStore.ref.trackArr.push([]);
+                    dataStore.set(JSON.parse(text));
+                    for (let i = 0; i < data.scoreTracks.length; i++) {
+                        ref.trackArr.push([]);
                     }
-                    calculate();
+                    recalculate();
                     success(newFileHandle);
                 } catch {
                     cancel();

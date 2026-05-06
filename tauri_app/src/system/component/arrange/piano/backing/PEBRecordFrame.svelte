@@ -1,11 +1,10 @@
 <script lang="ts">
-    import ContextUtil from "../../../../store/contextUtil";
-    import store from "../../../../store/store";
-    import MusicTheory from "../../../../domain/theory/music-theory";
+    import { getPianoArrange, getPianoBacking, getPianoEditor } from "../piano-editor-context";
+    import TonalityTheory from "../../../../domain/theory/tonality-theory";
 
-    $: arrange = ContextUtil.get("arrange");
-    $: editor = ContextUtil.get("pianoEditor");
-    $: bp = ContextUtil.get("backingProps");
+    const arrange = getPianoArrange();
+    const editor = getPianoEditor();
+    const bp = getPianoBacking();
     $: backing = $bp.backing;
 
     $: structs = (() => {
@@ -19,7 +18,7 @@
         const items = item.split(".");
         const struct = structs[Number(items[1])];
         const octaveIndex = Number(items[0]);
-        return MusicTheory.getKey12FullName(struct.key12 + octaveIndex * 12);
+        return TonalityTheory.getKey12FullName(struct.key12 + octaveIndex * 12);
     };
 
     $: isFocus = (index: number) => {

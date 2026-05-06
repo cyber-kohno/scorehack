@@ -1,14 +1,13 @@
-<script lang="ts">
-  import store from "../store/store";
-  import { controlStore } from "../store/global-store";
+<script lang="ts">  import { controlStore, terminalStore } from "../store/global-store";
   import ArrangeFrame from "./arrange/ArrangeFrame.svelte";
   import ArrangeFinderFrame from "./arrange/finder/ArrangeFinderFrame.svelte";
   import RootHeader from "./header/RootHeader.svelte";
   import OutlineFrame from "./outline/OutlineFrame.svelte";
   import TerminalFrame from "./terminal/TerminalFrame.svelte";
   import TimelineFrame from "./timeline/TimelineFrame.svelte";
+  import ToastLayer from "./common/ToastLayer.svelte";
 
-    $: isDispTerminal = $store.terminal != null;
+    $: isDispTerminal = $terminalStore != null;
 
     $: isDispArrangeEditor = (() => {
         const arrange = $controlStore.outline.arrange;
@@ -38,6 +37,7 @@
     {#if isDispArrangeFinder}
         <ArrangeFinderFrame />
     {/if}
+    <ToastLayer />
 </div>
 
 <style>

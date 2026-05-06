@@ -1,8 +1,6 @@
 <script lang="ts">
     import RefState from "../../../store/state/ref-state";
-    import { controlStore } from "../../../store/global-store";
-    import store from "../../../store/store";
-    import ShadeNote from "./ShadeNote.svelte";
+    import { controlStore, dataStore, refStore } from "../../../store/global-store";    import ShadeNote from "./ShadeNote.svelte";
 
     /** 選択中のトラック */
     $: currentTrackIndex = $controlStore.melody.trackIndex;
@@ -14,9 +12,9 @@
         // ハーモニーモード時は全てがシェイドトラックになるため無条件で表示する
         $controlStore.mode === "harmonize";
 
-    $: scoreTracks = $store.data.scoreTracks;
+    $: scoreTracks = $dataStore.scoreTracks;
 
-    $: scrollLimitProps = RefState.getScrollLimitProps($store.ref.grid);
+    $: scrollLimitProps = RefState.getScrollLimitProps($refStore.grid);
 </script>
 
 {#if scrollLimitProps != null}

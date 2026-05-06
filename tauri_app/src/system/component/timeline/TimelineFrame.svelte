@@ -3,36 +3,45 @@
   import BeatMeasureFrame from "./header/BeatMeasureFrame.svelte";
   import ChordListFrame from "./header/ChordListFrame.svelte";
   import ProgressInfo from "./header/ProgressInfo.svelte";
-  import PitchListFrame from "./pitch/PitchListFrame.svelte";
-  import store from "../../store/store";
-  import RefState from "../../store/state/ref-state";
+  import PitchListFrame from "./pitch/PitchListFrame.svelte";  import RefState from "../../store/state/ref-state";
   import PianoViewFrame from "./grid/PianoViewFrame.svelte";
-  import MusicTheory from "../../domain/theory/music-theory";
-  import useReducerCache from "../../service/derived/reducerCache";
+  import ChordTheory from "../../domain/theory/chord-theory";
+  import TonalityTheory from "../../domain/theory/tonality-theory";
+  import { controlStore, derivedStore, refStore } from "../../store/global-store";
+    import useDerivedSelector from "../../service/derived/derived-selector";
 
-  $: scrollLimitProps = RefState.getScrollLimitProps($store.ref.header);
+  $: scrollLimitProps = RefState.getScrollLimitProps($refStore.header);
 
-  $: reducerCache = useReducerCache($store);
+  $: derivedSelector = useDerivedSelector($derivedStore, $controlStore);
+  $: isArrangeEditorActive =
+    $controlStore.outline.arrange?.editor != undefined;
 
   $: pianoInfo = (() => {
-    const element = reducerCache.getCurElement();
+    const element = derivedSelector.getCurElement();
 
     // コード要素以外では表示しない。
     if (element.type !== "chord") return null;
 
-    const chordCache = reducerCache.getCurChord();
+    const chordCache = derivedSelector.getCurChord();
 
-    const base = reducerCache.getCurBase();
+    const base = derivedSelector.getCurBase();
     const tonality = base.scoreBase.tonality;
-    const scaleList = MusicTheory.getScaleKeyIndexesFromTonality(tonality);
+    const scaleList = TonalityTheory.getScaleKeyIndexesFromTonality(tonality);
 
     let uses: number[] = [];
 
     const compiledChord = chordCache.compiledChord;
     if (compiledChord) {
-      uses = compiledChord.structs.map((s) => s.key12);
-    }
+      const chord = compiledChord.chord;
+      uses = ChordTheory.getSymbolProps(chord.symbol).structs.map((s) => {
+        return chord.key12 + ChordTheory.getIntervalFromRelation(s);
+      });
 
+      const on = chord.on;
+      if (on != undefined && !uses.map((v) => v % 12).includes(on.key12)) {
+        uses.push(on.key12);
+      }
+    }
 
     return {
       scaleList,
@@ -41,10 +50,10 @@
   })();
 </script>
 
-<div class="wrap">
+<div class="wrap" data-isArrangeEditorActive={isArrangeEditorActive}>
   <div class="header">
     <div class="blank"></div>
-    <div class="active" bind:this={$store.ref.header}>
+    <div class="active" bind:this={$refStore.header}>
       {#if scrollLimitProps != null}
         <ChordListFrame {scrollLimitProps} />
         <ProgressInfo {scrollLimitProps} />
@@ -76,6 +85,13 @@
     height: 100%;
     background-color: #c6dee1;
     vertical-align: top;
+    transition:
+      filter 120ms ease,
+      opacity 120ms ease;
+  }
+  .wrap[data-isArrangeEditorActive="true"] {
+    filter: blur(3px) saturate(0.85) brightness(1.08);
+    opacity: 0.78;
   }
   .header {
     display: inline-block;

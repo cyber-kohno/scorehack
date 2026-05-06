@@ -1,25 +1,26 @@
-import MelodyState from "../../store/state/data/melody-state";
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
 
-const useMelodySelector = (lastControlStore: ControlState.Value, lastDataStore: DataState.Value) => {
+type Context = {
+    control: ControlState.Value;
+    data: DataState.Value;
+};
+
+const useMelodySelector = (ctx: Context) => {
+    const { control, data } = ctx;
 
     const getCurrScoreTrack = () => {
-        const melody = lastControlStore.melody;
-        return lastDataStore.scoreTracks[melody.trackIndex];
+        const melody = control.melody;
+        return data.scoreTracks[melody.trackIndex];
     }
 
-    const judgeOverlap = () => {
-        const melody = lastControlStore.melody;
-        const track = getCurrScoreTrack();
-        const overlapNote = track.notes.find(n => {
-            return MelodyState.judgeOverlapNotes(n, melody.cursor);
-        });
-        melody.isOverlap = overlapNote != undefined;
+    const getFocusNote = () => {
+        const melody = control.melody;
+        return getCurrScoreTrack().notes[melody.focus];
     }
 
     const getFocusRange = () => {
-        const melody = lastControlStore.melody;
+        const melody = control.melody;
         if (melody.focusLock === -1) return [melody.focus, melody.focus];
         return melody.focus < melody.focusLock
             ? [melody.focus, melody.focusLock]
@@ -28,7 +29,7 @@ const useMelodySelector = (lastControlStore: ControlState.Value, lastDataStore: 
 
     return {
         getCurrScoreTrack,
-        judgeOverlap,
+        getFocusNote,
         getFocusRange
     };
 };

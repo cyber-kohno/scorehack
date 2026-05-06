@@ -2,26 +2,22 @@
   import Layout from "../../../layout/layout-constant";
   import type DerivedState from "../../../store/state/derived-state";
   import RefState from "../../../store/state/ref-state";
-  import useMelodyUpdater from "../../../service/melody/melody-updater";
-  import useReducerRoot from "../../../service/common/root-updater";
-  import { controlStore, dataStore } from "../../../store/global-store";
-  import store from "../../../store/store";
-  import MusicTheory from "../../../domain/theory/music-theory";
+  import { controlStore, dataStore, derivedStore, settingsStore } from "../../../store/global-store";
+  import RhythmTheory from "../../../domain/theory/rhythm-theory";
+  import TonalityTheory from "../../../domain/theory/tonality-theory";
   import useMelodySelector from "../../../service/melody/melody-selector";
-    import useRootSelector from "../../../service/common/root-selector";
+    import StoreUtil from "../../../service/common/store-util";
 
   type PitchType = "tonic" | "other" | "scale";
 
   export let baseCache: DerivedState.BaseCache;
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
-  $: rootSelector = useRootSelector();
-  $: reducerMelody = useMelodyUpdater();
-  $: melodySelector = useMelodySelector($controlStore, $dataStore);
+  $: melodySelector = useMelodySelector({ control: $controlStore, data: $dataStore });
 
-  $: beatDiv16Count = MusicTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
+  $: beatDiv16Count = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
 
-  $: beatWidth = $store.settings.beatWidth * (beatDiv16Count / 4);
+  $: beatWidth = $settingsStore.beatWidth * (beatDiv16Count / 4);
 
   $: measureLines = (() => {
     // console.log(baseCache.baseSeq);
@@ -30,7 +26,7 @@
       width: number;
     }[] = [];
     const cnt = baseCache.lengthBeat * beatDiv16Count;
-    const focusPos = rootSelector.getTimelineFocusPos();
+    const focusPos = StoreUtil.getTimelineFocusPos($derivedStore, $controlStore);
     for (let i = 0; i < cnt; i++) {
       const left = (beatWidth / beatDiv16Count) * i;
       const absLeft = baseCache.viewPosLeft + left;
@@ -54,8 +50,8 @@
     const tonality = baseCache.scoreBase.tonality;
     const scaleList =
       tonality.scale === "major"
-        ? MusicTheory.MAJOR_SCALE_INTERVALS
-        : MusicTheory.MINOR_SCALE_INTERVALS;
+        ? TonalityTheory.MAJOR_SCALE_INTERVALS
+        : TonalityTheory.MINOR_SCALE_INTERVALS;
     const list: {
       top: number;
       type: PitchType;
@@ -79,7 +75,7 @@
 
       const pitchIndex = LP.NUM - 1 - i;
 
-      const keyIndex = MusicTheory.getKeyIndex(pitchIndex, tonality.key12);
+      const keyIndex = TonalityTheory.getKeyIndex(pitchIndex, tonality.key12);
       if (keyIndex === 0) type = "tonic";
       else if (scaleList.includes(keyIndex)) type = "scale";
       list.push({ top, type });
