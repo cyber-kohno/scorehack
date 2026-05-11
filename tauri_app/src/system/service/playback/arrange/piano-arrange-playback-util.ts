@@ -22,6 +22,7 @@ namespace PianoArrangePlaybackUtil {
     const pitchIndexes = unit.voicingSounds.map((v) => {
       const [octaveIndex, structIndex] = v.split(".").map((v) => Number(v));
       const struct = relationStructs[structIndex];
+      if (struct == undefined) return undefined;
       return (octaveIndex + struct.carryForwardOctave) * 12 + struct.key12;
     });
 
@@ -30,6 +31,7 @@ namespace PianoArrangePlaybackUtil {
       if (sustainBeat == undefined) return notes;
 
       pitchIndexes.forEach((pitch) => {
+        if (pitch == undefined) return;
         notes.push({
           norm: { div: 1 },
           pos: 0,
@@ -107,6 +109,7 @@ namespace PianoArrangePlaybackUtil {
           if (len < pedalLen) len = pedalLen;
         }
         const pitch = pitchIndexes[note.recordIndex];
+        if (pitch == undefined) return;
         const velocity = note.velocity;
         notes.push({ pos, len, pitch, norm, velocity });
       });

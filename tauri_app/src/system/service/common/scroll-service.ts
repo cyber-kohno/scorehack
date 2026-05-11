@@ -109,7 +109,7 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
 
     const adjustGridScrollXFromNote = (note: MelodyState.Note) => {
         const [pos, len] = [note.pos, note.len]
-            .map(size => MelodyState.calcBeat(note.norm, size) * settings.beatWidth);
+            .map(size => MelodyState.calcBeat(note.norm, size) * settings.view.timeline.beatWidth);
         adjustGridScrollX((width) => pos + len / 2 - width / 2);
     }
 

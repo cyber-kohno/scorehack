@@ -29,7 +29,7 @@
   $: [isDisp, left, width] = (() => {
     const beatSide = MelodyState.calcBeatSide(note);
     const [left, width] = [beatSide.pos, beatSide.len].map(
-      (v) => v * $settingsStore.beatWidth
+      (v) => v * $settingsStore.view.timeline.beatWidth
     );
     const isDisp =
       Math.abs(scrollLimitProps.scrollMiddleX - (left + width / 2)) <=

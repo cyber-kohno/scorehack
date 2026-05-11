@@ -1,14 +1,16 @@
 <script lang="ts">
   import type DerivedState from "../../../store/state/derived-state";
   import type RefState from "../../../store/state/ref-state";
-  import { controlStore, derivedStore } from "../../../store/global-store";
+  import { controlStore, dataStore, derivedStore, settingsStore } from "../../../store/global-store";
   import ChordTheory from "../../../domain/theory/chord-theory";
   import TimelineLastMargin from "../TimelineTailMargin.svelte";
   import StoreUtil from "../../../service/common/store-util";
+  import type ElementState from "../../../store/state/data/element-state";
 
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
   $: focus = $controlStore.outline.focus;
+  $: chordNameMode = $settingsStore.view.timeline.chordNameMode;
 
   $: chordCaches = (() => {
     const focusPos = StoreUtil.getTimelineFocusPos(
@@ -25,15 +27,33 @@
     });
   })();
 
-  const getChordName = (cache: DerivedState.ChordCache) => {
+  const getChordName = (
+    cache: DerivedState.ChordCache,
+    mode: typeof chordNameMode,
+    elements: typeof $dataStore.elements,
+  ) => {
+    if (mode === "degree") {
+      const element = elements[cache.elementSeq];
+      if (element.type !== "chord") return "-";
+
+      const data = element.data as ElementState.DataChord;
+      if (data.degree == undefined) return "-";
+      return ChordTheory.getDegreeChordName(data.degree);
+    }
+
     const compiledChord = cache.compiledChord;
     if (compiledChord == undefined) return "-";
     return ChordTheory.getKeyChordName(compiledChord.chord);
   };
+
+  $: chordItems = chordCaches.map((chordCache) => ({
+    ...chordCache,
+    name: getChordName(chordCache, chordNameMode, $dataStore.elements),
+  }));
 </script>
 
 <div class="wrap">
-  {#each chordCaches as chordCache}
+  {#each chordItems as chordCache}
     <div
       class="item"
       style:left="{chordCache.viewPosLeft}px"
@@ -44,7 +64,7 @@
         data-isFocus={focus === chordCache.elementSeq}
         data-isError={chordCache.error != undefined}
       >
-        {getChordName(chordCache)}
+        {chordCache.name}
       </div>
     </div>
   {/each}

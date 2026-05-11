@@ -7,7 +7,7 @@
         const keyIndex = note.pitch;
         return {
             x: 0, y: 0, width: 0, height: 0,
-            // ...OutlineUtil.getNoteRect(note, $settingsStore.beatWidth),
+            // ...OutlineUtil.getNoteRect(note, $settingsStore.view.timeline.beatWidth),
             keyIndex,
         };
     })();

@@ -1,11 +1,27 @@
 namespace SettingsState {
 
-    export type Value = {
+    export type TimelineChordNameMode = "absolute" | "degree";
+
+    export type TimelineView = {
         beatWidth: number;
+        chordNameMode: TimelineChordNameMode;
+    }
+
+    export type View = {
+        timeline: TimelineView;
+    }
+
+    export type Value = {
+        view: View;
     }
 
     export const INITIAL: Value = {
-        beatWidth: 120
+        view: {
+            timeline: {
+                beatWidth: 120,
+                chordNameMode: "degree"
+            }
+        }
     };
 }
 

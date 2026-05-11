@@ -16,7 +16,7 @@
   <div
     class="item"
     data-type={buildType(factor.unit)}
-    style:width="{factor.length * $settingsStore.beatWidth}px"
+    style:width="{factor.length * $settingsStore.view.timeline.beatWidth}px"
   ></div>
 {/each}
 

@@ -139,7 +139,7 @@ export const recalculate = () => {
                 const beatSizeNote = beatSize * beatRate;
 
                 const viewPosLeft = viewPos;
-                const viewPosWidth = beatSizeNote * settings.beatWidth;
+                const viewPosWidth = beatSizeNote * settings.view.timeline.beatWidth;
                 viewPos += viewPosWidth;
                 // console.log(viewPosLeft);
                 // console.log(viewPosWidth);

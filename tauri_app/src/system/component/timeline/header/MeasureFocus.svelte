@@ -13,7 +13,7 @@
     const melody = $controlStore.melody;
     const note = melody.focus === -1 ? melody.cursor : notes[melody.focus];
     const side = MelodyState.calcBeatSide(note);
-    return [side.pos, side.len].map((v) => v * $settingsStore.beatWidth);
+    return [side.pos, side.len].map((v) => v * $settingsStore.view.timeline.beatWidth);
   })();
   $: isMelodyMode = $controlStore.mode === "melody";
   $: isPreview = $playbackStore.timerKeys != null;

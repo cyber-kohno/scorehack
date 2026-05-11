@@ -12,7 +12,7 @@
   $: trackIndex = melody.trackIndex;
 
   $: scrollLimitProps = RefState.getScrollLimitProps($refStore.grid);
-  $: beatWidth = $settingsStore.beatWidth;
+  $: beatWidth = $settingsStore.view.timeline.beatWidth;
   $: isPlayback = $playbackStore.timerKeys != null;
   $: input = $inputStore;
   $: focusRange = (() => {

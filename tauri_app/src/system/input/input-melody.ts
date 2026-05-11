@@ -4,6 +4,7 @@ import { controlStore, playbackStore } from "../store/global-store";
 import stopPlaybackTimeline from "../service/playback/timeline/stop-playback-timeline";
 import startPlaybackTimeline from "../service/playback/timeline/start-playback-timeline";
 import createMelodyActions from "../actions/melody/melody-actions";
+import type PlaybackCacheState from "../service/playback/timeline/playback-cache-state";
 
 const useInputMelody = () => {
 
@@ -18,18 +19,26 @@ const useInputMelody = () => {
     const isFocusLock = () => {
         return get(controlStore).melody.focusLock !== -1;
     }
+    const togglePlayback = (target: PlaybackCacheState.LayerTargetMode = 'all') => {
+        if (isPlayback()) {
+            stopPlaybackTimeline();
+            return;
+        }
+
+        startPlaybackTimeline({ target });
+    }
 
     const control = (eventKey: string) => {
 
         if (isPlayback()) {
             switch (eventKey) {
-                case ' ': stopPlaybackTimeline();
+                case ' ': togglePlayback();
             }
             return;
         }
 
         switch (eventKey) {
-            case ' ': startPlaybackTimeline({ target: 'all' });
+            case ' ': togglePlayback();
         }
         if (isCursor()) {
             switch (eventKey) {
@@ -100,6 +109,7 @@ const useInputMelody = () => {
                 switch (eventKey) {
                     case 'ArrowLeft': melodyActions.focusOutNoteSide(-1); break;
                     case 'ArrowRight': melodyActions.focusOutNoteSide(1); break;
+                    case 'Delete': melodyActions.removeFocusNotes({ focusPrevious: true }); break;
                 }
             }
         }
@@ -155,15 +165,21 @@ const useInputMelody = () => {
             }
         }
         callbacks.holdShift = () => {
+            if (eventKey.toLowerCase() === 'e') {
+                melodyActions.toggleChordNameMode();
+                return;
+            }
 
             if (isCursor()) {
                 switch (eventKey) {
                     case '#': melodyActions.changeCursorTuplets(3); break;
+                    case ' ': togglePlayback('tl-focus-layer'); break;
                 }
             } else {
                 switch (eventKey) {
                     case 'ArrowLeft': melodyActions.moveFocusRange(-1); break;
                     case 'ArrowRight': melodyActions.moveFocusRange(1); break;
+                    case ' ': togglePlayback('tl-focus-layer'); break;
                 }
             }
         }

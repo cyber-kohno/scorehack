@@ -1,11 +1,12 @@
 import { get } from "svelte/store";
 import type InputState from "../store/state/input-state";
 import { controlStore, dataStore, playbackStore } from "../store/global-store";
-import useInputFinder from "./arrange/finder/inputFinder";
+import useInputFinder from "./arrange/finder/input-finder";
 import useInputArrange from "./arrange/input-arrange";
 import createOutlineActions from "../actions/outline/outline-actions";
 import startPlaybackTimeline from "../service/playback/timeline/start-playback-timeline";
 import stopPlaybackTimeline from "../service/playback/timeline/stop-playback-timeline";
+import type PlaybackCacheState from "../service/playback/timeline/playback-cache-state";
 
 const useInputOutline = () => {
 
@@ -14,13 +15,13 @@ const useInputOutline = () => {
   const outlineActions = createOutlineActions();
 
   const isPlayback = () => get(playbackStore).timerKeys != null;
-  const togglePlayback = () => {
+  const togglePlayback = (target: PlaybackCacheState.LayerTargetMode = "all") => {
     if (isPlayback()) {
       stopPlaybackTimeline();
       return;
     }
 
-    startPlaybackTimeline({ target: "all" });
+    startPlaybackTimeline({ target });
   };
 
   const isArrangeEditorActive = () => {
@@ -55,7 +56,7 @@ const useInputOutline = () => {
       case "a": outlineActions.insertChord(); break;
       case "s": outlineActions.insertSection(); break;
       case "m": outlineActions.insertEventMod(); break;
-      case "p": outlineActions.insertEventTempo(); break;
+      case "n": outlineActions.insertEventTempo(); break;
       case "j": outlineActions.insertEventTS(); break;
       case "Delete": outlineActions.removeFocusElement(); break;
 
@@ -95,6 +96,16 @@ const useInputOutline = () => {
     const currentOutline = currentControl.outline;
     const element = currentData.elements[currentOutline.focus];
     const elementType = element.type;
+
+    callbacks.holdE = () => {
+      switch (elementType) {
+        case "chord": {
+          switch (eventKey) {
+            case "Delete": outlineActions.removeBacking(); break;
+          }
+        } break;
+      }
+    };
 
     callbacks.holdC = () => {
       switch (element.type) {
@@ -194,8 +205,11 @@ const useInputOutline = () => {
 
     callbacks.holdShift = () => {
       switch (eventKey) {
+        case "B":
+        case "b": outlineActions.applyDefaultVoicing(); break;
         case "ArrowUp": outlineActions.moveRange(-1); break;
         case "ArrowDown": outlineActions.moveRange(1); break;
+        case " ": togglePlayback("ol-focus-layer"); break;
       }
     };
 

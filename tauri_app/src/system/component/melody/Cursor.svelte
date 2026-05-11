@@ -7,7 +7,7 @@
     const melody = $controlStore.melody;
     const cursor = melody.cursor;
     const beatSize = MelodyState.calcBeat(cursor.norm, cursor.pos);
-    const left = $settingsStore.beatWidth * beatSize;
+    const left = $settingsStore.view.timeline.beatWidth * beatSize;
     const pitch = cursor.pitch;
     const isOverlap = melody.isOverlap;
     return { left, pitch, isOverlap };
@@ -17,7 +17,7 @@
     const melody = $controlStore.melody;
     const cursor = melody.cursor;
     const beatSize = MelodyState.calcBeat(cursor.norm, cursor.len);
-    return $settingsStore.beatWidth * beatSize;
+    return $settingsStore.view.timeline.beatWidth * beatSize;
   })();
 </script>
 

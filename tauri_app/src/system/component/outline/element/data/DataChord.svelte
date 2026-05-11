@@ -30,14 +30,8 @@
 
   $: degreeName = (() => {
     const degree = data.degree;
-    let degreeName = "-";
-    if (degree != undefined) {
-      degreeName = ChordTheory.getDegreeKeyName(degree) + degree.symbol;
-      if (degree.on != undefined) {
-        degreeName += ` / ${ChordTheory.getDegreeKeyName(degree.on)}`;
-      }
-    }
-    return degreeName;
+    if (degree == undefined) return "-";
+    return ChordTheory.getDegreeChordName(degree);
   })();
 
   $: chordCache = chordCaches[chordSeq];

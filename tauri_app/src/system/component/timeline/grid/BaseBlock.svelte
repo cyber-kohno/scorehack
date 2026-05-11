@@ -17,7 +17,7 @@
 
   $: beatDiv16Count = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
 
-  $: beatWidth = $settingsStore.beatWidth * (beatDiv16Count / 4);
+  $: beatWidth = $settingsStore.view.timeline.beatWidth * (beatDiv16Count / 4);
 
   $: measureLines = (() => {
     // console.log(baseCache.baseSeq);

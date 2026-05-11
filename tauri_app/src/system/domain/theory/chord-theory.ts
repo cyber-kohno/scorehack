@@ -82,6 +82,14 @@ namespace ChordTheory {
         return name;
     }
 
+    export const getDegreeChordName = (degree: DegreeChord) => {
+        let name = getDegreeKeyName(degree) + degree.symbol;
+        if (degree.on != undefined) {
+            name += ` / ${getDegreeKeyName(degree.on)}`;
+        }
+        return name;
+    }
+
     // export const MAJOR_SCALE_DEGREE_CHORDS = [0, 2, 4, 5, 7, 9, 11];
     export const MAJOR_SCALE_DEGREE_CHORDS: DegreeChord[] = [
         { index: 0, symbol: '' },

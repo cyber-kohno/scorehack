@@ -12,7 +12,7 @@
   $: beatDiv16Count = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
   $: barDiv16Cnt = barDivBeatCnt * beatDiv16Count;
 
-  $: beatWidth = $settingsStore.beatWidth * (beatDiv16Count / 4);
+  $: beatWidth = $settingsStore.view.timeline.beatWidth * (beatDiv16Count / 4);
   $: left = baseCache.viewPosLeft;
   $: width = baseCache.viewPosWidth;
 

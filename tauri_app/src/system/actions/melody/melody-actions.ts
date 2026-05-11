@@ -27,6 +27,7 @@ const createContext = () => {
     return {
         control,
         data,
+        settings,
         melody,
         derivedSelector: useDerivedSelector(derived, control),
         melodySelector,
@@ -334,7 +335,7 @@ const createMelodyActions = () => {
         ctx.commitData();
     };
 
-    const removeFocusNotes = () => {
+    const removeFocusNotes = (option?: { focusPrevious?: boolean }) => {
         const ctx = createContext();
         const track = ctx.melodySelector.getCurrScoreTrack();
         const [start, end] = ctx.melodyUpdater.getFocusRange();
@@ -347,9 +348,21 @@ const createMelodyActions = () => {
         ctx.melodyUpdater.setNoOverlap();
         ctx.melodyUpdater.clearFocusLock();
 
-        const cursor = ctx.melody.cursor;
-        ctx.outlineUpdater.syncChordSeqFromNote(cursor);
-        ctx.refUpdater.adjustGridScrollXFromNote(cursor);
+        if (option?.focusPrevious) {
+            ctx.melodyUpdater.focusInNearNote(-1);
+        }
+
+        const focusNote = ctx.melodySelector.getFocusNote();
+        if (focusNote != undefined) {
+            ctx.melodyUpdater.setCursorRate(getFocusNoteDisplayRate(ctx, focusNote));
+            ctx.outlineUpdater.syncChordSeqFromNote(focusNote);
+            ctx.refUpdater.adjustGridScrollXFromNote(focusNote);
+            ctx.refUpdater.adjustGridScrollYFromCursor(focusNote);
+        } else {
+            const cursor = ctx.melody.cursor;
+            ctx.outlineUpdater.syncChordSeqFromNote(cursor);
+            ctx.refUpdater.adjustGridScrollXFromNote(cursor);
+        }
         ctx.commitControl();
         ctx.commitData();
     };
@@ -445,6 +458,22 @@ const createMelodyActions = () => {
         ctx.commitControl();
     };
 
+    const toggleChordNameMode = () => {
+        const ctx = createContext();
+        const timeline = ctx.settings.view.timeline;
+        const chordNameMode = timeline.chordNameMode === "degree" ? "absolute" : "degree";
+        settingsStore.set({
+            ...ctx.settings,
+            view: {
+                ...ctx.settings.view,
+                timeline: {
+                    ...timeline,
+                    chordNameMode,
+                },
+            },
+        });
+    };
+
     return {
         addNoteFromCursor,
         addNoteFromFocus,
@@ -471,6 +500,7 @@ const createMelodyActions = () => {
         copyNotes,
         pasteClipboardNotes,
         removeFocusNotes,
+        toggleChordNameMode,
     };
 };
 export default createMelodyActions;

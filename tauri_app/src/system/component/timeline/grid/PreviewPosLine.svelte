@@ -1,7 +1,7 @@
 <script lang="ts">
   import { playbackStore, settingsStore } from "../../../store/global-store";
   $: width = 300;
-  $: pos = $playbackStore.linePos * $settingsStore.beatWidth - width;
+  $: pos = $playbackStore.linePos * $settingsStore.view.timeline.beatWidth - width;
 </script>
 
 <div class="frame">
