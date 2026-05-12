@@ -1,5 +1,6 @@
 import type DerivedState from "../../derived-state";
 import type ElementState from "../element-state";
+import GuitarEditorState from "./guitar/guitar-editor-state";
 import PianoEditorState from "./piano/piano-editor-state";
 
 namespace ArrangeState {
@@ -15,6 +16,16 @@ namespace ArrangeState {
     isMute: false,
     relations: [],
     pianoLib: PianoEditorState.createInitialLib(),
+  });
+
+  export const createGuitarTrackInitial = (name: string): Track => ({
+    name,
+    method: "guitar",
+    soundFont: "",
+    volume: 10,
+    isMute: false,
+    relations: [],
+    guitarLib: GuitarEditorState.createInitialLib(),
   });
 
   export const INITIAL: DataProps = {
@@ -44,6 +55,7 @@ namespace ArrangeState {
 
     relations: Relation[];
     pianoLib?: PianoEditorState.Lib;
+    guitarLib?: GuitarEditorState.Lib;
   };
 
   /**

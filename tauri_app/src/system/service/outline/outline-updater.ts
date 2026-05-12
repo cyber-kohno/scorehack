@@ -1,4 +1,5 @@
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
+import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
@@ -277,6 +278,12 @@ const createOutlineUpdater = (ctx: Context) => {
             switch (arrTrack.method) {
                 case "piano":
                     arrange.editor = PianoEditorState.getEditorProps(
+                        chordCache.chordSeq,
+                        arrTrack,
+                    );
+                    break;
+                case "guitar":
+                    arrange.editor = GuitarEditorState.getEditorProps(
                         chordCache.chordSeq,
                         arrTrack,
                     );

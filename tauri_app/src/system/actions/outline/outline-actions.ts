@@ -12,7 +12,7 @@ import { createToast } from "../../service/common/toast-service";
 import ToastState from "../../store/state/toast-state";
 import createOutlineBackingActions from "./outline-backing-actions";
 import createOutlineEventActions from "./outline-event-actions";
-import MainHistoryUtil from "../../infra/tauri/history/main-history-util";
+import ScoreHistory from "../../infra/tauri/history/score-history";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -26,9 +26,7 @@ const createContext = () => {
     const commitControl = () => controlStore.set({ ...control });
     const commitData = () => {
         dataStore.set({ ...data });
-        MainHistoryUtil.addHistory().then(h => {
-            console.log(h.historyLength);
-        })
+        ScoreHistory.add();
     };
 
     return {
@@ -263,6 +261,15 @@ const createOutlineActions = () => {
         ctx.refUpdater.adjustOutlineScroll();
     };
 
+    const undoRedu = (dir: -1 | 1) => {
+        (async () => {
+            if (dir === -1) await ScoreHistory.undo();
+            else if (dir === 1) await ScoreHistory.redo();
+            const ctx = createContext();
+            ctx.refUpdater.adjustOutlineScroll();
+        })();
+    }
+
     return {
         ...backingActions,
         ...eventActions,
@@ -278,6 +285,7 @@ const createOutlineActions = () => {
         moveSection,
         removeFocusElement,
         setDegree,
+        undoRedu
     };
 };
 

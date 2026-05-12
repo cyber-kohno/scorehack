@@ -3,7 +3,7 @@ import type ArrangeLibrary from "../arrange-library";
 import PianoBackingState from "./piano-backing-state";
 
 namespace PianoEditorState {
-  export type Phase = "preset" | "edit" | "preview";
+  export type Phase = "preset" | "edit" | "playback";
   export type Control = "voicing" | "col" | "record" | "notes";
 
   export interface Value {

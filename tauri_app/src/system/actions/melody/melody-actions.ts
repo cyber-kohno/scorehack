@@ -9,7 +9,7 @@ import MelodyState from "../../store/state/data/melody-state";
 import createMelodyUpdater from "../../service/melody/melody-updater";
 import useMelodySelector from "../../service/melody/melody-selector";
 import { getNoteDisplayRate } from "../../component/melody/score/note-display-util";
-import MainHistoryUtil from "../../infra/tauri/history/main-history-util";
+import ScoreHistory from "../../infra/tauri/history/score-history";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -47,7 +47,7 @@ const createContext = () => {
         commitControl: () => controlStore.set({ ...control }),
         commitData: () => {
             dataStore.set({ ...data });
-            MainHistoryUtil.addHistory();
+            ScoreHistory.add();
         },
     };
 };
@@ -478,6 +478,18 @@ const createMelodyActions = () => {
         });
     };
 
+    const undoRedu = (dir: -1 | 1) => {
+        (async () => {
+            if (dir === -1) await ScoreHistory.undo();
+            else if (dir === 1) await ScoreHistory.redo();
+            const ctx = createContext();
+            let criteria = ctx.melodySelector.getFocusNote();
+            if (criteria == undefined) criteria = ctx.melody.cursor;
+            ctx.refUpdater.adjustGridScrollYFromCursor(criteria);
+            ctx.refUpdater.adjustGridScrollXFromNote(criteria);
+        })();
+    }
+
     return {
         addNoteFromCursor,
         addNoteFromFocus,
@@ -505,6 +517,7 @@ const createMelodyActions = () => {
         pasteClipboardNotes,
         removeFocusNotes,
         toggleChordNameMode,
+        undoRedu
     };
 };
 export default createMelodyActions;

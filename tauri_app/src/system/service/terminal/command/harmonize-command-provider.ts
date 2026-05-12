@@ -120,6 +120,46 @@ const createHarmonizeCommands = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
+        funcKey: "method",
+        usage: "Change the arrange method for the active track.",
+        args: [
+          {
+            name: "method: piano | guitar",
+            getCandidate: () => [...ArrangeState.ArrangeMedhods],
+          },
+        ],
+        callback: (args) => {
+          const arg0 = logger.validateRequired(args[0], 1);
+          if (arg0 == null) return;
+          if (arg0 !== "piano" && arg0 !== "guitar") {
+            logger.outputError(`The specified arrange method does not exist. [${arg0}]`);
+            return;
+          }
+
+          const track = getCurrHarmonizeTrack();
+          const prev = track.method;
+          if (prev === arg0) {
+            logger.outputInfo(`Arrange method is already selected. [${arg0}]`);
+            return;
+          }
+
+          track.method = arg0;
+          track.relations = [];
+          if (arg0 === "piano") {
+            track.pianoLib = ArrangeState.createPianoTrackInitial(track.name).pianoLib;
+          } else {
+            track.guitarLib = ArrangeState.createGuitarTrackInitial(track.name).guitarLib;
+          }
+          control.outline.arrange = null;
+
+          ctx.commit.control();
+          ctx.commit.dataAndRecalculate();
+          logger.outputInfo(`Changed arrange method. [${prev} -> ${arg0}]`);
+          lsh();
+        },
+      },
+      {
+        ...defaultProps,
         funcKey: "sf",
         usage: "Sets the SoundFont for the active track.",
         args: [

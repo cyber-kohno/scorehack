@@ -5,7 +5,7 @@ import stopPlaybackTimeline from "../service/playback/timeline/stop-playback-tim
 import startPlaybackTimeline from "../service/playback/timeline/start-playback-timeline";
 import createMelodyActions from "../actions/melody/melody-actions";
 import type PlaybackCacheState from "../service/playback/timeline/playback-cache-state";
-import MainHistoryUtil from "../infra/tauri/history/main-history-util";
+import ScoreHistory from "../infra/tauri/history/score-history";
 
 const useInputMelody = () => {
 
@@ -204,8 +204,8 @@ const useInputMelody = () => {
                 case 'v': {
                     melodyActions.pasteClipboardNotes();
                 } break;
-                case 'z': MainHistoryUtil.undoHistory(); break;
-                case 'y': MainHistoryUtil.redoHistory(); break;
+                case 'z': melodyActions.undoRedu(-1); break;
+                case 'y': melodyActions.undoRedu(1); break;
             }
         }
         return callbacks;
