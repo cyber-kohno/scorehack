@@ -12,6 +12,7 @@ import { createToast } from "../../service/common/toast-service";
 import ToastState from "../../store/state/toast-state";
 import createOutlineBackingActions from "./outline-backing-actions";
 import createOutlineEventActions from "./outline-event-actions";
+import MainHistoryUtil from "../../infra/tauri/history/main-history-util";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -23,7 +24,12 @@ const createContext = () => {
     const outline = control.outline;
 
     const commitControl = () => controlStore.set({ ...control });
-    const commitData = () => dataStore.set({ ...data });
+    const commitData = () => {
+        dataStore.set({ ...data });
+        MainHistoryUtil.addHistory().then(h => {
+            console.log(h.historyLength);
+        })
+    };
 
     return {
         control,

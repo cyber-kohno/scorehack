@@ -21,7 +21,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
 
     const getPianoEditor = () => {
         if (arrange.method !== "piano" || arrange.editor == undefined) throw new Error();
-        return arrange.editor as PianoEditorState.Props;
+        return arrange.editor as PianoEditorState.Value;
     };
 
     const getPianoLib = () => {
@@ -158,7 +158,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         // 選択したパターンをエディタに対して適用する
         const applyToEditor = () => {
             if (arrange.editor == undefined) throw new Error();
-            const editor = arrange.editor as PianoEditorState.Props;
+            const editor = arrange.editor as PianoEditorState.Value;
 
             const backing = PianoBackingState.createInitialBackingProps();
             editor.backing = backing;

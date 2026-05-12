@@ -16,14 +16,14 @@ const ARRANGE_KEY = Symbol("piano-arrange");
 
 type Context = {
     arrange: Writable<ArrangeState.EditorProps>;
-    editor: Writable<PianoEditorState.Props>;
+    editor: Writable<PianoEditorState.Value>;
     backingProps: Writable<BackingProps>;
 };
 
 export const createPianoEditorContext = () => {
     const ctx: Context = {
         arrange: writable(null as unknown as ArrangeState.EditorProps),
-        editor: writable(null as unknown as PianoEditorState.Props),
+        editor: writable(null as unknown as PianoEditorState.Value),
         backingProps: writable(null as unknown as BackingProps),
     };
     setContext(ARRANGE_KEY, ctx);

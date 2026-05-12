@@ -20,7 +20,7 @@ const createArrangeSelector = (ctx: Context) => {
     const getPianoEditor = () => {
         const arrange = getArrange();
         if (arrange.method !== "piano" || arrange.editor == undefined) throw new Error();
-        return arrange.editor as PianoEditorState.Props;
+        return arrange.editor as PianoEditorState.Value;
     };
 
     const getPianoFinder = () => {

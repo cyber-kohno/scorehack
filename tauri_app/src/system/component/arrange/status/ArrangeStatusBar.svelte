@@ -10,7 +10,7 @@
   })();
   $: pianoEditor = (() => {
     if (arrange.method !== "piano") return null;
-    return arrange.editor as PianoEditorState.Props;
+    return arrange.editor as PianoEditorState.Value;
   })();
   $: pianoBacking = (() => {
     if (!pianoEditor?.backing) return null;

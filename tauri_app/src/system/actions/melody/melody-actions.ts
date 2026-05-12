@@ -9,6 +9,7 @@ import MelodyState from "../../store/state/data/melody-state";
 import createMelodyUpdater from "../../service/melody/melody-updater";
 import useMelodySelector from "../../service/melody/melody-selector";
 import { getNoteDisplayRate } from "../../component/melody/score/note-display-util";
+import MainHistoryUtil from "../../infra/tauri/history/main-history-util";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -44,7 +45,10 @@ const createContext = () => {
         }),
         playbackPitch,
         commitControl: () => controlStore.set({ ...control }),
-        commitData: () => dataStore.set({ ...data }),
+        commitData: () => {
+            dataStore.set({ ...data });
+            MainHistoryUtil.addHistory();
+        },
     };
 };
 
@@ -107,7 +111,7 @@ const createMelodyActions = () => {
         ctx.refUpdater.adjustGridScrollYFromCursor(note);
         ctx.playbackPitch(note.pitch);
         ctx.commitControl();
-        dataStore.set({ ...ctx.data });
+        ctx.commitData();
     };
 
     const changeCursorDiv = (div: number) => {

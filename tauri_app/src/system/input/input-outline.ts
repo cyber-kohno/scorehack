@@ -7,6 +7,7 @@ import createOutlineActions from "../actions/outline/outline-actions";
 import startPlaybackTimeline from "../service/playback/timeline/start-playback-timeline";
 import stopPlaybackTimeline from "../service/playback/timeline/stop-playback-timeline";
 import type PlaybackCacheState from "../service/playback/timeline/playback-cache-state";
+import MainHistoryUtil from "../infra/tauri/history/main-history-util";
 
 const useInputOutline = () => {
 
@@ -212,6 +213,13 @@ const useInputOutline = () => {
         case " ": togglePlayback("ol-focus-layer"); break;
       }
     };
+
+    callbacks.holdCtrl = () => {
+      switch (eventKey) {
+        case 'z': MainHistoryUtil.undoHistory(); break;
+        case 'y': MainHistoryUtil.redoHistory(); break;
+      }
+    }
 
     return callbacks;
   };

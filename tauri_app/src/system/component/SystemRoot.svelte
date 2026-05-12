@@ -5,10 +5,13 @@
   import useInputRoot from "../input/input-root";
   import recalculate from "../service/derived/recalculate-derived";
     import { derivedStore } from "../store/global-store";
+    import MainHistoryUtil from "../infra/tauri/history/main-history-util";
 
   onMount(() => {
     LayoutInitializer.initConstProps();
     recalculate();
+
+    MainHistoryUtil.resetHistory();
   });
 
   $: isStandby = $derivedStore.elementCaches.length === 0;

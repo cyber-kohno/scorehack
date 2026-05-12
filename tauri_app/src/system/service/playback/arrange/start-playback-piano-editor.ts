@@ -14,7 +14,7 @@ const startPlaybackPianoEditor = () => {
     const arrange = control.outline.arrange;
     if (arrange == null || arrange.method !== "piano" || arrange.editor == undefined) return;
 
-    const editor = arrange.editor as PianoEditorState.Props;
+    const editor = arrange.editor as PianoEditorState.Value;
     const track = data.arrange.tracks[control.outline.trackIndex];
     if (track == undefined || track.method !== "piano") return;
     if (track.isMute || track.soundFont === "") return;

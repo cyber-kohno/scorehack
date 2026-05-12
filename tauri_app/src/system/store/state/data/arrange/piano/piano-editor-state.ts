@@ -6,7 +6,7 @@ namespace PianoEditorState {
   export type Phase = "preset" | "edit" | "preview";
   export type Control = "voicing" | "col" | "record" | "notes";
 
-  export interface Props {
+  export interface Value {
     phase: Phase;
     control: Control;
 
@@ -18,7 +18,7 @@ namespace PianoEditorState {
     lastSource: string;
   }
 
-  export const createInitialProps = (): Props => {
+  export const createInitialProps = (): Value => {
     return {
       backing: null,
       phase: "edit",
@@ -36,7 +36,7 @@ namespace PianoEditorState {
   export const getEditorProps = (
     chordSeq: number,
     track: ArrangeState.Track,
-  ): Props => {
+  ): Value => {
     const props = createInitialProps();
     const relation = track.relations.find((r) => r.chordSeq === chordSeq);
     if (relation != undefined) {
