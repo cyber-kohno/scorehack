@@ -5,6 +5,15 @@ namespace GuitarEditorState {
 
   export type StringSelection = number | null;
 
+  export type StrokeDirection = "down" | "up";
+
+  export type GuitarStrokeProps = {
+    strokeDelayBeat: number;
+    strokeDirection: StrokeDirection;
+    velocity: number;
+    decayRate: number;
+  };
+
   export type Value = {
     cursorString: number;
     cursorFret: number;
@@ -22,6 +31,13 @@ namespace GuitarEditorState {
   export interface Unit {
     frets: StringSelection[];
   }
+
+  export const createDefaultStrokeProps = (): GuitarStrokeProps => ({
+    strokeDelayBeat: 0.015,
+    strokeDirection: "down",
+    velocity: 10,
+    decayRate: 0.92,
+  });
 
   export const STANDARD_TUNING = [
     { number: 6, openMidi: 40, openNote: "E2" },

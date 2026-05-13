@@ -8,6 +8,8 @@ import RhythmTheory from "../../../domain/theory/rhythm-theory";
 import MelodyState from "../../../store/state/data/melody-state";
 import PianoArrangePlaybackUtil from "../arrange/piano-arrange-playback-util";
 import PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
+import GuitarArrangePlaybackUtil from "../arrange/guitar-arrange-playback-util";
+import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
 import FileUtil from "../../../infra/file/fileUtil";
 import stopPlaybackTimeline from "./stop-playback-timeline";
 import type PlaybackCacheState from "./playback-cache-state";
@@ -195,6 +197,50 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
                                 );
                                 if (playInfo == null) return 1;
                                 // console.log(`start:${playInfo.startMs}, sustain:${playInfo.sustainMs}`);
+                                notePlayers.push(playInfo);
+                            });
+                        });
+                    }
+                    break;
+                case "guitar":
+                    {
+                        chordCaches.forEach((chordCache, i) => {
+                            const chordSeq = chordCache.chordSeq;
+                            const arrPattern =
+                                GuitarEditorState.getArrangePatternFromRelation(
+                                    chordSeq,
+                                    track,
+                                );
+                            if (arrPattern == undefined) return 1;
+                            const baseCache = baseCaches[chordCache.baseSeq];
+
+                            if (chordCache.startBeat < outlineStart) return 1;
+
+                            const notes = GuitarArrangePlaybackUtil.convertPatternToNotes(
+                                arrPattern,
+                                {
+                                    sustainBeat: chordCache.lengthBeatNote,
+                                    stroke: GuitarEditorState.createDefaultStrokeProps(),
+                                },
+                            );
+
+                            const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(
+                                baseCache.scoreBase.ts,
+                            );
+                            const beatRate = beatDiv16Cnt / 4;
+                            const startBeat =
+                                chordCache.startBeat * beatRate +
+                                (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
+
+                            notes.forEach((note) => {
+                                const targetNote = MelodyState.calcAddBeat(note, startBeat);
+                                const playInfo = convertNoteToPlayer(
+                                    baseCaches,
+                                    timelineStart,
+                                    targetNote,
+                                    track.volume,
+                                );
+                                if (playInfo == null) return 1;
                                 notePlayers.push(playInfo);
                             });
                         });

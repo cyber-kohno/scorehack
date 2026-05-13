@@ -1,7 +1,9 @@
 import ChordTheory from "../../domain/theory/chord-theory";
+import GuitarVoicingResolver from "../../service/arrange/guitar/guitar-voicing-resolver";
 import { createToast } from "../../service/common/toast-service";
 import type ArrangeLibrary from "../../store/state/data/arrange/arrange-library";
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
+import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
 import ElementState from "../../store/state/data/element-state";
 import ToastState from "../../store/state/toast-state";
@@ -10,15 +12,36 @@ import type { OutlineActionContext } from "./outline-actions";
 const createOutlineBackingActions = (
     createContext: () => OutlineActionContext,
 ) => {
+    const getChordStructs = (
+        ctx: OutlineActionContext,
+        chordData: ElementState.DataChord,
+    ) => {
+        if (chordData.degree == undefined) return [];
+
+        const tonality = ctx.derivedSelector.getCurBase().scoreBase.tonality;
+        const chord = ChordTheory.getKeyChordFromDegree(tonality, chordData.degree);
+        return ChordTheory.getStructsFromKeyChord(chord);
+    };
+
     const getChordStructCount = (
         ctx: OutlineActionContext,
         chordData: ElementState.DataChord,
     ) => {
-        if (chordData.degree == undefined) return 0;
+        return getChordStructs(ctx, chordData).length;
+    };
 
-        const tonality = ctx.derivedSelector.getCurBase().scoreBase.tonality;
-        const chord = ChordTheory.getKeyChordFromDegree(tonality, chordData.degree);
-        return ChordTheory.getStructsFromKeyChord(chord).length;
+    const getChordPitchClasses = (
+        ctx: OutlineActionContext,
+        chordData: ElementState.DataChord,
+    ) => {
+        return getChordStructs(ctx, chordData)
+            .map(struct => ((struct.key12 % 12) + 12) % 12)
+            .sort((a, b) => a - b);
+    };
+
+    const isSamePitchClasses = (left: number[], right: number[]) => {
+        if (left.length !== right.length) return false;
+        return left.every((item, index) => item === right[index]);
     };
 
     const clearPianoVoicing = (
@@ -53,19 +76,40 @@ const createOutlineBackingActions = (
         return true;
     };
 
-    const clearVoicingIfStructCountChanged = (
+    const removeGuitarBacking = (
         ctx: OutlineActionContext,
-        beforeCount: number,
-        afterCount: number,
+        track: ArrangeState.Track,
     ) => {
-        if (beforeCount === afterCount) return false;
+        const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
+        if (chordSeq === -1 || track.guitarLib == undefined) return false;
 
+        const relationIndex = track.relations.findIndex(r => r.chordSeq === chordSeq);
+        if (relationIndex === -1) return false;
+
+        track.relations.splice(relationIndex, 1);
+        GuitarEditorState.deleteUnreferUnit(track);
+        return true;
+    };
+
+    const clearVoicingIfChordChanged = (
+        ctx: OutlineActionContext,
+        beforeChordData: ElementState.DataChord,
+        afterChordData: ElementState.DataChord,
+    ) => {
         const track = ctx.outlineSelector.getCurrHarmonizeTrack();
         switch (track.method) {
-            case "piano":
+            case "piano": {
+                const beforeCount = getChordStructCount(ctx, beforeChordData);
+                const afterCount = getChordStructCount(ctx, afterChordData);
+                if (beforeCount === afterCount) return false;
                 return clearPianoVoicing(ctx, track, afterCount);
-            case "guitar":
-                return false;
+            }
+            case "guitar": {
+                const beforePitchClasses = getChordPitchClasses(ctx, beforeChordData);
+                const afterPitchClasses = getChordPitchClasses(ctx, afterChordData);
+                if (isSamePitchClasses(beforePitchClasses, afterPitchClasses)) return false;
+                return removeGuitarBacking(ctx, track);
+            }
         }
     };
 
@@ -142,6 +186,46 @@ const createOutlineBackingActions = (
         return true;
     };
 
+    const applyDefaultGuitarVoicing = (
+        ctx: OutlineActionContext,
+        track: ArrangeState.Track,
+    ) => {
+        const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
+        if (chordSeq === -1) return false;
+
+        const chordCache = ctx.derived.chordCaches[chordSeq];
+        const compiledChord = chordCache.compiledChord;
+        const guitarLib = track.guitarLib;
+        if (compiledChord == undefined || guitarLib == undefined) return false;
+
+        let relation = track.relations.find(r => r.chordSeq === chordSeq);
+        if (relation != undefined) {
+            createToast({
+                ...ToastState.INITIAL,
+                x: 12,
+                y: 48,
+                width: 280,
+                text: "Backing is already set.",
+            });
+            return false;
+        }
+
+        const frets = GuitarVoicingResolver.resolve({
+            structs: compiledChord.structs,
+        });
+        if (frets.every(fret => fret == null)) return false;
+
+        const voicingPattNo = GuitarEditorState.registPattern(frets, guitarLib);
+
+        relation = {
+            chordSeq,
+            bkgPatt: -1,
+            sndsPatt: voicingPattNo,
+        };
+        track.relations.push(relation);
+        return true;
+    };
+
     const applyDefaultVoicing = () => {
         const ctx = createContext();
         const element = ctx.outlineSelector.getCurrentElement();
@@ -155,8 +239,11 @@ const createOutlineBackingActions = (
                 if (!applied) return;
                 ctx.commitDataAndRecalculate();
             } break;
-            case "guitar":
-                return;
+            case "guitar": {
+                const applied = applyDefaultGuitarVoicing(ctx, track);
+                if (!applied) return;
+                ctx.commitDataAndRecalculate();
+            } break;
         }
     };
 
@@ -188,15 +275,17 @@ const createOutlineBackingActions = (
                 if (!removed) return;
                 ctx.commitDataAndRecalculate();
             } break;
-            case "guitar":
-                return;
+            case "guitar": {
+                const removed = removeGuitarBacking(ctx, track);
+                if (!removed) return;
+                ctx.commitDataAndRecalculate();
+            } break;
         }
     };
 
     return {
         applyDefaultVoicing,
-        clearVoicingIfStructCountChanged,
-        getChordStructCount,
+        clearVoicingIfChordChanged,
         openArrangeEditor,
         openArrangeFinder,
         removeBacking,

@@ -1,11 +1,13 @@
 import type InputState from "../../store/state/input-state";
 import createGuitarArrangeActions from "../../actions/arrange/guitar/guitar-arrange-actions";
+import startPlaybackGuitarEditor from "../../service/playback/arrange/start-playback-guitar-editor";
 
 const useInputGuitarEditor = () => {
     const guitarActions = createGuitarArrangeActions();
 
     const control = (eventKey: string) => {
         switch (eventKey) {
+            case " ": startPlaybackGuitarEditor(); break;
             case "ArrowUp": guitarActions.moveCursor({ string: -1 }); break;
             case "ArrowDown": guitarActions.moveCursor({ string: 1 }); break;
             case "ArrowLeft": guitarActions.moveCursor({ fret: -1 }); break;

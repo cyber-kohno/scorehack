@@ -58,6 +58,10 @@ const createOutlineActions = () => {
     const backingActions = createOutlineBackingActions(createContext);
     const eventActions = createOutlineEventActions(createContext);
 
+    const cloneChordData = (chordData: ElementState.DataChord): ElementState.DataChord => {
+        return JSON.parse(JSON.stringify(chordData));
+    };
+
     const getInitialBeat = (ctx: ReturnType<typeof createContext>) => {
         const element = ctx.outlineSelector.getCurrentElement();
         if (element.type === "chord") {
@@ -148,13 +152,12 @@ const createOutlineActions = () => {
 
         if (element.type !== "chord") return;
 
-        const chordData: ElementState.DataChord = { ...element.data };
-        const beforeCount = backingActions.getChordStructCount(ctx, chordData);
-        chordData.degree = ChordTheory.getDiatonicDegreeChord("major", scaleIndex);
-        const afterCount = backingActions.getChordStructCount(ctx, chordData);
+        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
+        const afterChordData = cloneChordData(beforeChordData);
+        afterChordData.degree = ChordTheory.getDiatonicDegreeChord("major", scaleIndex);
 
-        ctx.outlineUpdater.setChordData(chordData);
-        backingActions.clearVoicingIfStructCountChanged(ctx, beforeCount, afterCount);
+        ctx.outlineUpdater.setChordData(afterChordData);
+        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 
@@ -166,14 +169,13 @@ const createOutlineActions = () => {
             throw new Error("modSymbol requires a chord element.");
         }
 
-        const chordData = element.data as ElementState.DataChord;
-        const beforeCount = backingActions.getChordStructCount(ctx, chordData);
+        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
         const changed = ctx.outlineUpdater.modSymbol(dir);
 
         if (!changed) return;
 
-        const afterCount = backingActions.getChordStructCount(ctx, chordData);
-        backingActions.clearVoicingIfStructCountChanged(ctx, beforeCount, afterCount);
+        const afterChordData = element.data as ElementState.DataChord;
+        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 
@@ -185,10 +187,13 @@ const createOutlineActions = () => {
             throw new Error("modRoot requires a chord element.");
         }
 
+        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
         const changed = ctx.outlineUpdater.modRoot(dir);
 
         if (!changed) return;
 
+        const afterChordData = element.data as ElementState.DataChord;
+        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 
@@ -216,6 +221,7 @@ const createOutlineActions = () => {
             throw new Error("modOn requires a chord element.");
         }
 
+        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
         const chordData = element.data as ElementState.DataChord;
         const degree = chordData.degree;
         if (degree == undefined) return;
@@ -231,6 +237,8 @@ const createOutlineActions = () => {
             }
         }
 
+        const afterChordData = element.data as ElementState.DataChord;
+        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 

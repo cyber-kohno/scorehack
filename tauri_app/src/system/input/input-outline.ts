@@ -206,8 +206,8 @@ const useInputOutline = () => {
 
     callbacks.holdShift = () => {
       switch (eventKey) {
-        case "B":
-        case "b": outlineActions.applyDefaultVoicing(); break;
+        case "W":
+        case "w": outlineActions.applyDefaultVoicing(); break;
         case "ArrowUp": outlineActions.moveRange(-1); break;
         case "ArrowDown": outlineActions.moveRange(1); break;
         case " ": togglePlayback("ol-focus-layer"); break;

@@ -1,0 +1,82 @@
+import { get } from "svelte/store";
+import TonalityTheory from "../../../domain/theory/tonality-theory";
+import RhythmTheory from "../../../domain/theory/rhythm-theory";
+import { controlStore, dataStore, playbackStore } from "../../../store/global-store";
+import MelodyState from "../../../store/state/data/melody-state";
+import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
+import GuitarArrangePlaybackUtil from "./guitar-arrange-playback-util";
+
+const startPlaybackGuitarEditor = () => {
+    const control = get(controlStore);
+    const data = get(dataStore);
+    const playback = get(playbackStore);
+
+    const arrange = control.outline.arrange;
+    if (arrange == null || arrange.method !== "guitar" || arrange.editor == undefined) return;
+
+    const editor = arrange.editor as GuitarEditorState.Value;
+    const track = data.arrange.tracks[control.outline.trackIndex];
+    if (track == undefined || track.method !== "guitar") return;
+    if (track.isMute || track.soundFont === "") return;
+
+    const sf = playback.sfItems.find(item => item.instrumentName === track.soundFont);
+    if (sf == undefined || sf.player == undefined) return;
+
+    const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(arrange.target.scoreBase.ts);
+    const beatRate = beatDiv16Cnt / 4;
+    const beatSize =
+        arrange.target.beat.num +
+        (-arrange.target.beat.eatHead + arrange.target.beat.eatTail) / beatDiv16Cnt;
+    const sustainBeat = beatSize * beatRate;
+    const notes = GuitarArrangePlaybackUtil.convertPatternToNotes(
+        { frets: editor.frets },
+        {
+            sustainBeat,
+            stroke: GuitarEditorState.createDefaultStrokeProps(),
+        },
+    );
+    if (notes.length === 0) return;
+
+    playback.timerKeys = [];
+    playback.intervalKeys = [];
+
+    const tempo = arrange.target.scoreBase.tempo * beatRate;
+    const msPerQuarter = 60000 / tempo;
+
+    let endMs = 0;
+    notes.forEach((note) => {
+        const side = MelodyState.calcBeatSide(note);
+        const startMs = side.pos * msPerQuarter;
+        const sustainMs = side.len * msPerQuarter;
+        const pitchName = TonalityTheory.getKey12FullName(note.pitch);
+        const gain = 5 * (track.volume / 10);
+
+        const key = setTimeout(() => {
+            sf.player?.play(pitchName, 0, {
+                gain,
+                duration: sustainMs / 1000,
+            });
+        }, startMs);
+        playback.timerKeys?.push(key);
+
+        const tailMs = startMs + sustainMs;
+        if (endMs < tailMs) endMs = tailMs;
+    });
+
+    const endKey = setTimeout(() => {
+        const current = get(playbackStore);
+        if (current.timerKeys == null) return;
+
+        current.timerKeys.forEach(key => clearTimeout(key));
+        current.timerKeys = null;
+        current.intervalKeys = null;
+        current.linePos = -1;
+        current.sfItems.forEach(sf => sf.player?.stop());
+        playbackStore.set({ ...current });
+    }, endMs);
+    playback.timerKeys.push(endKey);
+
+    playbackStore.set({ ...playback });
+};
+
+export default startPlaybackGuitarEditor;
