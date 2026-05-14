@@ -68,16 +68,23 @@ const createContext = () => {
 };
 
 const createTerminalActions = () => {
+    const rebuildAvailableFunctions = (ctx: ReturnType<typeof createContext>) => {
+        ctx.terminalUpdater.updateTarget();
+        createCommandRegistry(ctx).buildAvailableFunctions();
+    };
+
     const open = () => {
         terminalStore.set(createInitialTerminal());
 
         const ctx = createContext();
-        ctx.terminalUpdater.updateTarget();
-        createCommandRegistry(ctx).buildAvailableFunctions();
+        rebuildAvailableFunctions(ctx);
         ctx.commitTerminal();
     };
 
     const close = () => {
+        const ctx = createContext();
+        if (ctx.terminalSelector.isWait()) return;
+
         terminalStore.set(null);
     };
 
@@ -147,6 +154,7 @@ const createTerminalActions = () => {
         const ctx = createContext();
         if (ctx.terminalSelector.isWait()) return;
 
+        rebuildAvailableFunctions(ctx);
         ctx.terminalUpdater.registCommand();
         ctx.commitTerminal();
     };
