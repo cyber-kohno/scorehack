@@ -122,6 +122,8 @@ const useInputOutline = () => {
           switch (eventKey) {
             case "ArrowLeft": outlineActions.initialTS(-1); break;
             case "ArrowRight": outlineActions.initialTS(1); break;
+            case "ArrowUp": outlineActions.initialFeel(-1); break;
+            case "ArrowDown": outlineActions.initialFeel(1); break;
           }
         } break;
       }
@@ -158,11 +160,13 @@ const useInputOutline = () => {
             }
           }
           break;
-        case "ts":
+        case "rhythm":
           {
             switch (eventKey) {
               case "ArrowLeft": outlineActions.eventTS(-1); break;
               case "ArrowRight": outlineActions.eventTS(1); break;
+              case "ArrowUp": outlineActions.eventFeel(-1); break;
+              case "ArrowDown": outlineActions.eventFeel(1); break;
             }
           }
           break;

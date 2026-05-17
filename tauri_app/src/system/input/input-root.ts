@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import type InputState from "../store/state/input-state";
-import { controlStore, inputStore, playbackStore, terminalStore } from "../store/global-store";
+import { controlStore, inputStore, playbackStore, settingsStore, terminalStore } from "../store/global-store";
 import useInputMelody from "./input-melody";
 import useInputOutline from "./input-outline";
 import useInputTerminal from "./input-terminal";
@@ -65,6 +65,7 @@ const useInputRoot = () => {
             if (isTerminalActive()) {
                 const inputTerminal = useInputTerminal();
                 inputTerminal.control(eventKey);
+                if (eventKey === "Shift") controlKeyHold(e.key, true);
                 return;
             }
 
@@ -87,6 +88,12 @@ const useInputRoot = () => {
 
             controlKeyHold(e.key, true);
         } else {
+            if (isTerminalActive()) {
+                const inputTerminal = useInputTerminal();
+                setHoldControl(inputTerminal.getHoldCallbacks(eventKey));
+                return;
+            }
+
             setHoldControl(getHoldCallbacks(eventKey));
 
             switch (mode) {
@@ -119,6 +126,7 @@ const useInputRoot = () => {
                 case "s": {
                     const fileUtil = FileUtil.getUtil();
                     fileUtil.saveScoreFile({
+                        defaultDirectory: get(settingsStore).envs.SCH_FILE_DIR,
                         success: (handle) => {
                             createToast({
                                 ...ToastState.INITIAL,

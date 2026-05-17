@@ -2,7 +2,7 @@ import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import type ElementState from "../../store/state/data/element-state";
 import TerminalCommand from "./terminal-command";
 import createChordCommands from "./command/chord-command-provider";
-import createCommonCommands from "./command/common-command-provider";
+import createGlobalCommands from "./command/global/global-command-provider";
 import createHarmonizeCommands from "./command/harmonize-command-provider";
 import createInitCommands from "./command/init-command-provider";
 import createMelodyCommands from "./command/melody-command-provider";
@@ -13,7 +13,7 @@ import createSectionCommands from "./command/section-command-provider";
 const createCommandRegistry = (ctx: TerminalCommand.Context) => {
     const { terminal } = ctx;
 
-    const commonCommands = createCommonCommands(ctx);
+    const globalCommands = createGlobalCommands(ctx);
     const harmonizeCommands = createHarmonizeCommands(ctx);
     const initCommands = createInitCommands(ctx);
     const sectionCommands = createSectionCommands(ctx);
@@ -30,7 +30,7 @@ const createCommandRegistry = (ctx: TerminalCommand.Context) => {
 
         const sectors = terminal.target.split("\\");
 
-        add(commonCommands.list({ items }));
+        add(globalCommands.list({ items }));
 
         switch (sectors[0]) {
             case "harmonize": {

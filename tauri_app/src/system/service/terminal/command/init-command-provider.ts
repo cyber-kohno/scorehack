@@ -5,6 +5,8 @@ import TerminalCommand from "../terminal-command";
 const createInitCommands = (ctx: TerminalCommand.Context) => {
   const { logger, terminal } = ctx;
   const { getCurrentInitData } = ctx.selectors.outline;
+  const feelTypes = ["straight", "swing"] as const;
+  const swingTargets = ["8", "16"] as const;
 
   const list = (): TerminalCommand.Props[] => {
     const defaultProps = TerminalCommand.createDefaultProps("init");
@@ -59,7 +61,7 @@ const createInitCommands = (ctx: TerminalCommand.Context) => {
         args: [{ name: "timeSignature", getCandidate: () => RhythmTheory.getTSNames() }],
         callback: (args) => {
           const initData = getCurrentInitData();
-          const prev = RhythmTheory.formatTS(initData.ts);
+          const prev = RhythmTheory.formatRhythm(initData.rhythm);
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
 
@@ -69,9 +71,56 @@ const createInitCommands = (ctx: TerminalCommand.Context) => {
             return;
           }
 
-          initData.ts = nextTS;
+          initData.rhythm.ts = nextTS;
           ctx.commit.dataAndRecalculate();
-          logger.outputInfo(`Changed the time signature. [${prev} -> ${arg0}]`);
+          logger.outputInfo(`Changed the time signature. [${prev} -> ${RhythmTheory.formatRhythm(initData.rhythm)}]`);
+        },
+      },
+      {
+        ...defaultProps,
+        funcKey: "feel",
+        args: [
+          { name: "type", getCandidate: () => [...feelTypes] },
+          {
+            name: "target",
+            getCandidate: (args) => args[0] === "swing" ? [...swingTargets] : [],
+          },
+        ],
+        callback: (args) => {
+          const initData = getCurrentInitData();
+          const prev = RhythmTheory.formatRhythm(initData.rhythm);
+          const arg0 = logger.validateRequired(args[0], 1);
+          if (arg0 == null) return;
+
+          if (!feelTypes.includes(arg0 as typeof feelTypes[number])) {
+            logger.outputError(`The specified feel[${arg0}] is invalid.`);
+            return;
+          }
+
+          if (arg0 === "straight") {
+            initData.rhythm.feel = { type: "straight" };
+          } else {
+            const arg1 = logger.validateRequired(args[1], 2);
+            if (arg1 == null) return;
+            if (!swingTargets.includes(arg1 as typeof swingTargets[number])) {
+              logger.outputError(`The specified swing target[${arg1}] is invalid.`);
+              return;
+            }
+
+            initData.rhythm.feel = {
+              type: "swing",
+              target: Number(arg1) as RhythmTheory.SwingTarget,
+            };
+          }
+
+          const availableFeels = RhythmTheory.getAvailableFeels(initData.rhythm.ts);
+          if (!availableFeels.some(feel => RhythmTheory.isSameFeel(feel, initData.rhythm.feel))) {
+            logger.outputError(`The specified feel is not available for ${RhythmTheory.formatTS(initData.rhythm.ts)}.`);
+            return;
+          }
+
+          ctx.commit.dataAndRecalculate();
+          logger.outputInfo(`Changed the rhythm feel. [${prev} -> ${RhythmTheory.formatRhythm(initData.rhythm)}]`);
         },
       },
       {

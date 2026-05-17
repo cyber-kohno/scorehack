@@ -49,7 +49,7 @@ namespace DerivedState {
         sectionStart?: string;
         modulate?: ModulateCache;
         tempo?: TempoCache;
-        ts?: TSCache;
+        rhythm?: RhythmCache;
         arrs: string[];
 
         error?: {
@@ -65,9 +65,9 @@ namespace DerivedState {
         prev: number;
         next: number;
     }
-    export interface TSCache {
-        prev: RhythmTheory.TimeSignature;
-        next: RhythmTheory.TimeSignature;
+    export interface RhythmCache {
+        prev: RhythmTheory.Rhythm;
+        next: RhythmTheory.Rhythm;
     }
 
     export interface BeatCache {
@@ -101,7 +101,7 @@ namespace DerivedState {
 
         modulate?: ModulateCache;
         tempo?: TempoCache;
-        ts?: TSCache;
+        rhythm?: RhythmCache;
     }
 }
 export default DerivedState;

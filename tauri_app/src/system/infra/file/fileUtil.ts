@@ -23,6 +23,7 @@ namespace FileUtil {
     export interface SaveBase {
         success: (handle: FileState.Handle) => void;
         cancel: () => void;
+        defaultDirectory?: string;
     }
 
     export interface SaveFile extends SaveBase {
@@ -121,7 +122,7 @@ namespace FileUtil {
             }
 
             (async () => {
-                const path = await saveScoreFilePath(props.extension);
+                const path = await saveScoreFilePath(props.extension, props.defaultDirectory);
                 if (path == null) {
                     props.cancel();
                     return;
@@ -142,11 +143,11 @@ namespace FileUtil {
             saveFile({ ...props, plainData: saveFileStr, extension: 'sch' });
         }
 
-        const loadScoreFile = (success: (handle: FileState.Handle) => void, cancel: () => void) => {
+        const loadScoreFile = (success: (handle: FileState.Handle) => void, cancel: () => void, defaultDirectory?: string) => {
 
             (async () => {
                 try {
-                    const path = await openScoreFilePath();
+                    const path = await openScoreFilePath(defaultDirectory);
                     if (path == null) {
                         cancel();
                         return;

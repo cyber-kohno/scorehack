@@ -95,7 +95,7 @@ const createTerminalUpdater = (ctx: Context) => {
             const arg = func.args[argIndex];
             if (arg == undefined) return;
 
-            list = (arg.getCandidate ?? (() => []))();
+            list = (arg.getCandidate ?? (() => []))(args);
         }
 
         const keyword = orderItems[orderItems.length - 1];

@@ -34,6 +34,12 @@ const useInputTerminal = () => {
     const getHoldCallbacks = (eventKey: string): InputState.Callbacks => {
 
         const callbacks: InputState.Callbacks = {};
+        callbacks.holdShift = () => {
+            switch (eventKey) {
+                case "ArrowUp": terminalActions.scrollOutput(-1); break;
+                case "ArrowDown": terminalActions.scrollOutput(1); break;
+            }
+        };
         return callbacks;
     }
 

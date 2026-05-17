@@ -3,15 +3,11 @@
   import MainFrame from "./MainFrame.svelte";
   import LayoutInitializer from "../layout/layout-initializer";
   import useInputRoot from "../input/input-root";
-  import recalculate from "../service/derived/recalculate-derived";
-    import { derivedStore } from "../store/global-store";
-  import ScoreHistory from "../infra/tauri/history/score-history";
+  import { derivedStore } from "../store/global-store";
+  import initializeApp from "../service/app/app-initializer";
 
   onMount(() => {
-    LayoutInitializer.initConstProps();
-    recalculate();
-
-    ScoreHistory.reset();
+    void initializeApp();
   });
 
   $: isStandby = $derivedStore.elementCaches.length === 0;

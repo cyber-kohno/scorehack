@@ -1,4 +1,5 @@
-import SoundFont, { type InstrumentName } from 'soundfont-player';
+import { type InstrumentName } from 'soundfont-player';
+import type { PlaybackInstrument } from '../../infra/audio/playback-instrument';
 
 namespace PlaybackState {
 
@@ -12,6 +13,7 @@ namespace PlaybackState {
         audios: { element: HTMLAudioElement, referIndex: number }[];
 
         sfItems: SFItem[];
+        userSfItems: UserSFItem[];
 
     };
 
@@ -22,12 +24,20 @@ namespace PlaybackState {
         progressTime: -1,
         linePos: -1,
         audios: [],
-        sfItems: []
+        sfItems: [],
+        userSfItems: []
     };
 
     export type SFItem = {
         instrumentName: InstrumentName;
-        player?: SoundFont.Player;
+        player?: PlaybackInstrument;
+    }
+
+    export type UserSFItem = {
+        definitionName: string;
+        bank: number;
+        program: number;
+        player?: PlaybackInstrument;
     }
 
     export const validateSFName = (sfName: string) => {

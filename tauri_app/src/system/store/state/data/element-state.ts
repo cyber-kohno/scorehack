@@ -4,10 +4,10 @@ import type TonalityTheory from "../../../domain/theory/tonality-theory";
 
 namespace ElementState {
 
-    export type ElementType = 'init' | 'section' | 'chord' | 'change' | 'modulate' | 'tempo' | 'ts';
+    export type ElementType = 'init' | 'section' | 'chord' | 'change' | 'modulate' | 'tempo' | 'rhythm';
 
     export type DataInit = {
-        ts: RhythmTheory.TimeSignature;
+        rhythm: RhythmTheory.Rhythm;
         tempo: number;
         tonality: TonalityTheory.Tonality;
     };
@@ -45,8 +45,8 @@ namespace ElementState {
     export const TempoMedhods = ['rate', 'addition'] as const;
     export type TempoMedhod = typeof TempoMedhods[number];
 
-    export type DataTS = {
-        newTS: RhythmTheory.TimeSignature;
+    export type DataRhythm = {
+        newRhythm: RhythmTheory.Rhythm;
     };
 
     export type Element = {
@@ -57,7 +57,10 @@ namespace ElementState {
     export const getInitialElements = () => {
         const list: Element[] = [];
         const initData: DataInit = {
-            ts: { unit: 4, cnt: 4 },
+            rhythm: {
+                ts: { unit: 4, cnt: 4 },
+                feel: { type: 'straight' },
+            },
             tempo: 100,
             tonality: {
                 key12: 0,

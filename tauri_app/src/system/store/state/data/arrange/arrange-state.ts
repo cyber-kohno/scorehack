@@ -1,5 +1,6 @@
 import type DerivedState from "../../derived-state";
 import type ElementState from "../element-state";
+import type { TrackSoundFontRef } from "../track-soundfont-ref";
 import GuitarEditorState from "./guitar/guitar-editor-state";
 import PianoEditorState from "./piano/piano-editor-state";
 
@@ -50,6 +51,7 @@ namespace ArrangeState {
     name: string;
     method: ArrangeMedhod;
     soundFont: string;
+    soundFontRef?: TrackSoundFontRef;
     volume: number;
     isMute: boolean;
 

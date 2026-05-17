@@ -8,7 +8,7 @@
   $: [keyScaleName, tsName, tempo] = (() => {
     const keyScaleName = TonalityTheory.getScaleName(data.tonality);
 
-    const tsName = RhythmTheory.formatTS(data.ts);
+    const tsName = RhythmTheory.formatRhythm(data.rhythm);
     return [keyScaleName, tsName, data.tempo];
   })();
 </script>

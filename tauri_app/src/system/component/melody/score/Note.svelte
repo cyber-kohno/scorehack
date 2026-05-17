@@ -42,7 +42,7 @@
   });
 
   $: tonality = scoreBase.tonality;
-  $: protrusionHeight = getProtrusionHeight(getNoteDisplayUnit(note, scoreBase.ts));
+  $: protrusionHeight = getProtrusionHeight(getNoteDisplayUnit(note, scoreBase.rhythm.ts));
 
   $: [isDisp, left, scaleDegreeLabel, width] = (() => {
     const beatSide = MelodyState.calcBeatSide(note);
@@ -90,7 +90,7 @@
           <UnitDisplay note={cursor} />
         {/if}
         <div class="info">{scaleDegreeLabel}</div>
-        <Factors {note} ts={scoreBase.ts} />
+        <Factors {note} ts={scoreBase.rhythm.ts} />
       {/if}
     </div>
   </div>

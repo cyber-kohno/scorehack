@@ -1,6 +1,7 @@
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
 import type RefState from "../../store/state/ref-state";
+import type SettingsState from "../../store/state/settings-state";
 import type TerminalState from "../../store/state/terminal-state";
 import type useMelodySelector from "../melody/melody-selector";
 import type useOutlineSelector from "../outline/outline-selector";
@@ -10,7 +11,7 @@ namespace TerminalCommand {
     export type Arg = {
         name: string;
         /** ヘルパー利用時の候補リスト */
-        getCandidate?: () => string[];
+        getCandidate?: (args: string[]) => string[];
     };
 
     export interface PropsDefault {
@@ -28,6 +29,7 @@ namespace TerminalCommand {
         control: ControlState.Value;
         data: DataState.Value;
         ref: RefState.Value;
+        settings: SettingsState.Value;
         terminal: TerminalState.Value;
         logger: ReturnType<typeof useTerminalLogger>;
         selectors: {
@@ -39,6 +41,7 @@ namespace TerminalCommand {
             data: () => void;
             dataAndRecalculate: () => void;
             ref: () => void;
+            settings: () => void;
             terminal: () => void;
         };
     };

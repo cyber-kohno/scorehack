@@ -16,7 +16,7 @@
   </div>
   <div class="item">
     <div class="label">TS</div>
-    <div class="value">{RhythmTheory.formatTS(target.scoreBase.ts)}</div>
+    <div class="value">{RhythmTheory.formatRhythm(target.scoreBase.rhythm)}</div>
   </div>
   <div class="item">
     <div class="label">Beat</div>

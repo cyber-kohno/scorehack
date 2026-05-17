@@ -6,7 +6,7 @@
     import DataModulate from "./data/DataModulate.svelte";
     import DataSection from "./data/DataSection.svelte";
     import DataTempo from "./data/DataTempo.svelte";
-    import DataTS from "./data/DataTS.svelte";
+    import DataRhythm from "./data/DataRhythm.svelte";
 
     export let element!: DerivedState.ElementCache;
 
@@ -56,8 +56,8 @@
         <DataModulate {data} elementSeq={index} />
     {:else if element.type === "tempo"}
         <DataTempo {data} elementSeq={index} />
-    {:else if element.type === "ts"}
-        <DataTS {data} elementSeq={index} />
+    {:else if element.type === "rhythm"}
+        <DataRhythm {data} elementSeq={index} />
     {/if}
 
     <FocusCover

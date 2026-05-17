@@ -8,8 +8,8 @@
   export let baseCache!: DerivedState.BaseCache;
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
-  $: barDivBeatCnt = RhythmTheory.getBarDivBeatCount(baseCache.scoreBase.ts);
-  $: beatDiv16Count = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
+  $: barDivBeatCnt = RhythmTheory.getBarDivBeatCount(baseCache.scoreBase.rhythm.ts);
+  $: beatDiv16Count = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.rhythm.ts);
   $: barDiv16Cnt = barDivBeatCnt * beatDiv16Count;
 
   $: beatWidth = $settingsStore.view.timeline.beatWidth * (beatDiv16Count / 4);

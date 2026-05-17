@@ -15,7 +15,7 @@
 
   $: melodySelector = useMelodySelector({ control: $controlStore, data: $dataStore });
 
-  $: beatDiv16Count = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
+  $: beatDiv16Count = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.rhythm.ts);
 
   $: beatWidth = $settingsStore.view.timeline.beatWidth * (beatDiv16Count / 4);
 

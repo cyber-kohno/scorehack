@@ -18,8 +18,8 @@
       <div class="value">{TonalityTheory.getScaleName(scoreBase.tonality)}</div>
     </div>
     <div class="record">
-      <div class="title">ts:</div>
-      <div class="value">{RhythmTheory.formatTS(scoreBase.ts)}</div>
+      <div class="title">rhythm:</div>
+      <div class="value">{RhythmTheory.formatRhythm(scoreBase.rhythm)}</div>
     </div>
     <div class="record">
       <div class="title">tempo:</div>

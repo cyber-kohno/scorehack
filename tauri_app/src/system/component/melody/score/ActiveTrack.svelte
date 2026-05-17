@@ -32,15 +32,20 @@
     | "focus"
     | "none";
 
-  const getOperation = (isFocus: boolean): OperationStatus => {
-    if (isPlayback) return "playback";
+  const getOperation = (
+    isFocus: boolean,
+    inputState: typeof input,
+    playback: boolean,
+    focusLock: number,
+  ): OperationStatus => {
+    if (playback) return "playback";
     if (!isFocus) return "focus";
 
-    if (input.holdD) return "move";
-    if (input.holdF && melody.focusLock === -1) return "len";
-    if (input.holdC) return "scale";
-    if (input.holdX) return "octave";
-    if (input.holdShift || melody.focusLock !== -1) return "range";
+    if (inputState.holdD) return "move";
+    if (inputState.holdF && focusLock === -1) return "len";
+    if (inputState.holdC) return "scale";
+    if (inputState.holdX) return "octave";
+    if (inputState.holdShift || focusLock !== -1) return "range";
     return "none";
   };
 
@@ -117,7 +122,7 @@
       {beatWidth}
       {isPlayback}
       isCriteria={item.isCriteria}
-      operation={getOperation(item.isFocus)}
+      operation={getOperation(item.isFocus, input, isPlayback, melody.focusLock)}
       cursor={melody.cursor}
       scoreBase={item.scoreBase}
       {registerEffectRef}

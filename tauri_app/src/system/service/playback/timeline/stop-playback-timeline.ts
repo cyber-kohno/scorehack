@@ -27,6 +27,9 @@ const stopPlaybackTimeline = () => {
     playback.sfItems.forEach((sf) => {
         if (sf.player) sf.player.stop();
     });
+    playback.userSfItems.forEach((sf) => {
+        if (sf.player) sf.player.stop();
+    });
 
     playback.audios.forEach((audio) => audio.element.pause());
     playback.audios.length = 0;

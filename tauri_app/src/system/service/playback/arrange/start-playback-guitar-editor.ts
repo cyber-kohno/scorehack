@@ -17,12 +17,25 @@ const startPlaybackGuitarEditor = () => {
     const editor = arrange.editor as GuitarEditorState.Value;
     const track = data.arrange.tracks[control.outline.trackIndex];
     if (track == undefined || track.method !== "guitar") return;
-    if (track.isMute || track.soundFont === "") return;
+    if (track.isMute) return;
 
-    const sf = playback.sfItems.find(item => item.instrumentName === track.soundFont);
-    if (sf == undefined || sf.player == undefined) return;
+    const player = (() => {
+        const ref = track.soundFontRef;
+        if (ref?.source === "user") {
+            return playback.userSfItems.find((item) => {
+                return item.definitionName === ref.definitionName
+                    && item.bank === ref.bank
+                    && item.program === ref.program;
+            })?.player;
+        }
 
-    const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(arrange.target.scoreBase.ts);
+        const instrumentName = ref?.source === "builtin" ? ref.name : track.soundFont;
+        if (instrumentName === "") return undefined;
+        return playback.sfItems.find(item => item.instrumentName === instrumentName)?.player;
+    })();
+    if (player == undefined) return;
+
+    const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(arrange.target.scoreBase.rhythm.ts);
     const beatRate = beatDiv16Cnt / 4;
     const beatSize =
         arrange.target.beat.num +
@@ -52,7 +65,7 @@ const startPlaybackGuitarEditor = () => {
         const gain = 5 * (track.volume / 10);
 
         const key = setTimeout(() => {
-            sf.player?.play(pitchName, 0, {
+            player.play(pitchName, 0, {
                 gain,
                 duration: sustainMs / 1000,
             });
@@ -72,6 +85,7 @@ const startPlaybackGuitarEditor = () => {
         current.intervalKeys = null;
         current.linePos = -1;
         current.sfItems.forEach(sf => sf.player?.stop());
+        current.userSfItems.forEach(sf => sf.player?.stop());
         playbackStore.set({ ...current });
     }, endMs);
     playback.timerKeys.push(endKey);

@@ -6,6 +6,9 @@
     "core:default",
     "dialog:default",
     "fs:default",
+    "fs:read-all",
+    "fs:allow-appconfig-read-recursive",
+    "fs:allow-appconfig-write-recursive",
     "fs:allow-desktop-write-recursive",
     "fs:allow-document-write-recursive",
     "fs:allow-download-write-recursive"

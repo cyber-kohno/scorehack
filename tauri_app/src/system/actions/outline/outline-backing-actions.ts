@@ -60,7 +60,7 @@ const createOutlineBackingActions = (
         const category: ArrangeLibrary.SearchCategory = {
             beat: chordCache.beat.num,
             structCnt: structCount,
-            tsGloup: [scoreBase.ts],
+            tsGloup: [scoreBase.rhythm.ts],
             eatHead: chordCache.beat.eatHead,
             eatTail: chordCache.beat.eatTail,
         };
@@ -165,7 +165,7 @@ const createOutlineBackingActions = (
         const category: ArrangeLibrary.SearchCategory = {
             beat: chordCache.beat.num,
             structCnt: compiledChord.structs.length,
-            tsGloup: [scoreBase.ts],
+            tsGloup: [scoreBase.rhythm.ts],
             eatHead: chordCache.beat.eatHead,
             eatTail: chordCache.beat.eatTail,
         };

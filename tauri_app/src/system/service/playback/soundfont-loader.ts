@@ -1,6 +1,7 @@
 import { get } from "svelte/store";
 import { playbackStore } from "../../store/global-store";
 import SoundFont, { type InstrumentName } from "soundfont-player";
+import { createSoundFontPlayerAdapter } from "../../infra/audio/soundfont-player-adapter";
 
 const loadingPromises = new Map<InstrumentName, Promise<void>>();
 
@@ -29,7 +30,7 @@ const useSoundfontLoader = () => {
             const latestItem = latest.sfItems.find((sf) => sf.instrumentName === sfName);
             if (latestItem == undefined) throw new Error();
 
-            latestItem.player = player;
+            latestItem.player = createSoundFontPlayerAdapter(player);
             playbackStore.set({ ...latest, sfItems: [...latest.sfItems] });
         })();
 

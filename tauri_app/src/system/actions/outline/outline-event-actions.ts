@@ -50,7 +50,7 @@ const createOutlineEventActions = (
     const initialTS = (dir: -1 | 1) => {
         const ctx = createContext();
         const initData = ctx.outlineSelector.getCurrentInitData();
-        const currentName = RhythmTheory.formatTS(initData.ts);
+        const currentName = RhythmTheory.formatTS(initData.rhythm.ts);
         const currentIndex = RhythmTheory.TS_DEFS.findIndex(
             ts => RhythmTheory.formatTS(ts) === currentName,
         );
@@ -58,7 +58,21 @@ const createOutlineEventActions = (
         if (currentIndex === -1) return;
 
         const nextIndex = (RhythmTheory.TS_DEFS.length + currentIndex + dir) % RhythmTheory.TS_DEFS.length;
-        initData.ts = { ...RhythmTheory.TS_DEFS[nextIndex] };
+        initData.rhythm.ts = { ...RhythmTheory.TS_DEFS[nextIndex] };
+        initData.rhythm.feel = { type: 'straight' };
+        ctx.commitDataAndRecalculate();
+    };
+
+    const initialFeel = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const initData = ctx.outlineSelector.getCurrentInitData();
+        const feels = RhythmTheory.getAvailableFeels(initData.rhythm.ts);
+        const currentIndex = feels.findIndex(feel => RhythmTheory.isSameFeel(feel, initData.rhythm.feel));
+        const nextIndex = currentIndex === -1
+            ? 0
+            : (feels.length + currentIndex + dir) % feels.length;
+
+        initData.rhythm.feel = { ...feels[nextIndex] };
         ctx.commitDataAndRecalculate();
     };
 
@@ -86,11 +100,11 @@ const createOutlineEventActions = (
         if (element.type === "init") return;
 
         const scoreBase = ctx.derivedSelector.getCurBase().scoreBase;
-        const data: ElementState.DataTS = {
-            newTS: { ...scoreBase.ts },
+        const data: ElementState.DataRhythm = {
+            newRhythm: JSON.parse(JSON.stringify(scoreBase.rhythm)),
         };
         ctx.outlineUpdater.insertElement({
-            type: "ts",
+            type: "rhythm",
             data,
         });
         ctx.commitDataAndRecalculate();
@@ -206,12 +220,12 @@ const createOutlineEventActions = (
         const ctx = createContext();
         const element = ctx.outlineSelector.getCurrentElement();
 
-        if (element.type !== "ts") {
-            throw new Error("eventTS requires a ts element.");
+        if (element.type !== "rhythm") {
+            throw new Error("eventTS requires a rhythm element.");
         }
 
-        const data = element.data as ElementState.DataTS;
-        const currentName = RhythmTheory.formatTS(data.newTS);
+        const data = element.data as ElementState.DataRhythm;
+        const currentName = RhythmTheory.formatTS(data.newRhythm.ts);
         const currentIndex = RhythmTheory.TS_DEFS.findIndex(
             ts => RhythmTheory.formatTS(ts) === currentName,
         );
@@ -219,16 +233,38 @@ const createOutlineEventActions = (
         if (currentIndex === -1) return;
 
         const nextIndex = (RhythmTheory.TS_DEFS.length + currentIndex + dir) % RhythmTheory.TS_DEFS.length;
-        data.newTS = { ...RhythmTheory.TS_DEFS[nextIndex] };
+        data.newRhythm.ts = { ...RhythmTheory.TS_DEFS[nextIndex] };
+        data.newRhythm.feel = { type: 'straight' };
+        ctx.commitDataAndRecalculate();
+    };
+
+    const eventFeel = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "rhythm") {
+            throw new Error("eventFeel requires a rhythm element.");
+        }
+
+        const data = element.data as ElementState.DataRhythm;
+        const feels = RhythmTheory.getAvailableFeels(data.newRhythm.ts);
+        const currentIndex = feels.findIndex(feel => RhythmTheory.isSameFeel(feel, data.newRhythm.feel));
+        const nextIndex = currentIndex === -1
+            ? 0
+            : (feels.length + currentIndex + dir) % feels.length;
+
+        data.newRhythm.feel = { ...feels[nextIndex] };
         ctx.commitDataAndRecalculate();
     };
 
     return {
+        eventFeel,
         eventModKind,
         eventModVal,
         eventTempoKind,
         eventTempoVal,
         eventTS,
+        initialFeel,
         initialScale,
         initialScaleKey,
         initialTempo,

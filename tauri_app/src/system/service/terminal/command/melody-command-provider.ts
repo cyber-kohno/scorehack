@@ -1,11 +1,16 @@
 import FileUtil from "../../../infra/file/fileUtil";
+import SoundFontFile from "../../../infra/audio/soundfont-file";
+import UserSoundFontCache from "../../../infra/audio/user-soundfont-cache";
+import UserSoundFontPath from "../../../infra/audio/user-soundfont-path";
+import type MelodyState from "../../../store/state/data/melody-state";
 import PlaybackState from "../../../store/state/playback-state";
 import useScrollService from "../../common/scroll-service";
+import { prepareUserSoundFont, UserSoundFontPrepareError } from "../../playback/user-soundfont-service";
 import TerminalCommand from "../terminal-command";
 import useSoundfontLoader from "../../playback/soundfont-loader";
 
 const createMelodyCommands = (ctx: TerminalCommand.Context) => {
-    const { control, data, ref, terminal, logger } = ctx;
+    const { control, data, ref, settings, terminal, logger } = ctx;
     const { getCurrScoreTrack } = ctx.selectors.melody;
     const { isLoadSoundFont, loadSoundFont } = useSoundfontLoader();
 
@@ -26,6 +31,19 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
             if (func == undefined) throw new Error();
             func.callback([]);
         }
+        const findUserSoundFont = (name: string) => {
+            return settings.userSoundFonts.find((soundFont) => soundFont.name === name);
+        };
+        const formatTrackSoundFont = (track: MelodyState.ScoreTrack) => {
+            const ref = track.soundFontRef;
+            if (ref == undefined) return track.soundFont;
+            switch (ref.source) {
+                case "builtin": return ref.name;
+                case "user": {
+                    return `${ref.definitionName} ${SoundFontFile.formatPresetKey(ref)}`;
+                }
+            }
+        };
         return [
             {
                 ...defaultProps,
@@ -51,7 +69,7 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                                 return [
                                     i.toString(),
                                     active + item.name,
-                                    item.soundFont,
+                                    formatTrackSoundFont(item),
                                     item.volume.toString(),
                                     item.isMute ? '●' : '',
                                     item.notes.length.toString()
@@ -269,6 +287,10 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                         const sfName = PlaybackState.validateSFName(arg0);
                         const track = getCurrScoreTrack();
                         track.soundFont = sfName;
+                        track.soundFontRef = {
+                            source: "builtin",
+                            name: sfName,
+                        };
 
                         const endProc = () => {
                             logger.outputInfo(`Set a soundfont as the active track. [${sfName}]`);
@@ -284,11 +306,82 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                                 ctx.commit.data();
                                 ctx.commit.terminal();
                             });
-                        } else endProc();
+                        } else {
+                            endProc();
+                            ctx.commit.data();
+                        }
                     } catch {
                         logger.outputError(`The specified soundfont does not exist. [${arg0}]`);
                     }
                 }
+            },
+            {
+                ...defaultProps,
+                funcKey: "ufs",
+                usage: "Sets a user SoundFont for the active track.",
+                args: [
+                    {
+                        name: "soundFontName: string",
+                        getCandidate: () => settings.userSoundFonts.map((soundFont) => soundFont.name),
+                    },
+                    {
+                        name: "bankProgram",
+                        getCandidate: (args) => {
+                            const soundFont = findUserSoundFont(args[0]);
+                            if (soundFont == undefined) return [];
+                            return UserSoundFontCache.getPresetKeys(UserSoundFontPath.resolvePath(soundFont, settings));
+                        },
+                    },
+                ],
+                callback: (args) => {
+                    const arg0 = logger.validateRequired(args[0], 1);
+                    if (arg0 == null) return;
+
+                    const arg1 = logger.validateRequired(args[1], 2);
+                    if (arg1 == null) return;
+
+                    const soundFont = findUserSoundFont(arg0);
+                    if (soundFont == undefined) {
+                        logger.outputError(`The specified SoundFont definition does not exist. [${arg0}]`);
+                        return;
+                    }
+
+                    const presetKey = SoundFontFile.parsePresetKey(arg1);
+                    if (presetKey == null) {
+                        logger.outputError(`The preset key must be formatted as 000_000. [${arg1}]`);
+                        return;
+                    }
+
+                    terminal.wait = true;
+                    (async () => {
+                        const soundFontRef = {
+                            source: "user",
+                            definitionName: arg0,
+                            bank: presetKey.bank,
+                            program: presetKey.program,
+                        } as const;
+                        const { preset } = await prepareUserSoundFont(soundFontRef);
+
+                        const track = getCurrScoreTrack();
+                        track.soundFont = "";
+                        track.soundFontRef = soundFontRef;
+                        logger.outputInfo(
+                            `Set a user SoundFont as the active track. [${arg0} ${arg1} ${preset.name}]`,
+                        );
+                        lss();
+                    })().catch((error) => {
+                        console.error("Failed to set user SoundFont:", error);
+                        if (error instanceof UserSoundFontPrepareError) {
+                            logger.outputError(error.message);
+                            return;
+                        }
+                        logger.outputError(`Failed to set user SoundFont. [${arg0} ${arg1}]`);
+                    }).finally(() => {
+                        terminal.wait = false;
+                        ctx.commit.data();
+                        ctx.commit.terminal();
+                    });
+                },
             },
             // {
             //     ...defaultProps,

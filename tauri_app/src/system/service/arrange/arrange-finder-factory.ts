@@ -51,7 +51,7 @@ export const createPianoArrangeFinderFromTarget = (props: {
     const { target, arrTrack } = props;
 
     return createPianoArrangeFinderFromSource({
-        ts: target.scoreBase.ts,
+        ts: target.scoreBase.rhythm.ts,
         beat: target.beat,
         compiledChord: target.compiledChord,
         chordSeq: target.chordSeq,

@@ -50,7 +50,7 @@ export const recalculate = () => {
     let sectionStart: string | undefined = undefined;
     let lastModulate: DerivedState.ModulateCache | undefined = undefined;
     let lastTempo: DerivedState.TempoCache | undefined = undefined;
-    let lastTS: DerivedState.TSCache | undefined = undefined;
+    let lastRhythm: DerivedState.RhythmCache | undefined = undefined;
 
     let curSection = '';
     elements.forEach((el, i) => {
@@ -123,7 +123,7 @@ export const recalculate = () => {
                 const judgeStraddle = () => {
                     /** ベース上での経過拍数 */
                     const baseOnBeat = startBeat - baseCache.startBeat;
-                    const divCnt = RhythmTheory.getBarDivBeatCount(baseCache.scoreBase.ts);
+                    const divCnt = RhythmTheory.getBarDivBeatCount(baseCache.scoreBase.rhythm.ts);
                     const curBar = Math.floor(baseOnBeat / divCnt);
                     const nextBar = Math.floor((baseOnBeat + data.beat) / divCnt);
                     // 同じ小説に収まっている
@@ -133,10 +133,17 @@ export const recalculate = () => {
                     return !(isSameBar || isNextFit);
                 };
 
-                const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.ts);
+                const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.rhythm.ts);
                 const beatRate = beatDiv16Cnt / 4;
                 const beatSize = data.beat + (prevEat * -1 + data.eat) / beatDiv16Cnt;
                 const beatSizeNote = beatSize * beatRate;
+                const beatNoteStart = startBeatNote + (prevEat / beatDiv16Cnt) * beatRate;
+                const beatNoteLength = RhythmTheory.getSwungBeatNoteDuration(
+                    baseCache.scoreBase.rhythm,
+                    settings.playback.swing,
+                    beatNoteStart,
+                    beatSizeNote,
+                );
 
                 const viewPosLeft = viewPos;
                 const viewPosWidth = beatSizeNote * settings.view.timeline.beatWidth;
@@ -144,7 +151,7 @@ export const recalculate = () => {
                 // console.log(viewPosLeft);
                 // console.log(viewPosWidth);
 
-                const sustainTime = (60000 / baseCache.scoreBase.tempo) * beatSize;
+                const sustainTime = (60000 / (baseCache.scoreBase.tempo * beatRate)) * beatNoteLength;
                 const isStraddled = judgeStraddle();
 
                 const beat: DerivedState.BeatCache = {
@@ -182,7 +189,7 @@ export const recalculate = () => {
                     sectionStart,
                     modulate: lastModulate,
                     tempo: lastTempo,
-                    ts: lastTS,
+                    rhythm: lastRhythm,
                     arrs,
                     error: isStraddled ? { straddle: true } : undefined,
                 };
@@ -193,7 +200,7 @@ export const recalculate = () => {
                 sectionStart = undefined;
                 lastModulate = undefined;
                 lastTempo = undefined;
-                lastTS = undefined;
+                lastRhythm = undefined;
 
                 chordCaches.push(chordCache);
                 elementCache.chordSeq = lastChordSeq;
@@ -207,7 +214,7 @@ export const recalculate = () => {
             } break;
             case 'modulate':
             case 'tempo':
-            case 'ts': {
+            case 'rhythm': {
 
                 baseCache.viewPosWidth = viewPos - baseCache.viewPosLeft;
                 baseCaches.push(baseCache);
@@ -226,7 +233,7 @@ export const recalculate = () => {
                 // 経過時間をリセット
                 baseCache.sustainTime = 0;
 
-                const divCnt = RhythmTheory.getBarDivBeatCount(baseCache.scoreBase.ts);
+                const divCnt = RhythmTheory.getBarDivBeatCount(baseCache.scoreBase.rhythm.ts);
                 baseCache.startBar += Math.ceil(baseCache.lengthBeat / divCnt);
 
                 baseCache.startBeat = baseCache.startBeat + baseCache.lengthBeat;
@@ -297,14 +304,14 @@ export const recalculate = () => {
 
                         baseCache.scoreBase.tempo = tempo;
                     } break;
-                    case 'ts': {
-                        const data = el.data as ElementState.DataTS;
-                        const prev = JSON.parse(JSON.stringify(baseCache.scoreBase.ts));
-                        const next = JSON.parse(JSON.stringify(data.newTS));
+                    case 'rhythm': {
+                        const data = el.data as ElementState.DataRhythm;
+                        const prev = JSON.parse(JSON.stringify(baseCache.scoreBase.rhythm));
+                        const next = JSON.parse(JSON.stringify(data.newRhythm));
 
-                        lastTS = { prev, next };
-                        elementCache.ts = lastTS;
-                        baseCache.scoreBase.ts = next;
+                        lastRhythm = { prev, next };
+                        elementCache.rhythm = lastRhythm;
+                        baseCache.scoreBase.rhythm = next;
                     } break;
                 }
             }
@@ -323,7 +330,7 @@ export const recalculate = () => {
                 }
                 case 'modulate':
                 case 'tempo':
-                case 'ts': return EL.MODULATE_RECRORD_HEIGHT * 3;
+                case 'rhythm': return EL.MODULATE_RECRORD_HEIGHT * 3;
             }
             return 0;
         }

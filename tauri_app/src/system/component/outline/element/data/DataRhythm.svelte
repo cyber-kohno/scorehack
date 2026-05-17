@@ -3,28 +3,28 @@
   import { derivedStore } from "../../../../store/global-store";
   import type ElementState from "../../../../store/state/data/element-state";
 
-  export let data!: ElementState.DataTS;
+  export let data!: ElementState.DataRhythm;
   export let elementSeq!: number;
 
-  $: [nextTS, prev, next, isNoChange] = (() => {
-    const ts = $derivedStore.elementCaches[elementSeq].ts;
-    if (ts == undefined) throw new Error("ts must not be undefined.");
+  $: [nextRhythm, prev, next, isNoChange] = (() => {
+    const rhythm = $derivedStore.elementCaches[elementSeq].rhythm;
+    if (rhythm == undefined) throw new Error("rhythm must not be undefined.");
 
     return [
-      RhythmTheory.formatTS(data.newTS),
-      RhythmTheory.formatTS(ts.prev),
-      RhythmTheory.formatTS(ts.next),
-      RhythmTheory.formatTS(ts.prev) === RhythmTheory.formatTS(ts.next),
+      RhythmTheory.formatRhythm(data.newRhythm),
+      RhythmTheory.formatRhythm(rhythm.prev),
+      RhythmTheory.formatRhythm(rhythm.next),
+      RhythmTheory.formatRhythm(rhythm.prev) === RhythmTheory.formatRhythm(rhythm.next),
     ];
   })();
 </script>
 
 <div class="wrap">
   <div class="method">
-    TS
+    Rhy
   </div>
   <div class="val" data-isNoChange={isNoChange}>
-    {nextTS}
+    {nextRhythm}
   </div>
   <div class="change">
     {isNoChange ? "-" : `${prev} → ${next}`}

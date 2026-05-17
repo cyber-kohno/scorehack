@@ -243,7 +243,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         const category: ArrangeLibrary.SearchCategory = {
             beat: beatCache.num,
             structCnt: compiledChord.structs.length,
-            tsGloup: [scoreBase.ts],
+            tsGloup: [scoreBase.rhythm.ts],
             eatHead: beatCache.eatHead,
             eatTail: beatCache.eatTail,
         };

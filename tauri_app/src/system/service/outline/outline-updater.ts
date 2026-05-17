@@ -296,7 +296,7 @@ const createOutlineUpdater = (ctx: Context) => {
         return buildArrange(props => {
             const { arrange, arrTrack, chordCache } = props;
 
-            const ts = derived.baseCaches[chordCache.baseSeq].scoreBase.ts;
+            const ts = derived.baseCaches[chordCache.baseSeq].scoreBase.rhythm.ts;
             arrange.finder = createArrangeFinder({ arrTrack, ts, chordCache });
         });
     };

@@ -21,7 +21,7 @@
       section?: string;
       modulate?: Diff;
       tempo?: Diff;
-      ts?: Diff;
+      rhythm?: Diff;
     }[] = [];
     const focusPos = StoreUtil.getTimelineFocusPos(
       $derivedStore,
@@ -44,16 +44,16 @@
       const section = chordCache.sectionStart;
       const modulateCache = chordCache.modulate;
       const tempoCache = chordCache.tempo;
-      const tsCache = chordCache.ts;
+      const rhythmCache = chordCache.rhythm;
       if (
         section != undefined ||
         modulateCache != undefined ||
         tempoCache != undefined ||
-        tsCache != undefined
+        rhythmCache != undefined
       ) {
         let modulate: Diff | undefined = undefined;
         let tempo: Diff | undefined = undefined;
-        let ts: Diff | undefined = undefined;
+        let rhythm: Diff | undefined = undefined;
         if (modulateCache != undefined) {
           modulate = {
             prev: TonalityTheory.getScaleName(modulateCache.prev),
@@ -66,10 +66,10 @@
             next: tempoCache.next.toString(),
           };
         }
-        if (tsCache != undefined) {
-          ts = {
-            prev: RhythmTheory.formatTS(tsCache.prev),
-            next: RhythmTheory.formatTS(tsCache.next),
+        if (rhythmCache != undefined) {
+          rhythm = {
+            prev: RhythmTheory.formatRhythm(rhythmCache.prev),
+            next: RhythmTheory.formatRhythm(rhythmCache.next),
           };
         }
         changeList.push({
@@ -77,7 +77,7 @@
           section,
           modulate,
           tempo,
-          ts,
+          rhythm,
         });
       }
     });
@@ -118,9 +118,9 @@
           {`${change.tempo.prev} → ${change.tempo.next}`}
         </div>
       {/if}
-      {#if change.ts != undefined}
+      {#if change.rhythm != undefined}
         <div class="scale">
-          {`${change.ts.prev} → ${change.ts.next}`}
+          {`${change.rhythm.prev} → ${change.rhythm.next}`}
         </div>
       {/if}
     </div>

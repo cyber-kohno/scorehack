@@ -37,7 +37,7 @@ const createMelodyUpdater = (ctx: Context) => {
 
         const cursor = melody.cursor;
         const baseCache = derived.baseCaches[elementCache.baseSeq];
-        const rate = RhythmTheory.getMelodyInputRates(baseCache.scoreBase.ts)[2];
+        const rate = RhythmTheory.getMelodyInputRates(baseCache.scoreBase.rhythm.ts)[2];
 
         cursor.norm.div = rate.div;
         cursor.norm.tuplets = undefined;

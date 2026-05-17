@@ -60,7 +60,7 @@ const createMelodyActions = () => {
     ) => {
         const pos = MelodyState.calcBeat(note.norm, note.pos);
         const base = ctx.derivedSelector.getBaseFromBeat(pos);
-        return getNoteDisplayRate(note, base.scoreBase.ts);
+        return getNoteDisplayRate(note, base.scoreBase.rhythm.ts);
     };
     const moveCursorPitch = (dir: number) => {
         const ctx = createContext();
@@ -129,7 +129,7 @@ const createMelodyActions = () => {
         const target = focusNote ?? cursor;
         const targetPos = MelodyState.calcBeat(target.norm, target.pos);
         const base = ctx.derivedSelector.getBaseFromBeat(targetPos);
-        const rate = RhythmTheory.getMelodyInputRates(base.scoreBase.ts)[index];
+        const rate = RhythmTheory.getMelodyInputRates(base.scoreBase.rhythm.ts)[index];
 
         if (rate == undefined) return;
 

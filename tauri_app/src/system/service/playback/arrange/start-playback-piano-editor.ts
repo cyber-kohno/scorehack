@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import TonalityTheory from "../../../domain/theory/tonality-theory";
 import RhythmTheory from "../../../domain/theory/rhythm-theory";
-import { controlStore, dataStore, playbackStore } from "../../../store/global-store";
+import { controlStore, dataStore, playbackStore, settingsStore } from "../../../store/global-store";
 import MelodyState from "../../../store/state/data/melody-state";
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import PianoArrangePlaybackUtil from "./piano-arrange-playback-util";
@@ -10,6 +10,7 @@ const startPlaybackPianoEditor = () => {
     const control = get(controlStore);
     const data = get(dataStore);
     const playback = get(playbackStore);
+    const settings = get(settingsStore);
 
     const arrange = control.outline.arrange;
     if (arrange == null || arrange.method !== "piano" || arrange.editor == undefined) return;
@@ -17,17 +18,30 @@ const startPlaybackPianoEditor = () => {
     const editor = arrange.editor as PianoEditorState.Value;
     const track = data.arrange.tracks[control.outline.trackIndex];
     if (track == undefined || track.method !== "piano") return;
-    if (track.isMute || track.soundFont === "") return;
+    if (track.isMute) return;
 
-    const sf = playback.sfItems.find(item => item.instrumentName === track.soundFont);
-    if (sf == undefined || sf.player == undefined) return;
+    const player = (() => {
+        const ref = track.soundFontRef;
+        if (ref?.source === "user") {
+            return playback.userSfItems.find((item) => {
+                return item.definitionName === ref.definitionName
+                    && item.bank === ref.bank
+                    && item.program === ref.program;
+            })?.player;
+        }
+
+        const instrumentName = ref?.source === "builtin" ? ref.name : track.soundFont;
+        if (instrumentName === "") return undefined;
+        return playback.sfItems.find(item => item.instrumentName === instrumentName)?.player;
+    })();
+    if (player == undefined) return;
 
     const chord = arrange.target.compiledChord.chord;
     const unit: PianoEditorState.Unit = {
         voicingSounds: editor.voicing.items,
         layers: editor.backing?.layers ?? null,
     };
-    const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(arrange.target.scoreBase.ts);
+    const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(arrange.target.scoreBase.rhythm.ts);
     const beatRate = beatDiv16Cnt / 4;
     const beatSize =
         arrange.target.beat.num +
@@ -39,19 +53,36 @@ const startPlaybackPianoEditor = () => {
     playback.timerKeys = [];
     playback.intervalKeys = [];
 
-    const tempo = arrange.target.scoreBase.tempo * beatRate;
-    const msPerQuarter = 60000 / tempo;
+    const msPerBeatNote = 60000 / (arrange.target.scoreBase.tempo * beatRate);
 
     let endMs = 0;
     notes.forEach((note) => {
         const side = MelodyState.calcBeatSide(note);
-        const startMs = side.pos * msPerQuarter;
-        const sustainMs = side.len * msPerQuarter;
+        const startBeatNote = side.pos;
+        const sustainBeatNote = note.norm.tuplets != undefined
+            ? side.len
+            : RhythmTheory.getSwungBeatNoteDuration(
+                arrange.target.scoreBase.rhythm,
+                settings.playback.swing,
+                startBeatNote,
+                side.len,
+            );
+        const startMs = msPerBeatNote * (
+            note.norm.tuplets != undefined
+                ? startBeatNote
+                : RhythmTheory.getSwungBeatNoteDuration(
+                    arrange.target.scoreBase.rhythm,
+                    settings.playback.swing,
+                    0,
+                    startBeatNote,
+                )
+        );
+        const sustainMs = sustainBeatNote * msPerBeatNote;
         const pitchName = TonalityTheory.getKey12FullName(note.pitch);
         const gain = 5 * (track.volume / 10);
 
         const key = setTimeout(() => {
-            sf.player?.play(pitchName, 0, {
+            player.play(pitchName, 0, {
                 gain,
                 duration: sustainMs / 1000,
             });
@@ -71,6 +102,7 @@ const startPlaybackPianoEditor = () => {
         current.intervalKeys = null;
         current.linePos = -1;
         current.sfItems.forEach(sf => sf.player?.stop());
+        current.userSfItems.forEach(sf => sf.player?.stop());
         playbackStore.set({ ...current });
     }, endMs);
     playback.timerKeys.push(endKey);

@@ -39,6 +39,7 @@ const createContext = () => {
         control,
         data,
         ref,
+        settings,
         terminal,
         logger: useTerminalLogger(terminal),
         selectors: {
@@ -50,6 +51,7 @@ const createContext = () => {
             data: commitData,
             dataAndRecalculate: createCommitDataAndRecalculate(commitData),
             ref: () => refStore.set({ ...ref }),
+            settings: () => settingsStore.set({ ...settings }),
             terminal: commitTerminal,
         },
         refUpdater: useScrollService({
@@ -150,6 +152,16 @@ const createTerminalActions = () => {
         ctx.commitTerminal();
     };
 
+    const scrollOutput = (dir: -1 | 1) => {
+        const ctx = createContext();
+        if (ctx.terminalSelector.isWait()) return;
+
+        const terminalRef = ctx.ref.terminal;
+        if (terminalRef == undefined) return;
+
+        terminalRef.scrollTop += dir * 96;
+    };
+
     const registCommand = () => {
         const ctx = createContext();
         if (ctx.terminalSelector.isWait()) return;
@@ -175,6 +187,7 @@ const createTerminalActions = () => {
         open,
         registCommand,
         removeCommand,
+        scrollOutput,
     };
 };
 

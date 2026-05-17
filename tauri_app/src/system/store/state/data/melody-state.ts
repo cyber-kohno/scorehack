@@ -1,5 +1,6 @@
 import type TonalityTheory from "../../../domain/theory/tonality-theory";
 import Layout from "../../../layout/layout-constant";
+import type { TrackSoundFontRef as SharedTrackSoundFontRef } from "./track-soundfont-ref";
 
 namespace MelodyState {
 
@@ -25,8 +26,11 @@ namespace MelodyState {
     volume: number;
   }
 
+  export type TrackSoundFontRef = SharedTrackSoundFontRef;
+
   export interface ScoreTrack extends Track {
     soundFont: string;
+    soundFontRef?: TrackSoundFontRef;
     notes: VocalNote[];
   }
   export const createMelodyTrackScoreInitial = (): ScoreTrack => {

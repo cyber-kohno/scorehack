@@ -70,7 +70,7 @@ const createOutlineActions = () => {
         }
 
         const scoreBase = ctx.derivedSelector.getCurBase().scoreBase;
-        return RhythmTheory.getBarDivBeatCount(scoreBase.ts);
+        return RhythmTheory.getBarDivBeatCount(scoreBase.rhythm.ts);
     };
 
     const insertChord = () => {

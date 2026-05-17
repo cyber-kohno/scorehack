@@ -1,9 +1,9 @@
 import TonalityTheory from "../../../domain/theory/tonality-theory";
-import SoundFont from "soundfont-player";
+import type { PlaybackInstrument } from "../../../infra/audio/playback-instrument";
 import MelodyState from "../../../store/state/data/melody-state";
 import { get } from "svelte/store";
 import { playbackStore } from "../../../store/global-store";
-import PlaybackState from "../../../store/state/playback-state";
+import SoundFontFile from "../../../infra/audio/soundfont-file";
 
 namespace PlaybackCacheState {
 
@@ -21,7 +21,7 @@ namespace PlaybackCacheState {
    * 1トラック分のノーツ情報をサウンドフォントとペアで管理する
    */
   export type TrackPlayer = {
-    sf: SoundFont.Player;
+    sf: PlaybackInstrument;
     notes: SoundTimePlayer[];
   };
 
@@ -41,13 +41,25 @@ namespace PlaybackCacheState {
 
   export const playbackSF = (track: MelodyState.ScoreTrack, pitchIndex: number) => {
     const preview = get(playbackStore);
-    if (track.soundFont === '') return;
-    const sfName = PlaybackState.validateSFName(track.soundFont);
-    const sf = preview.sfItems.find(item => item.instrumentName === sfName);
-    if (sf == undefined || sf.player == undefined) return;
-    sf.player.stop();
+    const ref = track.soundFontRef;
+    const player = (() => {
+      if (ref?.source === "user") {
+        return preview.userSfItems.find((item) => {
+          return item.definitionName === ref.definitionName
+            && item.bank === ref.bank
+            && item.program === ref.program;
+        })?.player;
+      }
+
+      const sfName = ref?.source === "builtin" ? ref.name : track.soundFont;
+      if (sfName === "") return undefined;
+      return preview.sfItems.find(item => item.instrumentName === sfName)?.player;
+    })();
+
+    if (player == undefined) return;
     const soundName = TonalityTheory.getKey12FullName(pitchIndex);
-    sf.player.play(soundName, 0, { gain: 5, duration: 0.5 });
+    player.stop();
+    player.play(soundName, 0, { gain: 5, duration: 0.5 });
   }
 }
 export default PlaybackCacheState;
