@@ -11,6 +11,11 @@ type Context = {
     arrTrack: ArrangeState.Track;
 };
 
+export type PianoVoicingToggleResult = {
+    activated: boolean;
+    pitch?: number;
+};
+
 const createPianoArrangeUpdater = (ctx: Context) => {
     const { arrange, arrTrack } = ctx;
 
@@ -102,14 +107,24 @@ const createPianoArrangeUpdater = (ctx: Context) => {
     };
 
     const toggleVoicing = () => {
+        const structs = arrange.target.compiledChord.structs;
         const { voicing } = getVoicingContext();
         const key = `${voicing.cursorX}.${voicing.cursorY}`;
+        let result: PianoVoicingToggleResult;
 
         if (!voicing.items.includes(key)) {
             voicing.items.push(key);
+            const struct = structs[voicing.cursorY];
+            result = {
+                activated: true,
+                pitch: struct == undefined
+                    ? undefined
+                    : struct.key12 + voicing.cursorX * 12,
+            };
         } else {
             const pos = voicing.items.findIndex(s => s === key);
             voicing.items.splice(pos, 1);
+            result = { activated: false };
         }
 
         voicing.items.sort((a, b) => {
@@ -117,6 +132,8 @@ const createPianoArrangeUpdater = (ctx: Context) => {
             const [bx, by] = b.split(".").map(s => Number(s));
             return ax * 10 + ay - (bx * 10 + by);
         });
+
+        return result;
     };
 
     const shiftControl = (next: PianoEditorState.Control) => {
@@ -219,26 +236,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         if (pianoLib == undefined) throw new Error();
 
         // 有効チャンネル外のノーツは削除する
-        const backing = editor.backing;
-        let backingData: PianoBackingState.DataProps | null = null;
-        if (backing != null) {
-            backing.layers.forEach(l => {
-                l.items = l.items.filter(item => {
-                    const [x, y] = item.split(".").map(v => Number(v));
-                    return (
-                        x >= 0 &&
-                        x <= l.cols.length - 1 &&
-                        y >= 0 &&
-                        y <= editor.voicing.items.length - 1
-                    );
-                });
-            });
-            backingData = {
-                layers: JSON.parse(JSON.stringify(backing.layers)),
-                recordNum: backing.recordNum,
-            };
-        }
-        const sounds = JSON.parse(JSON.stringify(editor.voicing.items));
+        const patternData = PianoEditorState.createPatternData(editor);
         // 検索用カテゴリの作成
         const category: ArrangeLibrary.SearchCategory = {
             beat: beatCache.num,
@@ -250,8 +248,8 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         // 新しいパターンの場合は登録してパターンNoをそれぞれ取得
         const [backingPattNo, soundsPattNo] = PianoEditorState.registPattern(
             category,
-            backingData,
-            sounds,
+            patternData.backing,
+            patternData.sounds,
             pianoLib,
         );
 

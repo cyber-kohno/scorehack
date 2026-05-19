@@ -1,6 +1,7 @@
 <script lang="ts">  import { controlStore, terminalStore } from "../store/global-store";
   import ArrangeFrame from "./arrange/ArrangeFrame.svelte";
   import ArrangeFinderFrame from "./arrange/finder/ArrangeFinderFrame.svelte";
+  import ConfirmDialogLayer from "./common/ConfirmDialogLayer.svelte";
   import RootHeader from "./header/RootHeader.svelte";
   import OutlineFrame from "./outline/OutlineFrame.svelte";
   import TerminalFrame from "./terminal/TerminalFrame.svelte";
@@ -37,6 +38,7 @@
     {#if isDispArrangeFinder}
         <ArrangeFinderFrame />
     {/if}
+    <ConfirmDialogLayer />
     <ToastLayer />
 </div>
 

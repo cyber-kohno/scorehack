@@ -10,10 +10,12 @@
 </script>
 
 <div class="struct-item" >
-  <div class="label-inner"data-selected={isSelected} data-over={isOver}>
-    {#if isFocus}
-      <div class="focus"></div>
-    {/if}
+  <div
+    class="label-inner"
+    data-selected={isSelected}
+    data-over={isOver}
+    data-focus={isFocus}
+  >
     {TonalityTheory.getKey12FullName(structKey12 + octaveIndex * 12)}
   </div>
 </div>
@@ -50,14 +52,8 @@
   .label-inner[data-over="true"] {
     background-color: rgba(255, 65, 65, 0.726);
   }
-  .focus {
-    display: inline-block;
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 2;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 247, 158, 0.223);
+  .label-inner[data-focus="true"] {
+    outline: solid 3px #1f8b36;
+    outline-offset: -3px;
   }
 </style>

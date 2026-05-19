@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { controlStore, derivedStore, inputStore, refStore } from "../../store/global-store";
+  import { actionMenuStore, controlStore, derivedStore, inputStore, refStore } from "../../store/global-store";
     import type ElementState from "../../store/state/data/element-state";
   import RefState from "../../store/state/ref-state";  import Element from "./element/Element.svelte";
+  import ActionMenu from "./item/ActionMenu.svelte";
   import ChordSelector from "./item/ChordSelector.svelte";
 
   $: dispElements = (() => {
@@ -37,6 +38,14 @@
       (element.data as ElementState.DataChord).degree != undefined
     );
   })();
+
+  $: isDispActionMenu = (() => {
+    return (
+      $controlStore.mode === "harmonize" &&
+      $controlStore.outline.arrange == null &&
+      $actionMenuStore != null
+    );
+  })();
 </script>
 
 <div class="wrap">
@@ -53,6 +62,9 @@
   <div class="list-second">
     {#if isDispChordSelector}
       <ChordSelector />
+    {/if}
+    {#if isDispActionMenu}
+      <ActionMenu />
     {/if}
   </div>
 </div>

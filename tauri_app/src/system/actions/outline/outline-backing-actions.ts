@@ -1,5 +1,6 @@
 import ChordTheory from "../../domain/theory/chord-theory";
 import GuitarVoicingResolver from "../../service/arrange/guitar/guitar-voicing-resolver";
+import { openConfirmDialog } from "../../service/common/confirm-dialog-service";
 import { createToast } from "../../service/common/toast-service";
 import type ArrangeLibrary from "../../store/state/data/arrange/arrange-library";
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
@@ -262,30 +263,174 @@ const createOutlineBackingActions = (
         return true;
     };
 
-    const removeBacking = () => {
-        const ctx = createContext();
+    const getPianoRemoveBackingWarnings = (
+        ctx: OutlineActionContext,
+        track: ArrangeState.Track,
+    ) => {
+        const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
+        const pianoLib = track.pianoLib;
+        if (chordSeq === -1 || pianoLib == undefined) return [];
+
+        const relation = track.relations.find(r => r.chordSeq === chordSeq);
+        if (relation == undefined) return [];
+
+        const warnings: string[] = [];
+        const isLastRelationRef = (target: "bkgPatt" | "sndsPatt", pattNo: number) => {
+            if (pattNo === -1) return false;
+            return track.relations.filter(r => r.chordSeq !== chordSeq).every(r => r[target] !== pattNo);
+        };
+        const isPresetBacking = (pattNo: number) => {
+            return pianoLib.presets.some(preset => preset.bkgPatt === pattNo);
+        };
+        const isPresetSounds = (pattNo: number) => {
+            return pianoLib.presets.some(preset => preset.voics.includes(pattNo));
+        };
+
+        if (
+            relation.bkgPatt !== -1 &&
+            !isPresetBacking(relation.bkgPatt) &&
+            isLastRelationRef("bkgPatt", relation.bkgPatt)
+        ) {
+            warnings.push("The piano backing pattern will also be deleted from the library.");
+        }
+        if (
+            relation.sndsPatt !== -1 &&
+            !isPresetSounds(relation.sndsPatt) &&
+            isLastRelationRef("sndsPatt", relation.sndsPatt)
+        ) {
+            warnings.push("The piano voicing pattern will also be deleted from the library.");
+        }
+
+        return warnings;
+    };
+
+    const getGuitarRemoveBackingWarnings = (
+        ctx: OutlineActionContext,
+        track: ArrangeState.Track,
+    ) => {
+        const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
+        const guitarLib = track.guitarLib;
+        if (chordSeq === -1 || guitarLib == undefined) return [];
+
+        const relation = track.relations.find(r => r.chordSeq === chordSeq);
+        if (relation == undefined || relation.sndsPatt === -1) return [];
+
+        const hasOtherRef = track.relations
+            .filter(r => r.chordSeq !== chordSeq)
+            .some(r => r.sndsPatt === relation.sndsPatt);
+        if (hasOtherRef) return [];
+
+        return ["The guitar voicing pattern will also be deleted from the library."];
+    };
+
+    const getRemoveBackingWarnings = (ctx: OutlineActionContext) => {
         const element = ctx.outlineSelector.getCurrentElement();
-        if (element.type !== "chord") return;
+        if (element.type !== "chord") return [];
+
+        const track = ctx.outlineSelector.getCurrHarmonizeTrack();
+        switch (track.method) {
+            case "piano": return getPianoRemoveBackingWarnings(ctx, track);
+            case "guitar": return getGuitarRemoveBackingWarnings(ctx, track);
+        }
+    };
+
+    const confirmLibraryPatternDelete = (
+        warnings: string[],
+        callback: () => void,
+    ) => {
+        if (warnings.length === 0) {
+            callback();
+            return;
+        }
+
+        openConfirmDialog({
+            tone: "danger",
+            title: "Delete Arrange",
+            messageLines: [
+                "This arrange is the last reference to one or more library patterns.",
+                ...warnings,
+                "Continue?",
+            ],
+            choices: [
+                {
+                    key: "y",
+                    label: "Delete",
+                    role: "proceed",
+                    callback,
+                },
+                {
+                    key: "n",
+                    label: "Cancel",
+                    role: "cancel",
+                    callback: () => {},
+                },
+            ],
+        });
+    };
+
+    const removeBackingFromContext = (ctx: OutlineActionContext) => {
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "chord") return false;
 
         const track = ctx.outlineSelector.getCurrHarmonizeTrack();
 
         switch (track.method) {
             case "piano": {
                 const removed = removePianoBacking(ctx, track);
-                if (!removed) return;
-                ctx.commitDataAndRecalculate();
+                if (!removed) return false;
+                return true;
             } break;
             case "guitar": {
                 const removed = removeGuitarBacking(ctx, track);
-                if (!removed) return;
-                ctx.commitDataAndRecalculate();
+                if (!removed) return false;
+                return true;
             } break;
         }
+
+        return false;
+    };
+
+    const removeBackingImmediately = () => {
+        const ctx = createContext();
+        const removed = removeBackingFromContext(ctx);
+        if (!removed) return;
+
+        ctx.commitDataAndRecalculate();
+    };
+
+    const removeBacking = () => {
+        const ctx = createContext();
+        confirmLibraryPatternDelete(
+            getRemoveBackingWarnings(ctx),
+            removeBackingImmediately,
+        );
+    };
+
+    const deleteChordImmediately = () => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "chord") return;
+
+        const chordData = element.data as ElementState.DataChord;
+        if (chordData.degree == undefined) return;
+
+        removeBackingFromContext(ctx);
+        chordData.degree = undefined;
+        ctx.commitDataAndRecalculate();
+    };
+
+    const deleteChord = () => {
+        const ctx = createContext();
+        confirmLibraryPatternDelete(
+            getRemoveBackingWarnings(ctx),
+            deleteChordImmediately,
+        );
     };
 
     return {
         applyDefaultVoicing,
         clearVoicingIfChordChanged,
+        deleteChord,
         openArrangeEditor,
         openArrangeFinder,
         removeBacking,

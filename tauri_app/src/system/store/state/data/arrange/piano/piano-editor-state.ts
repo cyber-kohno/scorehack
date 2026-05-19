@@ -108,6 +108,38 @@ namespace PianoEditorState {
     presets: [],
   });
 
+  export const createPatternData = (editor: Value) => {
+    const sounds = JSON.parse(JSON.stringify(editor.voicing.items)) as string[];
+    const backing = (() => {
+      if (editor.backing == null) return null;
+
+      return {
+        recordNum: editor.backing.recordNum,
+        layers: editor.backing.layers.map(layer => ({
+          cols: JSON.parse(JSON.stringify(layer.cols)) as PianoBackingState.Col[],
+          items: layer.items.filter(item => {
+            const [x, y] = item.split(".").map(v => Number(v));
+            return (
+              x >= 0 &&
+              x <= layer.cols.length - 1 &&
+              y >= 0 &&
+              y <= sounds.length - 1
+            );
+          }),
+        })),
+      };
+    })();
+
+    return {
+      sounds,
+      backing,
+    };
+  };
+
+  export const createSnapshot = (editor: Value) => {
+    return JSON.stringify(createPatternData(editor));
+  };
+
   // export const getUnitFromEditor = (editor: Props): Unit => {
   //     return {
   //         layers: editor.backing.layers,

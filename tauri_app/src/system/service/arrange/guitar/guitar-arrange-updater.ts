@@ -6,6 +6,11 @@ type Context = {
     arrTrack: ArrangeState.Track;
 };
 
+export type GuitarFretToggleResult = {
+    activated: boolean;
+    pitch?: number;
+};
+
 const createGuitarArrangeUpdater = (ctx: Context) => {
     const { arrange, arrTrack } = ctx;
 
@@ -48,8 +53,16 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
 
         const editor = getGuitarEditor();
         const current = editor.frets[editor.cursorString];
+        const activated = current !== editor.cursorFret;
         editor.frets[editor.cursorString] =
-            current === editor.cursorFret ? null : editor.cursorFret;
+            activated ? editor.cursorFret : null;
+
+        return {
+            activated,
+            pitch: activated
+                ? GuitarEditorState.STANDARD_TUNING[editor.cursorString].openMidi + editor.cursorFret
+                : undefined,
+        };
     };
 
     const muteString = () => {

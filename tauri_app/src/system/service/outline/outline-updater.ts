@@ -281,6 +281,7 @@ const createOutlineUpdater = (ctx: Context) => {
                         chordCache.chordSeq,
                         arrTrack,
                     );
+                    arrange.editor.lastSource = PianoEditorState.createSnapshot(arrange.editor);
                     break;
                 case "guitar":
                     arrange.editor = GuitarEditorState.getEditorProps(

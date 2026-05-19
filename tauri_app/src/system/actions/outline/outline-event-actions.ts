@@ -93,7 +93,7 @@ const createOutlineEventActions = (
         ctx.commitDataAndRecalculate();
     };
 
-    const insertEventTS = () => {
+    const insertEventRhythm = () => {
         const ctx = createContext();
         const element = ctx.outlineSelector.getCurrentElement();
 
@@ -270,8 +270,8 @@ const createOutlineEventActions = (
         initialTempo,
         initialTS,
         insertEventMod,
+        insertEventRhythm,
         insertEventTempo,
-        insertEventTS,
     };
 };
 

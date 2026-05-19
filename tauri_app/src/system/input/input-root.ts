@@ -1,6 +1,7 @@
 import { get } from "svelte/store";
-import type InputState from "../store/state/input-state";
-import { controlStore, inputStore, playbackStore, settingsStore, terminalStore } from "../store/global-store";
+import InputState from "../store/state/input-state";
+import { actionMenuStore, confirmDialogStore, controlStore, inputStore, playbackStore, settingsStore, terminalStore } from "../store/global-store";
+import useInputActionMenu from "./input-action-menu";
 import useInputMelody from "./input-melody";
 import useInputOutline from "./input-outline";
 import useInputTerminal from "./input-terminal";
@@ -9,6 +10,7 @@ import createTerminalActions from "../actions/terminal/terminal-actions";
 import FileUtil from "../infra/file/fileUtil";
 import { createToast } from "../service/common/toast-service";
 import ToastState from "../store/state/toast-state";
+import { chooseConfirmDialogByKey } from "../service/common/confirm-dialog-service";
 
 const useInputRoot = () => {
     const terminalActions = createTerminalActions();
@@ -16,6 +18,8 @@ const useInputRoot = () => {
     const inputOutline = useInputOutline();
     const inputMelody = useInputMelody();
     const isTerminalActive = () => get(terminalStore) != null;
+    const isConfirmDialogActive = () => get(confirmDialogStore) != null;
+    const isActionMenuActive = () => get(actionMenuStore) != null;
 
     const controlKeyHold = (eventKey: string, isDown: boolean) => {
 
@@ -49,6 +53,21 @@ const useInputRoot = () => {
     }
 
     const controlKeyDown = (e: KeyboardEvent) => {
+        if (isConfirmDialogActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set({ ...InputState.INITIAL });
+            chooseConfirmDialogByKey(e.key);
+            return;
+        }
+        if (isActionMenuActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set({ ...InputState.INITIAL });
+            useInputActionMenu().control(e.key);
+            return;
+        }
+
         const input = get(inputStore);
 
         const control = get(controlStore);
@@ -108,6 +127,19 @@ const useInputRoot = () => {
     }
 
     const controlKeyUp = (e: KeyboardEvent) => {
+        if (isConfirmDialogActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set({ ...InputState.INITIAL });
+            return;
+        }
+        if (isActionMenuActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set({ ...InputState.INITIAL });
+            return;
+        }
+
         controlKeyHold(e.key, false);
     }
 

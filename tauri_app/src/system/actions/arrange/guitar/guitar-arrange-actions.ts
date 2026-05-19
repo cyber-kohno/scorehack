@@ -2,6 +2,7 @@ import { get } from "svelte/store";
 import createGuitarArrangeUpdater from "../../../service/arrange/guitar/guitar-arrange-updater";
 import createArrangeSelector from "../../../service/arrange/arrange-selector";
 import { createCommitDataAndRecalculate } from "../../../service/derived/recalculate-derived";
+import previewArrangeNote from "../../../service/playback/arrange/preview-arrange-note";
 import { controlStore, dataStore } from "../../../store/global-store";
 
 const createContext = () => {
@@ -19,6 +20,7 @@ const createContext = () => {
 
     return {
         control,
+        arrTrack,
         guitarUpdater: createGuitarArrangeUpdater({ arrange, arrTrack }),
         commitControl,
         commitDataAndRecalculate: createCommitDataAndRecalculate(commitData),
@@ -56,9 +58,17 @@ const createGuitarArrangeActions = () => {
         updater.moveCursor(dir);
     });
 
-    const toggleFret = updateControl(updater => {
-        updater.toggleFret();
-    });
+    const toggleFret = () => {
+        const ctx = createContext();
+        const result = ctx.guitarUpdater.toggleFret();
+        if (result === false) return;
+
+        ctx.commitControl();
+
+        if (result.activated && result.pitch != undefined) {
+            previewArrangeNote(ctx.arrTrack, result.pitch);
+        }
+    };
 
     const muteString = updateControl(updater => {
         updater.muteString();

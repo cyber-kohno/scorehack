@@ -3,6 +3,7 @@ import createPianoArrangeUpdater from "../../../service/arrange/piano/piano-arra
 import createArrangeSelector from "../../../service/arrange/arrange-selector";
 import useScrollService from "../../../service/common/scroll-service";
 import { createCommitDataAndRecalculate } from "../../../service/derived/recalculate-derived";
+import previewArrangeNote from "../../../service/playback/arrange/preview-arrange-note";
 import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../../store/global-store";
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 
@@ -25,6 +26,7 @@ const createContext = () => {
 
     return {
         control,
+        arrTrack,
         pianoUpdater: createPianoArrangeUpdater({ arrange, arrTrack }),
         refUpdater: useScrollService({
             control,
@@ -83,9 +85,16 @@ const createPianoArrangeActions = () => {
         updater.moveVoicingCursor(dir);
     });
 
-    const toggleVoicing = updateControl(updater => {
-        updater.toggleVoicing();
-    });
+    const toggleVoicing = () => {
+        const ctx = createContext();
+        const result = ctx.pianoUpdater.toggleVoicing();
+
+        ctx.commitControl();
+
+        if (result.activated && result.pitch != undefined) {
+            previewArrangeNote(ctx.arrTrack, result.pitch);
+        }
+    };
 
     const shiftControl = updateControlWithArg<PianoEditorState.Control>((updater, next) => {
         updater.shiftControl(next);
