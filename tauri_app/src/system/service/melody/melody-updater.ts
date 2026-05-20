@@ -330,10 +330,14 @@ const createMelodyUpdater = (ctx: Context) => {
         note.len = len;
     };
 
-    const moveNoteLen = (note: MelodyState.Note, dir: -1 | 1) => {
+    const moveNoteLen = (note: MelodyState.Note, dir: -1 | 1, baseTail: number) => {
         const nextNote: MelodyState.Note = JSON.parse(JSON.stringify(note));
         scaleNoteByUnit(nextNote, { ...melody.cursor, pos: dir * melody.cursor.len });
         if (nextNote.len <= 0) return false;
+
+        const nextSide = MelodyState.calcBeatSide(nextNote);
+        if (nextSide.pos < 0) return false;
+        if (nextSide.pos + nextSide.len > baseTail) return false;
 
         const otherNotes = track.notes.slice();
         otherNotes.splice(melody.focus, 1);

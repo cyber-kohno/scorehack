@@ -1,7 +1,7 @@
 import ChordTheory from "../../domain/theory/chord-theory";
 import GuitarVoicingResolver from "../../service/arrange/guitar/guitar-voicing-resolver";
-import { openConfirmDialog } from "../../service/common/confirm-dialog-service";
-import { createToast } from "../../service/common/toast-service";
+import ConfirmDialog from "../../service/common/confirm-dialog-controller";
+import Toast from "../../service/common/toast-controller";
 import type ArrangeLibrary from "../../store/state/data/arrange/arrange-library";
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
@@ -149,8 +149,8 @@ const createOutlineBackingActions = (
 
         let relation = track.relations.find(r => r.chordSeq === chordSeq);
         if (relation != undefined) {
-            createToast({
-                ...ToastState.INITIAL,
+            Toast.create({
+                ...ToastState.createInitial(),
                 x: 12,
                 y: 48,
                 width: 280,
@@ -201,8 +201,8 @@ const createOutlineBackingActions = (
 
         let relation = track.relations.find(r => r.chordSeq === chordSeq);
         if (relation != undefined) {
-            createToast({
-                ...ToastState.INITIAL,
+            Toast.create({
+                ...ToastState.createInitial(),
                 x: 12,
                 y: 48,
                 width: 280,
@@ -343,7 +343,7 @@ const createOutlineBackingActions = (
             return;
         }
 
-        openConfirmDialog({
+        ConfirmDialog.open({
             tone: "danger",
             title: "Delete Arrange",
             messageLines: [
@@ -353,16 +353,9 @@ const createOutlineBackingActions = (
             ],
             choices: [
                 {
-                    key: "y",
                     label: "Delete",
                     role: "proceed",
                     callback,
-                },
-                {
-                    key: "n",
-                    label: "Cancel",
-                    role: "cancel",
-                    callback: () => {},
                 },
             ],
         });

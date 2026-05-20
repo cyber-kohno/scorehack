@@ -8,11 +8,12 @@ import createOutlineUpdater from "../../service/outline/outline-updater";
 import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../store/global-store";
 import ElementState from "../../store/state/data/element-state";
 import useOutlineSelector from "../../service/outline/outline-selector";
-import { createToast } from "../../service/common/toast-service";
+import Toast from "../../service/common/toast-controller";
 import ToastState from "../../store/state/toast-state";
 import createOutlineBackingActions from "./outline-backing-actions";
 import createOutlineEventActions from "./outline-event-actions";
 import ScoreHistory from "../../infra/tauri/history/score-history";
+import useMelodySelector from "../../service/melody/melody-selector";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -35,6 +36,7 @@ const createContext = () => {
         derived,
         outline,
         derivedSelector: useDerivedSelector(derived, control),
+        melodySelector: useMelodySelector({ data, control }),
         outlineSelector: useOutlineSelector({ data, control }),
         outlineUpdater: createOutlineUpdater({ control, data, derived }),
         refUpdater: useScrollService({
@@ -111,8 +113,24 @@ const createOutlineActions = () => {
 
         // 初期値ブロックと、最後の1つのセクションは消せない
         if (element.type === "init" || isLastSection) {
-            createToast({ ...ToastState.INITIAL, text: 'test', x: 50, y: 50 });
+            Toast.create({ ...ToastState.createInitial(), text: 'test', x: 50, y: 50 });
             return;
+        }
+
+        const selectedChordLength = ctx.outlineSelector.getSelectedChordLengthBeatNote(ctx.derived);
+        if (selectedChordLength > 0) {
+            const nextTail = ctx.derivedSelector.getBeatNoteTail() - selectedChordLength;
+            const melodyTail = ctx.melodySelector.getAllScoreTracksTailBeatNote();
+            if (melodyTail > nextTail + 1e-9) {
+                Toast.create({
+                    ...ToastState.createInitial(),
+                    x: 12,
+                    y: 48,
+                    width: 320,
+                    text: "Cannot delete: melody notes exceed the new score length.",
+                });
+                return;
+            }
         }
 
         const removed = ctx.outlineUpdater.removeFocusElement();

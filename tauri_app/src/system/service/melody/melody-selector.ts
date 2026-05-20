@@ -1,5 +1,6 @@
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
+import MelodyState from "../../store/state/data/melody-state";
 
 type Context = {
     control: ControlState.Value;
@@ -27,10 +28,21 @@ const useMelodySelector = (ctx: Context) => {
             : [melody.focusLock, melody.focus];
     };
 
+    const getAllScoreTracksTailBeatNote = () => {
+        return data.scoreTracks.reduce((maxTail, track) => {
+            const trackTail = track.notes.reduce((max, note) => {
+                const side = MelodyState.calcBeatSide(note);
+                return Math.max(max, side.pos + side.len);
+            }, 0);
+            return Math.max(maxTail, trackTail);
+        }, 0);
+    };
+
     return {
         getCurrScoreTrack,
         getFocusNote,
-        getFocusRange
+        getFocusRange,
+        getAllScoreTracksTailBeatNote,
     };
 };
 export default useMelodySelector;

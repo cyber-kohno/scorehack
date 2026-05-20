@@ -4,7 +4,7 @@
   import { controlStore, dataStore, derivedStore, settingsStore } from "../../../store/global-store";
   import ChordTheory from "../../../domain/theory/chord-theory";
   import TimelineLastMargin from "../TimelineTailMargin.svelte";
-  import StoreUtil from "../../../service/common/store-util";
+  import useDerivedSelector from "../../../service/derived/derived-selector";
   import type ElementState from "../../../store/state/data/element-state";
 
   export let scrollLimitProps: RefState.ScrollLimitProps;
@@ -13,10 +13,7 @@
   $: chordNameMode = $settingsStore.view.timeline.chordNameMode;
 
   $: chordCaches = (() => {
-    const focusPos = StoreUtil.getTimelineFocusPos(
-      $derivedStore,
-      $controlStore,
-    );
+    const focusPos = useDerivedSelector($derivedStore, $controlStore).getTimelineFocusPos();
     return $derivedStore.chordCaches.filter((c) => {
       const middle = c.viewPosLeft + c.viewPosWidth / 2;
       return (

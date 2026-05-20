@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import createArrangeUpdater from "../../service/arrange/arrange-updater";
 import { controlStore, dataStore } from "../../store/global-store";
-import { openConfirmDialog } from "../../service/common/confirm-dialog-service";
+import ConfirmDialog from "../../service/common/confirm-dialog-controller";
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
 
 const createContext = () => {
@@ -41,7 +41,7 @@ const createArrangeActions = () => {
             return;
         }
 
-        openConfirmDialog({
+        ConfirmDialog.open({
             tone: "danger",
             title: "Close Arrange Editor",
             messageLines: [
@@ -50,16 +50,9 @@ const createArrangeActions = () => {
             ],
             choices: [
                 {
-                    key: "y",
                     label: "Discard and close",
                     role: "proceed",
                     callback: closeArrangeImmediately,
-                },
-                {
-                    key: "n",
-                    label: "Cancel",
-                    role: "cancel",
-                    callback: () => {},
                 },
             ],
         });

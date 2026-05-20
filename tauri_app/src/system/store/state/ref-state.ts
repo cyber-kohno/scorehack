@@ -34,12 +34,12 @@ namespace RefState {
 
     type RefIndex = { seq: number, ref: HTMLElement };
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         elementRefs: [],
         trackArr: [[]],
         timerKeys: [],
         arrange: { piano: {}, finder: { records: [] } }
-    };
+    });
 
     export type ScrollLimitProps = {
         scrollMiddleX: number;

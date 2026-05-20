@@ -2,7 +2,7 @@
   import type DerivedState from "../../../store/state/derived-state";
   import type RefState from "../../../store/state/ref-state";
   import RhythmTheory from "../../../domain/theory/rhythm-theory";
-  import StoreUtil from "../../../service/common/store-util";
+  import useDerivedSelector from "../../../service/derived/derived-selector";
   import { controlStore, derivedStore, settingsStore } from "../../../store/global-store";
 
   export let baseCache!: DerivedState.BaseCache;
@@ -26,10 +26,7 @@
       bar?: number;
     }[] = [];
     const num = baseCache.lengthBeat * beatDiv16Count;
-    const focusPos = StoreUtil.getTimelineFocusPos(
-      $derivedStore,
-      $controlStore,
-    );
+    const focusPos = useDerivedSelector($derivedStore, $controlStore).getTimelineFocusPos();
     for (let i = 0; i < num; i++) {
       let bar: number | undefined = undefined;
       const left = (beatWidth / beatDiv16Count) * i;

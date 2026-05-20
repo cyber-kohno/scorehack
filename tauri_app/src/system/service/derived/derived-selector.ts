@@ -26,6 +26,16 @@ const useDerivedSelector = (derivedStore: DerivedState.Value, controlStore: Cont
         return chordCache.viewPosLeft + chordCache.viewPosWidth;
     }
 
+    const getTimelineFocusPos = () => {
+        let pos = 0;
+        const chordSeq = elementCaches[outline.focus].lastChordSeq;
+        if (chordSeq !== -1) {
+            const chordCache = chordCaches[chordSeq];
+            pos = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;
+        }
+        return pos;
+    }
+
     const getCurElement = () => {
         const focus = outline.focus;
         if (elementCaches[focus] == undefined) throw new Error("elementCache must exist.");
@@ -83,6 +93,7 @@ const useDerivedSelector = (derivedStore: DerivedState.Value, controlStore: Cont
         getChordInfoFromElementSeq,
         getBeatNoteTail,
         getChordBlockRight,
+        getTimelineFocusPos,
         getCurElement,
         getCurBase,
         getCurChord,

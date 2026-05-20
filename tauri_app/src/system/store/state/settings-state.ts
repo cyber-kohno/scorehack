@@ -48,7 +48,7 @@ namespace SettingsState {
         envs: Envs;
     }
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         view: {
             timeline: {
                 beatWidth: 120,
@@ -67,7 +67,7 @@ namespace SettingsState {
             SF_FILE_DIR: "",
             SCH_FILE_DIR: ""
         }
-    };
+    });
 }
 
 export default SettingsState;

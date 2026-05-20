@@ -8,13 +8,13 @@ namespace ToastState {
         text: string;
     };
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         x: 0,
         y: 0,
         durationMs: 1800,
         width: 240,
         text: "",
-    };
+    });
 }
 
 export default ToastState;

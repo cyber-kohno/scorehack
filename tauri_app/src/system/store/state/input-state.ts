@@ -11,7 +11,7 @@ namespace InputState {
         holdCtrl: boolean;
     };
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         holdE: false,
         holdD: false,
         holdF: false,
@@ -20,7 +20,7 @@ namespace InputState {
         holdG: false,
         holdShift: false,
         holdCtrl: false,
-    };
+    });
 
     export type Callbacks = {
         [K in keyof Value]?: () => void;

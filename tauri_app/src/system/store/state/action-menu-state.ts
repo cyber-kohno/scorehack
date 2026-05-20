@@ -1,6 +1,6 @@
 namespace ActionMenuState {
 
-    export type ItemRole = "normal" | "danger";
+    export type ItemRole = "normal" | "warning" | "danger";
 
     export type ActionItem = {
         type: "action";
@@ -22,10 +22,10 @@ namespace ActionMenuState {
         items: Item[];
     };
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         path: [0],
         items: [],
-    };
+    });
 }
 
 export default ActionMenuState;

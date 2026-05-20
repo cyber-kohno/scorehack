@@ -3,7 +3,7 @@
   import TonalityTheory from "../../../domain/theory/tonality-theory";
   import RhythmTheory from "../../../domain/theory/rhythm-theory";
     import { controlStore, derivedStore } from "../../../store/global-store";
-    import StoreUtil from "../../../service/common/store-util";
+    import useDerivedSelector from "../../../service/derived/derived-selector";
 
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
@@ -23,10 +23,7 @@
       tempo?: Diff;
       rhythm?: Diff;
     }[] = [];
-    const focusPos = StoreUtil.getTimelineFocusPos(
-      $derivedStore,
-      $controlStore,
-    );
+    const focusPos = useDerivedSelector($derivedStore, $controlStore).getTimelineFocusPos();
     $derivedStore.chordCaches.forEach((chordCache) => {
       const x = chordCache.viewPosLeft;
       const middle = chordCache.viewPosLeft + chordCache.viewPosWidth / 2;

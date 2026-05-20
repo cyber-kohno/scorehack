@@ -1,6 +1,6 @@
 <script lang="ts">
   import { actionMenuStore, controlStore, derivedStore, refStore } from "../../../store/global-store";
-  import ActionMenu from "../../../service/common/action-menu-service";
+  import ActionMenu from "../../../service/common/action-menu-controller";
   import type ActionMenuState from "../../../store/state/action-menu-state";
 
   $: actionMenu = $actionMenuStore;
@@ -145,6 +145,16 @@
 
   .item[data-role="danger"] {
     color: #ffd7d7;
+  }
+
+  .item[data-role="warning"] {
+    color: #ffe4b3;
+  }
+
+  .item[data-role="warning"].focus {
+    border-color: #d6a85b;
+    background-color: #59442a;
+    color: #fff0cf;
   }
 
   .item[data-role="danger"].focus {

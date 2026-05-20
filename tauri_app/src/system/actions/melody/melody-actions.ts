@@ -401,6 +401,7 @@ const createMelodyActions = () => {
     const moveNoteLen = (dir: -1 | 1) => {
         const ctx = createContext();
         const note = ctx.melodySelector.getFocusNote();
+        const baseTail = ctx.derivedSelector.getBeatNoteTail();
 
         if (note == undefined) {
             throw new Error("moveNoteLen requires a focused note.");
@@ -409,7 +410,7 @@ const createMelodyActions = () => {
             throw new Error("moveNoteLen cannot be used while focus range is active.");
         }
 
-        const moved = ctx.melodyUpdater.moveNoteLen(note, dir);
+        const moved = ctx.melodyUpdater.moveNoteLen(note, dir, baseTail);
         if (!moved) return;
 
         ctx.refUpdater.adjustGridScrollXFromNote(note);

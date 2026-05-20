@@ -29,9 +29,9 @@ namespace ArrangeState {
     guitarLib: GuitarEditorState.createInitialLib(),
   });
 
-  export const INITIAL: DataProps = {
+  export const createInitial = (): DataProps => ({
     tracks: [createPianoTrackInitial("track0")],
-  };
+  });
 
   export type EditorProps = {
     method: ArrangeState.ArrangeMedhod;

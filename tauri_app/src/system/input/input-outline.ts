@@ -8,7 +8,7 @@ import startPlaybackTimeline from "../service/playback/timeline/start-playback-t
 import stopPlaybackTimeline from "../service/playback/timeline/stop-playback-timeline";
 import type PlaybackCacheState from "../service/playback/timeline/playback-cache-state";
 import ScoreHistory from "../infra/tauri/history/score-history";
-import ActionMenu from "../service/common/action-menu-service";
+import ActionMenu from "../service/common/action-menu-controller";
 
 const useInputOutline = () => {
 

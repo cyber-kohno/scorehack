@@ -4,7 +4,6 @@ namespace ConfirmDialogState {
     export type ChoiceRole = "proceed" | "cancel" | "neutral";
 
     export type Choice = {
-        key: string;
         label: string;
         role?: ChoiceRole;
         callback: () => void | Promise<void>;
@@ -15,14 +14,16 @@ namespace ConfirmDialogState {
         title?: string;
         messageLines: string[];
         choices: Choice[];
+        focus: number;
     };
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         tone: "normal",
         title: "",
         messageLines: [],
         choices: [],
-    };
+        focus: 0,
+    });
 }
 
 export default ConfirmDialogState;

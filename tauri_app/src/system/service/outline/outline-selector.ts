@@ -1,6 +1,7 @@
 import type ElementState from "../../store/state/data/element-state";
 import type DataState from "../../store/state/data/data-state";
 import type ControlState from "../../store/state/control-state";
+import type DerivedState from "../../store/state/derived-state";
 
 type Context = {
   data: DataState.Value;
@@ -51,6 +52,22 @@ const upeOutlineSelector = (ctx: Context) => {
     return data.arrange.tracks[outline.trackIndex];
   };
 
+  const getSelectedChordLengthBeatNote = (derived: DerivedState.Value) => {
+    const { focus, focusLock } = control.outline;
+    const [start, end] = focusLock === -1
+      ? [focus, focus]
+      : focus < focusLock
+        ? [focus, focusLock]
+        : [focusLock, focus];
+
+    return derived.elementCaches
+      .slice(start, end + 1)
+      .reduce((sum, element) => {
+        if (element.chordSeq === -1) return sum;
+        return sum + derived.chordCaches[element.chordSeq].lengthBeatNote;
+      }, 0);
+  };
+
   return {
     getCurrentElement,
     getCurrentSectionData,
@@ -59,6 +76,7 @@ const upeOutlineSelector = (ctx: Context) => {
     getCurrentModulateData,
     getCurrentTempoData,
     getCurrHarmonizeTrack,
+    getSelectedChordLengthBeatNote,
   };
 };
 

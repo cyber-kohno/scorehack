@@ -1,16 +1,13 @@
 import { get } from "svelte/store";
 import InputState from "../store/state/input-state";
-import { actionMenuStore, confirmDialogStore, controlStore, inputStore, playbackStore, settingsStore, terminalStore } from "../store/global-store";
+import { actionMenuStore, confirmDialogStore, controlStore, inputStore, playbackStore, terminalStore } from "../store/global-store";
 import useInputActionMenu from "./input-action-menu";
 import useInputMelody from "./input-melody";
 import useInputOutline from "./input-outline";
 import useInputTerminal from "./input-terminal";
-import StoreUtil from "../service/common/store-util";
+import InputRootController from "../service/common/input-root-controller";
 import createTerminalActions from "../actions/terminal/terminal-actions";
-import FileUtil from "../infra/file/fileUtil";
-import { createToast } from "../service/common/toast-service";
-import ToastState from "../store/state/toast-state";
-import { chooseConfirmDialogByKey } from "../service/common/confirm-dialog-service";
+import ConfirmDialog from "../service/common/confirm-dialog-controller";
 
 const useInputRoot = () => {
     const terminalActions = createTerminalActions();
@@ -24,7 +21,7 @@ const useInputRoot = () => {
     const controlKeyHold = (eventKey: string, isDown: boolean) => {
 
         const set = (key: keyof InputState.Value, isDown: boolean) => {
-            StoreUtil.setInputHold(key, isDown);
+            InputRootController.setInputHold(key, isDown);
         };
         switch (eventKey) {
             case "e": { set('holdE', isDown) } break;
@@ -56,14 +53,19 @@ const useInputRoot = () => {
         if (isConfirmDialogActive()) {
             e.preventDefault();
             e.stopPropagation();
-            inputStore.set({ ...InputState.INITIAL });
-            chooseConfirmDialogByKey(e.key);
+            inputStore.set(InputState.createInitial());
+            switch (e.key) {
+                case "ArrowLeft": ConfirmDialog.move(-1); break;
+                case "ArrowRight": ConfirmDialog.move(1); break;
+                case "Enter": ConfirmDialog.apply(); break;
+                case "Escape": ConfirmDialog.cancel(); break;
+            }
             return;
         }
         if (isActionMenuActive()) {
             e.preventDefault();
             e.stopPropagation();
-            inputStore.set({ ...InputState.INITIAL });
+            inputStore.set(InputState.createInitial());
             useInputActionMenu().control(e.key);
             return;
         }
@@ -80,7 +82,7 @@ const useInputRoot = () => {
         const isPlayback = get(playbackStore).timerKeys != null;
         if (e.ctrlKey && normalizedKey === "s") e.preventDefault();
 
-        if (!StoreUtil.hasHold(input)) {
+        if (!InputRootController.hasHold(input)) {
             if (isTerminalActive()) {
                 const inputTerminal = useInputTerminal();
                 inputTerminal.control(eventKey);
@@ -92,7 +94,7 @@ const useInputRoot = () => {
                 switch (eventKey) {
                     case 'r': {
                         if (isUseArrange) break;
-                        StoreUtil.switchMode();
+                        InputRootController.switchMode();
                     } break;
                     case 't': {
                         terminalActions.open();
@@ -130,13 +132,13 @@ const useInputRoot = () => {
         if (isConfirmDialogActive()) {
             e.preventDefault();
             e.stopPropagation();
-            inputStore.set({ ...InputState.INITIAL });
+            inputStore.set(InputState.createInitial());
             return;
         }
         if (isActionMenuActive()) {
             e.preventDefault();
             e.stopPropagation();
-            inputStore.set({ ...InputState.INITIAL });
+            inputStore.set(InputState.createInitial());
             return;
         }
 
@@ -156,28 +158,7 @@ const useInputRoot = () => {
 
             switch (eventKey.toLowerCase()) {
                 case "s": {
-                    const fileUtil = FileUtil.getUtil();
-                    fileUtil.saveScoreFile({
-                        defaultDirectory: get(settingsStore).envs.SCH_FILE_DIR,
-                        success: (handle) => {
-                            createToast({
-                                ...ToastState.INITIAL,
-                                x: 12,
-                                y: 48,
-                                width: 280,
-                                text: `Saved. [${handle.name}]`,
-                            });
-                        },
-                        cancel: () => {
-                            createToast({
-                                ...ToastState.INITIAL,
-                                x: 12,
-                                y: 48,
-                                width: 280,
-                                text: "Save canceled.",
-                            });
-                        },
-                    });
+                    InputRootController.saveScore();
                 } break;
             }
         };

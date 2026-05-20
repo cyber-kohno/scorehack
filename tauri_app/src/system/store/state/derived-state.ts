@@ -14,12 +14,12 @@ namespace DerivedState {
         outlineTailPos: number;
     }
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         baseCaches: [],
         chordCaches: [],
         elementCaches: [],
         outlineTailPos: 0
-    };
+    });
 
     export interface BeatRange {
         startTime: number;

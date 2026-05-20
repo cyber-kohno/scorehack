@@ -17,12 +17,12 @@ namespace ControlState {
         arrange: null | ArrangeState.EditorProps;
     }
 
-    export const OUTLINE_INITIAL: OutlineValue = {
+    export const createInitialOutline = (): OutlineValue => ({
         focus: 1,
         focusLock: -1,
         trackIndex: 0,
         arrange: null
-    };
+    });
 
 
     export type MelodyValue = {
@@ -37,7 +37,7 @@ namespace ControlState {
         };
     };
 
-    export const MELODY_INITIAL: MelodyValue = {
+    export const createInitialMelody = (): MelodyValue => ({
         cursor: {
             norm: { div: 1 },
             pos: 0,
@@ -49,13 +49,13 @@ namespace ControlState {
         isOverlap: false,
         trackIndex: 0,
         clipboard: { notes: null },
-    };
+    });
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         mode: "harmonize",
-        outline: OUTLINE_INITIAL,
-        melody: MELODY_INITIAL
-    }
+        outline: createInitialOutline(),
+        melody: createInitialMelody()
+    });
 
 }
 

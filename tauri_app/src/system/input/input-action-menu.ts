@@ -1,4 +1,4 @@
-import ActionMenu from "../service/common/action-menu-service";
+import ActionMenu from "../service/common/action-menu-controller";
 
 const useInputActionMenu = () => {
     const control = (eventKey: string) => {

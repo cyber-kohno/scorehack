@@ -11,11 +11,11 @@ namespace DataState {
         arrange: ArrangeState.DataProps;
     }
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         elements: ElementState.getInitialElements(),
         scoreTracks: [MelodyState.createMelodyTrackScoreInitial()],
         audioTracks: [],
-        arrange: ArrangeState.INITIAL
-    }
+        arrange: ArrangeState.createInitial()
+    });
 }
 export default DataState;

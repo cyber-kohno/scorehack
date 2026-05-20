@@ -1,8 +1,17 @@
 <script lang="ts">
+  import { get } from "svelte/store";
   import { confirmDialogStore } from "../../store/global-store";
-  import { chooseConfirmDialogByKey } from "../../service/common/confirm-dialog-service";
+  import ConfirmDialog from "../../service/common/confirm-dialog-controller";
 
   $: dialog = $confirmDialogStore;
+
+  const selectChoice = (focus: number) => {
+    const current = get(confirmDialogStore);
+    if (current == null) return;
+
+    confirmDialogStore.set({ ...current, focus });
+    ConfirmDialog.apply();
+  };
 </script>
 
 {#if dialog != null}
@@ -17,14 +26,14 @@
         {/each}
       </div>
       <div class="choices">
-        {#each dialog.choices as choice}
+        {#each dialog.choices as choice, index}
           <button
             type="button"
             class="choice"
+            class:focus={index === dialog.focus}
             data-role={choice.role ?? "neutral"}
-            on:click={() => chooseConfirmDialogByKey(choice.key)}
+            on:click={() => selectChoice(index)}
           >
-            <span class="key">{choice.key}</span>
             <span class="label">{choice.label}</span>
           </button>
         {/each}
@@ -85,10 +94,10 @@
     gap: 7px;
     min-height: 30px;
     padding: 4px 10px;
-    border: solid 1px #6b9abc;
-    border-radius: 5px;
-    background-color: #16374f;
-    color: #d8f7ff;
+    border: solid 2px #4f7fa5;
+    border-radius: 4px;
+    background-color: transparent;
+    color: #c8f3ff;
     font: inherit;
     font-size: 13px;
     line-height: 18px;
@@ -96,33 +105,44 @@
 
   .choice[data-role="proceed"] {
     border-color: #77d0c4;
+    color: #c8f3ff;
+  }
+
+  .choice[data-role="proceed"].focus {
+    border-color: #77d0c4;
     background-color: #1c5b66;
     color: #e4fdff;
-    font-weight: 700;
   }
 
   .dialog[data-tone="danger"] .choice[data-role="proceed"] {
+    border-color: #e08989;
+    color: #ffd7d7;
+  }
+
+  .dialog[data-tone="danger"] .choice[data-role="proceed"].focus {
     border-color: #e08989;
     background-color: #5a2f3e;
     color: #ffe7e7;
   }
 
   .choice[data-role="cancel"] {
-    background-color: #20384c;
+    border-color: #6aa7c8;
+    color: #d6f7ff;
   }
 
-  .key {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 22px;
-    height: 20px;
-    padding: 0 4px;
-    border-radius: 4px;
-    background-color: #d6f7ff;
-    color: #0d263a;
-    font-size: 12px;
-    font-weight: 700;
+  .choice[data-role="cancel"].focus {
+    border-color: #6aa7c8;
+    background-color: #214763;
+    color: #d6f7ff;
+  }
+
+  .choice.focus {
+    border-color: #77d0c4;
+    background-color: #1c5b66;
+    color: #e4fdff;
+    text-shadow:
+      0.35px 0 currentColor,
+      -0.35px 0 currentColor;
   }
 
   .label {

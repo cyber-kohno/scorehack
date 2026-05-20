@@ -32,28 +32,29 @@ namespace SettingsFile {
     };
 
     const mergeSettings = (settings: Partial<SettingsState.Value>): SettingsState.Value => {
+        const initial = SettingsState.createInitial();
         const merged = {
-            ...SettingsState.INITIAL,
+            ...initial,
             ...settings,
             view: {
-                ...SettingsState.INITIAL.view,
+                ...initial.view,
                 ...settings.view,
                 timeline: {
-                    ...SettingsState.INITIAL.view.timeline,
+                    ...initial.view.timeline,
                     ...settings.view?.timeline,
                 },
             },
             playback: {
-                ...SettingsState.INITIAL.playback,
+                ...initial.playback,
                 ...settings.playback,
                 swing: {
-                    ...SettingsState.INITIAL.playback.swing,
+                    ...initial.playback.swing,
                     ...settings.playback?.swing,
                 },
             },
-            userSoundFonts: settings.userSoundFonts ?? SettingsState.INITIAL.userSoundFonts,
+            userSoundFonts: settings.userSoundFonts ?? initial.userSoundFonts,
             envs: {
-                ...SettingsState.INITIAL.envs,
+                ...initial.envs,
                 ...settings.envs,
             },
         };

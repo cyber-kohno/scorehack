@@ -4,8 +4,7 @@ namespace FileState {
         score?: Handle
     }
 
-    export const INITIAL: Value = {
-    }
+    export const createInitial = (): Value => ({});
 
     export type Handle = {
         path: string;

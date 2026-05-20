@@ -17,7 +17,7 @@ namespace PlaybackState {
 
     };
 
-    export const INITIAL: Value = {
+    export const createInitial = (): Value => ({
         timerKeys: null,
         intervalKeys: null,
         lastTime: -1,
@@ -26,7 +26,7 @@ namespace PlaybackState {
         audios: [],
         sfItems: [],
         userSfItems: []
-    };
+    });
 
     export type SFItem = {
         instrumentName: InstrumentName;

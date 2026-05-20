@@ -6,7 +6,7 @@
   import RhythmTheory from "../../../domain/theory/rhythm-theory";
   import TonalityTheory from "../../../domain/theory/tonality-theory";
   import useMelodySelector from "../../../service/melody/melody-selector";
-    import StoreUtil from "../../../service/common/store-util";
+  import useDerivedSelector from "../../../service/derived/derived-selector";
 
   type PitchType = "tonic" | "other" | "scale";
 
@@ -26,7 +26,7 @@
       width: number;
     }[] = [];
     const cnt = baseCache.lengthBeat * beatDiv16Count;
-    const focusPos = StoreUtil.getTimelineFocusPos($derivedStore, $controlStore);
+    const focusPos = useDerivedSelector($derivedStore, $controlStore).getTimelineFocusPos();
     for (let i = 0; i < cnt; i++) {
       const left = (beatWidth / beatDiv16Count) * i;
       const absLeft = baseCache.viewPosLeft + left;
