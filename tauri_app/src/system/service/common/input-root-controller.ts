@@ -19,6 +19,7 @@ namespace InputRootController {
         }
         control.mode = mode === 'harmonize' ? 'melody' : 'harmonize';
         ref.trackArr.forEach(t => t.length = 0);
+        ref.noteRefs.forEach(t => t.length = 0);
         controlStore.set({ ...control });
     };
 

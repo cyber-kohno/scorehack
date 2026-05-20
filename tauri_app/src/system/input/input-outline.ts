@@ -76,7 +76,13 @@ const useInputOutline = () => {
       } break;
 
       case "b": outlineActions.openArrangeEditor(); break;
-      case "w": outlineActions.openArrangeFinder(); break;
+      case "w": {
+        const control = get(controlStore);
+        const data = get(dataStore);
+        const element = data.elements[control.outline.focus];
+        if (element.type === "section") outlineActions.openSectionNameInput();
+        else outlineActions.openArrangeFinder();
+      } break;
       case " ": togglePlayback(); break;
     }
   };

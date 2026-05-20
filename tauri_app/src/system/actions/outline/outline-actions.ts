@@ -14,6 +14,7 @@ import createOutlineBackingActions from "./outline-backing-actions";
 import createOutlineEventActions from "./outline-event-actions";
 import ScoreHistory from "../../infra/tauri/history/score-history";
 import useMelodySelector from "../../service/melody/melody-selector";
+import FloatingTextInput from "../../service/common/floating-text-input-controller";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -140,6 +141,38 @@ const createOutlineActions = () => {
         ctx.commitDataAndRecalculate();
         ctx.refUpdater.adjustGridScrollXFromOutline();
         ctx.refUpdater.adjustOutlineScroll();
+    };
+
+    const renameSection = (value: string) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "section") return;
+
+        const name = value.trim();
+        if (name.length === 0) return;
+
+        ctx.outlineUpdater.setSectionName(name);
+        ctx.commitDataAndRecalculate();
+    };
+
+    const openSectionNameInput = () => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "section") return;
+
+        const sectionData = element.data as ElementState.DataSection;
+        const elementRef = get(refStore).elementRefs.find((item) => item.seq === ctx.outline.focus)?.ref;
+        if (elementRef == undefined) return;
+
+        const rect = elementRef.getBoundingClientRect();
+        FloatingTextInput.open({
+            value: sectionData.name,
+            cursor: sectionData.name.length,
+            left: rect.left,
+            top: rect.bottom + 10,
+            width: Math.max(120, rect.width),
+            apply: renameSection,
+        });
     };
 
     const moveFocus = (dir: -1 | 1) => {
@@ -309,6 +342,8 @@ const createOutlineActions = () => {
         moveFocus,
         moveRange,
         moveSection,
+        openSectionNameInput,
+        renameSection,
         removeFocusElement,
         setDegree,
         undoRedu

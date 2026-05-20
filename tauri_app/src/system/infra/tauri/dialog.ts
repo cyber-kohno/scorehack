@@ -12,14 +12,26 @@ export const openScoreFilePath = async (defaultDirectory?: string) => {
   return path;
 };
 
-export const saveScoreFilePath = async (extension: string, defaultDirectory?: string) => {
+export const saveTextFilePath = async (props: {
+  extension: string;
+  name: string;
+  defaultDirectory?: string;
+}) => {
   const path = await save({
-    defaultPath: defaultDirectory === "" ? undefined : defaultDirectory,
-    filters: [{ name: "Score File", extensions: [extension] }],
+    defaultPath: props.defaultDirectory === "" ? undefined : props.defaultDirectory,
+    filters: [{ name: props.name, extensions: [props.extension] }],
   });
 
   if (path == null || Array.isArray(path)) return null;
   return path;
+};
+
+export const saveScoreFilePath = async (extension: string, defaultDirectory?: string) => {
+  return saveTextFilePath({
+    extension,
+    defaultDirectory,
+    name: "Score File",
+  });
 };
 
 export const openMp3FilePath = async () => {

@@ -66,6 +66,23 @@
     refs[existsIndex].ref = ref;
   };
 
+  const registerNoteRef = (index: number, ref: HTMLElement | null) => {
+    const refs = $refStore.noteRefs[trackIndex] ?? ($refStore.noteRefs[trackIndex] = []);
+    const existsIndex = refs.findIndex((r) => r.seq === index);
+
+    if (ref == null) {
+      if (existsIndex !== -1) refs.splice(existsIndex, 1);
+      return;
+    }
+
+    if (existsIndex === -1) {
+      refs.push({ seq: index, ref });
+      return;
+    }
+
+    refs[existsIndex].ref = ref;
+  };
+
   $: cursorMiddle = (() => {
     const melody = $controlStore.melody;
     const note = melody.focus === -1 ? melody.cursor : notes[melody.focus];
@@ -126,6 +143,7 @@
       cursor={melody.cursor}
       scoreBase={item.scoreBase}
       {registerEffectRef}
+      {registerNoteRef}
     />
   {/each}
 {/if}

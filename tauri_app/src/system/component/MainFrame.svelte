@@ -2,6 +2,7 @@
   import ArrangeFrame from "./arrange/ArrangeFrame.svelte";
   import ArrangeFinderFrame from "./arrange/finder/ArrangeFinderFrame.svelte";
   import ConfirmDialogLayer from "./common/ConfirmDialogLayer.svelte";
+  import FloatingTextInputLayer from "./common/FloatingTextInputLayer.svelte";
   import RootHeader from "./header/RootHeader.svelte";
   import OutlineFrame from "./outline/OutlineFrame.svelte";
   import TerminalFrame from "./terminal/TerminalFrame.svelte";
@@ -39,6 +40,7 @@
         <ArrangeFinderFrame />
     {/if}
     <ConfirmDialogLayer />
+    <FloatingTextInputLayer />
     <ToastLayer />
 </div>
 

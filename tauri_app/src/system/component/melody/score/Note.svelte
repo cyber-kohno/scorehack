@@ -9,7 +9,7 @@
   import { getNoteDisplayUnit, getProtrusionHeight } from "./note-display-util";
   import type ElementState from "../../../store/state/data/element-state";
 
-  export let note: MelodyState.Note;
+  export let note: MelodyState.VocalNote;
   export let index: number;
   export let scrollLimitProps: RefState.ScrollLimitProps;
   export let cursorMiddle: number;
@@ -20,6 +20,7 @@
   export let cursor: MelodyState.Note;
   export let scoreBase: ElementState.DataInit;
   export let registerEffectRef: (index: number, ref: HTMLElement | null) => void;
+  export let registerNoteRef: (index: number, ref: HTMLElement | null) => void;
 
   type OperationStatus =
     | "move" // 移動
@@ -32,13 +33,16 @@
     | "none"; // なし
 
   let ref: HTMLElement | null = null;
+  let noteRef: HTMLElement | null = null;
 
   onMount(() => {
     registerEffectRef(index, ref);
+    registerNoteRef(index, noteRef);
   });
 
   onDestroy(() => {
     registerEffectRef(index, null);
+    registerNoteRef(index, null);
   });
 
   $: tonality = scoreBase.tonality;
@@ -82,6 +86,7 @@
       class="frame"
       style:top="{Layout.getPitchTop(note.pitch) - 2}px"
       data-isScale={isScale}
+      bind:this={noteRef}
     >
       {#if !isPlayback}
         {#if !isCriteria}
@@ -90,6 +95,9 @@
           <UnitDisplay note={cursor} />
         {/if}
         <div class="info">{scaleDegreeLabel}</div>
+        {#if note.pron}
+          <div class="pron">{note.pron}</div>
+        {/if}
         <Factors {note} ts={scoreBase.rhythm.ts} />
       {/if}
     </div>
@@ -177,5 +185,22 @@
     top: 32px;
     font-size: 14px;
     font-weight: 600;
+  }
+
+  .pron {
+    display: inline-block;
+    position: absolute;
+    z-index: 5;
+    left: 0;
+    top: 66px;
+    max-width: 220px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.55);
+    color: #ff7ccf;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 16px;
+    white-space: nowrap;
   }
 </style>

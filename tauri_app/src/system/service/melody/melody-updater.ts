@@ -280,6 +280,16 @@ const createMelodyUpdater = (ctx: Context) => {
         track.notes.splice(start, end - start + 1);
     };
 
+    const setNotePron = (note: MelodyState.VocalNote, value: string) => {
+        const nextValue = value.trim();
+        if (nextValue.length === 0) {
+            delete note.pron;
+            return;
+        }
+
+        note.pron = nextValue;
+    };
+
     const copyNotes = () => {
         const [start, end] = getFocusRange();
         const notes = track.notes.filter((_, i) => {
@@ -550,6 +560,7 @@ const createMelodyUpdater = (ctx: Context) => {
         moveSpaceFromCursor,
         pasteClipboardNotes,
         removeNotes,
+        setNotePron,
         setNoOverlap,
         syncCursorFromElementSeq,
     };

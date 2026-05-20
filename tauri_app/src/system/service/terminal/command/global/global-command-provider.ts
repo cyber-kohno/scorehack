@@ -1,6 +1,6 @@
 import FileUtil from "../../../../infra/file/fileUtil";
 import { get } from "svelte/store";
-import { dataStore } from "../../../../store/global-store";
+import { dataStore, derivedStore } from "../../../../store/global-store";
 import UserSoundFontCache from "../../../../infra/audio/user-soundfont-cache";
 import UserSoundFontPath from "../../../../infra/audio/user-soundfont-path";
 import SettingsFile from "../../../../infra/settings/settings-file";
@@ -13,6 +13,7 @@ import { formatUserSoundFontRef, prepareUserSoundFont, UserSoundFontPrepareError
 import TerminalCommand from "../../terminal-command";
 import useSoundfontLoader from "../../../playback/soundfont-loader";
 import createRfsCommand from "./rfs-command";
+import MusicXmlExporter from "../../../export/musicxml-exporter";
 
 const createGlobalCommands = (ctx: TerminalCommand.Context) => {
   const { logger, settings, terminal } = ctx;
@@ -34,6 +35,7 @@ const createGlobalCommands = (ctx: TerminalCommand.Context) => {
   };
 
   const saveTargets = ["project", "settings"];
+  const exportTargets = ["musicxml"];
 
   const isUserSoundFontRef = (ref: TrackSoundFontRef | undefined): ref is UserTrackSoundFontRef => {
     return ref?.source === "user";
@@ -132,6 +134,54 @@ const createGlobalCommands = (ctx: TerminalCommand.Context) => {
             },
             cancel() {
               logger.outputInfo("File saveing was canceled.");
+              terminal.wait = false;
+              ctx.commit.terminal();
+            },
+          });
+        },
+      },
+      {
+        ...defaultProps,
+        funcKey: "export",
+        usage: "Export the active data to an external file format.",
+        args: [
+          {
+            name: "format: string",
+            getCandidate: () => exportTargets,
+          },
+        ],
+        callback: (args) => {
+          const format = logger.validateRequired(args[0], 1);
+          if (format == null) return;
+
+          if (format !== "musicxml") {
+            logger.outputError(`Unknown export format. [${format}]`);
+            ctx.commit.terminal();
+            return;
+          }
+
+          const track = ctx.selectors.melody.getCurrScoreTrack();
+          const derived = get(derivedStore);
+          const xml = MusicXmlExporter.create({
+            title: track.name,
+            track,
+            derived,
+          });
+
+          logger.outputInfo("Select the file to export.");
+          terminal.wait = true;
+          fileUtil.saveTextFile({
+            defaultDirectory: settings.envs.SCH_FILE_DIR,
+            extension: "musicxml",
+            filterName: "MusicXML File",
+            plainData: xml,
+            success: (handle) => {
+              logger.outputInfo(`MusicXML exported successfully. [${handle.name}]`);
+              terminal.wait = false;
+              ctx.commit.terminal();
+            },
+            cancel: () => {
+              logger.outputInfo("MusicXML export was canceled.");
               terminal.wait = false;
               ctx.commit.terminal();
             },

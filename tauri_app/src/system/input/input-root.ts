@@ -1,7 +1,8 @@
 import { get } from "svelte/store";
 import InputState from "../store/state/input-state";
-import { actionMenuStore, confirmDialogStore, controlStore, inputStore, playbackStore, terminalStore } from "../store/global-store";
+import { actionMenuStore, confirmDialogStore, controlStore, floatingTextInputStore, inputStore, playbackStore, terminalStore } from "../store/global-store";
 import useInputActionMenu from "./input-action-menu";
+import useInputFloatingTextInput from "./input-floating-text-input";
 import useInputMelody from "./input-melody";
 import useInputOutline from "./input-outline";
 import useInputTerminal from "./input-terminal";
@@ -16,6 +17,7 @@ const useInputRoot = () => {
     const inputMelody = useInputMelody();
     const isTerminalActive = () => get(terminalStore) != null;
     const isConfirmDialogActive = () => get(confirmDialogStore) != null;
+    const isFloatingTextInputActive = () => get(floatingTextInputStore) != null;
     const isActionMenuActive = () => get(actionMenuStore) != null;
 
     const controlKeyHold = (eventKey: string, isDown: boolean) => {
@@ -60,6 +62,13 @@ const useInputRoot = () => {
                 case "Enter": ConfirmDialog.apply(); break;
                 case "Escape": ConfirmDialog.cancel(); break;
             }
+            return;
+        }
+        if (isFloatingTextInputActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            useInputFloatingTextInput().control(e.key);
             return;
         }
         if (isActionMenuActive()) {
@@ -130,6 +139,12 @@ const useInputRoot = () => {
 
     const controlKeyUp = (e: KeyboardEvent) => {
         if (isConfirmDialogActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            return;
+        }
+        if (isFloatingTextInputActive()) {
             e.preventDefault();
             e.stopPropagation();
             inputStore.set(InputState.createInitial());

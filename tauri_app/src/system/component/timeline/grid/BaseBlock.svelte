@@ -128,7 +128,7 @@
 
     background-color: #3ec9ce70;
     top: 0;
-    height: calc(var(--pitch-top-margin) + var(--pitch-frame-height));
+    height: calc(var(--pitch-top-margin) + var(--pitch-frame-height) + var(--pitch-bottom-margin));
   }
   .wrap[data-even="false"] {
     background-color: #3ecea370;
@@ -139,7 +139,7 @@
     position: absolute;
     z-index: 2;
     top: var(--pitch-top-margin);
-    height: calc(100% - var(--pitch-top-margin));
+    height: calc(100% - var(--pitch-top-margin) - var(--pitch-bottom-margin));
     background-color: rgba(0, 0, 0, 0.303);
   }
 

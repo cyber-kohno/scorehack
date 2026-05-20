@@ -10,6 +10,7 @@ import createMelodyUpdater from "../../service/melody/melody-updater";
 import useMelodySelector from "../../service/melody/melody-selector";
 import { getNoteDisplayRate } from "../../component/melody/score/note-display-util";
 import ScoreHistory from "../../infra/tauri/history/score-history";
+import FloatingTextInput from "../../service/common/floating-text-input-controller";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -28,6 +29,7 @@ const createContext = () => {
     return {
         control,
         data,
+        ref,
         settings,
         melody,
         derivedSelector: useDerivedSelector(derived, control),
@@ -463,6 +465,39 @@ const createMelodyActions = () => {
         ctx.commitControl();
     };
 
+    const openPronInput = () => {
+        const ctx = createContext();
+        const note = ctx.melodySelector.getFocusNote() as MelodyState.VocalNote | undefined;
+        const noteIndex = ctx.melody.focus;
+
+        if (note == undefined || noteIndex === -1) return;
+
+        const noteRef = ctx.ref.noteRefs[ctx.melody.trackIndex]?.find((item) => item.seq === noteIndex)?.ref;
+        if (noteRef == undefined) return;
+
+        const rect = noteRef.getBoundingClientRect();
+        const value = note.pron ?? "";
+
+        FloatingTextInput.open({
+            value,
+            cursor: value.length,
+            left: rect.left,
+            top: rect.bottom + 10,
+            width: Math.max(120, rect.width),
+            apply: (value) => setNotePron(ctx.melody.trackIndex, noteIndex, value),
+        });
+    };
+
+    const setNotePron = (trackIndex: number, noteIndex: number, value: string) => {
+        const ctx = createContext();
+        const track = ctx.data.scoreTracks[trackIndex];
+        const note = track?.notes[noteIndex];
+        if (note == undefined) return;
+
+        ctx.melodyUpdater.setNotePron(note, value);
+        ctx.commitData();
+    };
+
     const toggleChordNameMode = () => {
         const ctx = createContext();
         const timeline = ctx.settings.view.timeline;
@@ -516,6 +551,7 @@ const createMelodyActions = () => {
         moveSpaceFromCursor,
         copyNotes,
         pasteClipboardNotes,
+        openPronInput,
         removeFocusNotes,
         toggleChordNameMode,
         undoRedu

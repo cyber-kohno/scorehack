@@ -33,7 +33,7 @@ namespace ControlState {
         focus: number;
         focusLock: number;
         clipboard: {
-            notes: MelodyState.Note[] | null;
+            notes: MelodyState.VocalNote[] | null;
         };
     };
 

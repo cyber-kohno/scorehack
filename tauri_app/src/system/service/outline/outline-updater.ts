@@ -79,6 +79,16 @@ const createOutlineUpdater = (ctx: Context) => {
         element.data = chordData;
     };
 
+    const setSectionName = (name: string) => {
+        const element = getCurrentElement();
+        if (element.type !== "section") {
+            throw new Error(`section element is required. [${element.type}]`);
+        }
+
+        const data = element.data as ElementState.DataSection;
+        data.name = name;
+    };
+
     const modSymbol = (dir: "prev" | "next" | "lower" | "upper") => {
         const chordData = getChordData();
         if (chordData.degree == undefined) return false;
@@ -318,6 +328,7 @@ const createOutlineUpdater = (ctx: Context) => {
         openArrangeFinder,
         removeFocusElement,
         setChordData,
+        setSectionName,
         syncChordSeqFromNote,
         modBeat,
         modEat,

@@ -17,7 +17,7 @@ namespace MelodyState {
   }
 
   export interface VocalNote extends Note {
-    lyric?: string;
+    pron?: string;
   }
 
   export interface Track {

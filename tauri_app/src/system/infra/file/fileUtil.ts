@@ -1,7 +1,7 @@
 import MidiWriter from 'midi-writer-js';
 import pako from 'pako';
 import { get } from 'svelte/store';
-import { openMp3FilePath, openScoreFilePath, saveScoreFilePath } from '../tauri/dialog';
+import { openMp3FilePath, openScoreFilePath, saveScoreFilePath, saveTextFilePath } from '../tauri/dialog';
 import { readBinaryFile, readUtf8TextFile, writeUtf8TextFile } from '../tauri/fs';
 import { dataStore, fileStore, refStore } from '../../store/global-store';
 import MelodyState from '../../store/state/data/melody-state';
@@ -29,6 +29,10 @@ namespace FileUtil {
     export interface SaveFile extends SaveBase {
         plainData: string;
         extension: string;
+    }
+
+    export interface SaveTextFile extends SaveFile {
+        filterName: string;
     }
 
     const uint8ArrayToBase64 = (buffer: Uint8Array) => {
@@ -143,6 +147,29 @@ namespace FileUtil {
             saveFile({ ...props, plainData: saveFileStr, extension: 'sch' });
         }
 
+        const saveTextFile = (props: SaveTextFile) => {
+            (async () => {
+                const path = await saveTextFilePath({
+                    extension: props.extension,
+                    name: props.filterName,
+                    defaultDirectory: props.defaultDirectory,
+                });
+                if (path == null) {
+                    props.cancel();
+                    return;
+                }
+
+                const exportPath = path.toLowerCase().endsWith(`.${props.extension}`)
+                    ? path
+                    : `${path}.${props.extension}`;
+                const handle = toHandle(exportPath);
+                await writeUtf8TextFile(handle.path, props.plainData);
+                props.success(handle);
+            })().catch(() => {
+                props.cancel();
+            });
+        }
+
         const loadScoreFile = (success: (handle: FileState.Handle) => void, cancel: () => void, defaultDirectory?: string) => {
 
             (async () => {
@@ -160,6 +187,7 @@ namespace FileUtil {
                     dataStore.set(JSON.parse(text));
                     for (let i = 0; i < data.scoreTracks.length; i++) {
                         ref.trackArr.push([]);
+                        ref.noteRefs.push([]);
                     }
                     recalculate();
                     success(newFileHandle);
@@ -171,6 +199,7 @@ namespace FileUtil {
 
         return {
             saveScoreFile,
+            saveTextFile,
             loadScoreFile,
             loadMp3,
             downloadMidi,

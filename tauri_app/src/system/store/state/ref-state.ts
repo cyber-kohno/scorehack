@@ -19,6 +19,7 @@ namespace RefState {
 
         elementRefs: RefIndex[];
         trackArr: RefIndex[][];
+        noteRefs: RefIndex[][];
 
         timerKeys: RefTimerKey[];
     }
@@ -37,6 +38,7 @@ namespace RefState {
     export const createInitial = (): Value => ({
         elementRefs: [],
         trackArr: [[]],
+        noteRefs: [[]],
         timerKeys: [],
         arrange: { piano: {}, finder: { records: [] } }
     });

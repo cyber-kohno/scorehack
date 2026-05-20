@@ -128,6 +128,7 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                         notes: []
                     });
                     ref.trackArr.push([]);
+                    ref.noteRefs.push([]);
                     logger.outputInfo(`Created a new track. [${name}]`);
                     ctx.commit.data();
                     ctx.commit.ref();
@@ -209,6 +210,7 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                     const name = tracks[delIndex].name;
                     tracks.splice(delIndex, 1);
                     ref.trackArr.splice(delIndex, 1);
+                    ref.noteRefs.splice(delIndex, 1);
                     // 先頭以外が選択されている場合かつ、アクティブより上が削除され場合
                     if (delIndex > 0 && delIndex <= melody.trackIndex) melody.trackIndex--;
                     logger.outputInfo(`Track deleted. [${name}].`);

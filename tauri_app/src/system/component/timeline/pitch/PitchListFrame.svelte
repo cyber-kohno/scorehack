@@ -16,10 +16,13 @@
 </script>
 
 <div class="wrap" bind:this={$refStore.pitch}>
-  <div class="top-margin"></div>
-  {#each pitchNames as pitch}
-    <div class="item">{pitch}</div>
-  {/each}
+  <div class="content">
+    <div class="top-margin"></div>
+    {#each pitchNames as pitch}
+      <div class="item">{pitch}</div>
+    {/each}
+    <div class="bottom-margin"></div>
+  </div>
   {#if isMelodyMode}
     <PitchFocus />
   {/if}
@@ -35,12 +38,28 @@
     overflow: hidden;
     vertical-align: top;
   }
+  .content {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    height: calc(
+      var(--pitch-top-margin) + var(--pitch-frame-height) +
+        var(--pitch-bottom-margin)
+    );
+  }
   .top-margin {
     display: inline-block;
     position: relative;
     background-color: #a6d2d8;
     width: 100%;
     height: var(--pitch-top-margin);
+  }
+  .bottom-margin {
+    display: inline-block;
+    position: relative;
+    background-color: #a6d2d8;
+    width: 100%;
+    height: var(--pitch-bottom-margin);
   }
   .item {
     display: inline-block;

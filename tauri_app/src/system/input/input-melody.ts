@@ -67,6 +67,9 @@ const useInputMelody = () => {
                 case 'a': {
                     melodyActions.addNoteFromFocus();
                 } break;
+                case 'w': {
+                    melodyActions.openPronInput();
+                } break;
                 case '1': { melodyActions.changeCursorRate(0); } break;
                 case '2': { melodyActions.changeCursorRate(1); } break;
                 case '3': { melodyActions.changeCursorRate(2); } break;

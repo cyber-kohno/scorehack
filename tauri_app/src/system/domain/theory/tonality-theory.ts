@@ -86,18 +86,18 @@ namespace TonalityTheory {
 
     export const getScaleDegreeLabel = (index: number) => {
         const labels = [
-            "i",
-            "i#",
-            "ii",
-            "ii#",
-            "iii",
-            "iv",
-            "iv#",
-            "v",
-            "v#",
-            "vi",
-            "vi#",
-            "vii",
+            "1",
+            "#1",
+            "2",
+            "#2",
+            "3",
+            "4",
+            "#4",
+            "5",
+            "#5",
+            "6",
+            "#6",
+            "7",
         ];
         return labels[(index + 12) % 12];
     }

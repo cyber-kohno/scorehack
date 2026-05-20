@@ -78,6 +78,11 @@ namespace OutlineMenuProvider {
             case "section":
                 return [
                     {
+                        type: "action",
+                        label: "Rename",
+                        callback: outlineActions.openSectionNameInput,
+                    },
+                    {
                         type: "parent",
                         label: "Insert",
                         children: createInsertChildren(outlineActions),
