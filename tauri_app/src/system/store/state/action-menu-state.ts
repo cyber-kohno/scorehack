@@ -26,6 +26,30 @@ namespace ActionMenuState {
         path: [0],
         items: [],
     });
+
+    export const createFactory = () => ({
+        action: (
+            label: string,
+            callback: ActionItem["callback"],
+            role?: ItemRole,
+        ): ActionItem => {
+            const item: ActionItem = {
+                type: "action",
+                label,
+                callback,
+            };
+            if (role != undefined) item.role = role;
+            return item;
+        },
+        parent: (
+            label: string,
+            children: Item[],
+        ): ParentItem => ({
+            type: "parent",
+            label,
+            children,
+        }),
+    });
 }
 
 export default ActionMenuState;

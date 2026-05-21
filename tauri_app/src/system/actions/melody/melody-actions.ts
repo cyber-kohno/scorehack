@@ -167,6 +167,7 @@ const createMelodyActions = () => {
 
         ctx.melodyUpdater.setCursorRate(getFocusNoteDisplayRate(ctx, note));
         ctx.outlineUpdater.syncChordSeqFromNote(note);
+        ctx.refUpdater.adjustOutlineScroll();
         ctx.refUpdater.adjustGridScrollXFromNote(note);
         ctx.refUpdater.adjustGridScrollYFromCursor(note);
         ctx.commitControl();
@@ -205,6 +206,7 @@ const createMelodyActions = () => {
 
         ctx.melodyUpdater.setCursorRate(getFocusNoteDisplayRate(ctx, note));
         ctx.outlineUpdater.syncChordSeqFromNote(note);
+        ctx.refUpdater.adjustOutlineScroll();
         ctx.refUpdater.adjustGridScrollXFromNote(note);
         ctx.refUpdater.adjustGridScrollYFromCursor(note);
         ctx.playbackPitch(note.pitch);
@@ -226,6 +228,7 @@ const createMelodyActions = () => {
         if (note == undefined) return;
 
         ctx.outlineUpdater.syncChordSeqFromNote(note);
+        ctx.refUpdater.adjustOutlineScroll();
         ctx.refUpdater.adjustGridScrollXFromNote(note);
         ctx.refUpdater.adjustGridScrollYFromCursor(note);
         ctx.commitControl();
@@ -362,11 +365,13 @@ const createMelodyActions = () => {
         if (focusNote != undefined) {
             ctx.melodyUpdater.setCursorRate(getFocusNoteDisplayRate(ctx, focusNote));
             ctx.outlineUpdater.syncChordSeqFromNote(focusNote);
+            ctx.refUpdater.adjustOutlineScroll();
             ctx.refUpdater.adjustGridScrollXFromNote(focusNote);
             ctx.refUpdater.adjustGridScrollYFromCursor(focusNote);
         } else {
             const cursor = ctx.melody.cursor;
             ctx.outlineUpdater.syncChordSeqFromNote(cursor);
+            ctx.refUpdater.adjustOutlineScroll();
             ctx.refUpdater.adjustGridScrollXFromNote(cursor);
         }
         ctx.commitControl();

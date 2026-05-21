@@ -196,10 +196,11 @@
     max-width: 220px;
     padding: 1px 4px;
     border-radius: 2px;
-    background-color: rgba(0, 0, 0, 0.55);
-    color: #ff7ccf;
+    background-color: rgba(0, 0, 0, 0.807);
+    border-radius: 2px;
+    color: #fff383;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 400;
     line-height: 16px;
     white-space: nowrap;
   }

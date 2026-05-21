@@ -5,7 +5,6 @@
 
   $: actionMenu = $actionMenuStore;
   const MENU_WIDTH = 232;
-  const ITEM_HEIGHT = 28;
   const MENU_GAP = 0;
 
   $: [left, top] = (() => {

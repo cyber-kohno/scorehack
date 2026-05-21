@@ -1,6 +1,7 @@
 import type DerivedState from "../../store/state/derived-state";
 import MelodyState from "../../store/state/data/melody-state";
 import type TonalityTheory from "../../domain/theory/tonality-theory";
+import type RhythmTheory from "../../domain/theory/rhythm-theory";
 
 namespace MusicXmlExporter {
     const DIVISIONS = 480;
@@ -39,6 +40,16 @@ namespace MusicXmlExporter {
         return (ts.cnt * 4) / ts.unit;
     };
 
+    const roundUpToMeasureEnd = (
+        baseStart: number,
+        tail: number,
+        measureLength: number,
+    ) => {
+        const length = Math.max(0, tail - baseStart);
+        const measureCount = Math.ceil((length - 1e-9) / measureLength);
+        return baseStart + Math.max(1, measureCount) * measureLength;
+    };
+
     const buildMeasures = (derived: DerivedState.Value, track: MelodyState.ScoreTrack): MeasureInfo[] => {
         const noteTail = track.notes.reduce((tail, note) => {
             const side = MelodyState.calcBeatSide(note);
@@ -54,7 +65,10 @@ namespace MusicXmlExporter {
         derived.baseCaches.forEach((base, index) => {
             const measureLength = getMeasureLengthBeatNote(base);
             const nextBase = derived.baseCaches[index + 1];
-            const baseTail = nextBase?.startBeatNote ?? Math.max(base.startBeatNote + base.lengthBeatNote, tail);
+            const exactBaseTail = nextBase?.startBeatNote ?? Math.max(base.startBeatNote + base.lengthBeatNote, tail);
+            const baseTail = nextBase == undefined
+                ? roundUpToMeasureEnd(base.startBeatNote, exactBaseTail, measureLength)
+                : exactBaseTail;
             let start = base.startBeatNote;
             let isBaseStart = true;
 
@@ -93,6 +107,22 @@ namespace MusicXmlExporter {
             }
         }
         return best ?? 0;
+    };
+
+    const isSameTonality = (
+        left: TonalityTheory.Tonality,
+        right: TonalityTheory.Tonality,
+    ) => {
+        return left.key12 === right.key12
+            && left.scale === right.scale;
+    };
+
+    const isSameTimeSignature = (
+        left: RhythmTheory.TimeSignature,
+        right: RhythmTheory.TimeSignature,
+    ) => {
+        return left.cnt === right.cnt
+            && left.unit === right.unit;
     };
 
     const pitchToXml = (pitch: number) => {
@@ -216,25 +246,58 @@ namespace MusicXmlExporter {
         return segments;
     };
 
-    const renderAttributes = (measure: MeasureInfo) => {
+    const renderAttributes = (
+        measure: MeasureInfo,
+        prevBase: DerivedState.BaseCache | undefined,
+    ) => {
         const scoreBase = measure.base.scoreBase;
         const ts = scoreBase.rhythm.ts;
-        return [
+        const isFirst = prevBase == undefined;
+        const shouldRenderKey = isFirst
+            || !isSameTonality(prevBase.scoreBase.tonality, scoreBase.tonality);
+        const shouldRenderTime = isFirst
+            || !isSameTimeSignature(prevBase.scoreBase.rhythm.ts, ts);
+
+        if (!isFirst && !shouldRenderKey && !shouldRenderTime) return [];
+
+        const lines = [
             "      <attributes>",
-            `        <divisions>${DIVISIONS}</divisions>`,
-            "        <key>",
-            `          <fifths>${getFifths(scoreBase.tonality)}</fifths>`,
-            `          <mode>${scoreBase.tonality.scale}</mode>`,
-            "        </key>",
-            "        <time>",
-            `          <beats>${ts.cnt}</beats>`,
-            `          <beat-type>${ts.unit}</beat-type>`,
-            "        </time>",
-            "        <clef>",
-            "          <sign>G</sign>",
-            "          <line>2</line>",
-            "        </clef>",
-            "      </attributes>",
+        ];
+        if (isFirst) lines.push(`        <divisions>${DIVISIONS}</divisions>`);
+        if (shouldRenderKey) {
+            lines.push("        <key>");
+            lines.push(`          <fifths>${getFifths(scoreBase.tonality)}</fifths>`);
+            lines.push(`          <mode>${scoreBase.tonality.scale}</mode>`);
+            lines.push("        </key>");
+        }
+        if (shouldRenderTime) {
+            lines.push("        <time>");
+            lines.push(`          <beats>${ts.cnt}</beats>`);
+            lines.push(`          <beat-type>${ts.unit}</beat-type>`);
+            lines.push("        </time>");
+        }
+        if (isFirst) {
+            lines.push("        <clef>");
+            lines.push("          <sign>G</sign>");
+            lines.push("          <line>2</line>");
+            lines.push("        </clef>");
+        }
+        lines.push("      </attributes>");
+        return lines;
+    };
+
+    const renderTempoDirection = (
+        measure: MeasureInfo,
+        prevBase: DerivedState.BaseCache | undefined,
+    ) => {
+        const tempo = measure.base.scoreBase.tempo;
+        if (prevBase != undefined && prevBase.scoreBase.tempo === tempo) return [];
+
+        return [
+            `      <direction placement="above">`,
+            `        <direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>${tempo}</per-minute></metronome></direction-type>`,
+            `        <sound tempo="${tempo}"/>`,
+            `      </direction>`,
         ];
     };
 
@@ -260,14 +323,13 @@ namespace MusicXmlExporter {
             `  <part id="P1">`,
         ];
 
+        let prevBase: DerivedState.BaseCache | undefined = undefined;
         measures.forEach((measure) => {
             lines.push(`    <measure number="${measure.number}">`);
             if (measure.isBaseStart) {
-                lines.push(...renderAttributes(measure));
-                lines.push(`      <direction placement="above">`);
-                lines.push(`        <direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>${measure.base.scoreBase.tempo}</per-minute></metronome></direction-type>`);
-                lines.push(`        <sound tempo="${measure.base.scoreBase.tempo}"/>`);
-                lines.push(`      </direction>`);
+                lines.push(...renderAttributes(measure, prevBase));
+                lines.push(...renderTempoDirection(measure, prevBase));
+                prevBase = measure.base;
             }
             collectMeasureSegments(props.track, measure).forEach((segment) => {
                 lines.push(...renderNote(segment, "      "));
