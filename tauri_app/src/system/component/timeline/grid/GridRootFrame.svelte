@@ -1,6 +1,7 @@
 <script lang="ts">    import BaseBlock from "./BaseBlock.svelte";
     import ChordBlock from "./ChordBlock.svelte";
     import GridFocus from "./GridFocus.svelte";
+    import ArrangeShadeTracks from "./arrange/ArrangeShadeTracks.svelte";
     import Cursor from "../../melody/Cursor.svelte";
     import RefState from "../../../store/state/ref-state";
     import ShadeTracks from "../../melody/score/ShadeTracks.svelte";
@@ -40,6 +41,10 @@
         <Cursor />
     {/if}
 
+    <div class="arrangenoteswrap">
+        <ArrangeShadeTracks />
+    </div>
+
     <div class="noteswrap" data-isMelodyMode={isMelodyMode}>
         {#if isMelodyMode}
             <ActiveTrack />
@@ -72,5 +77,11 @@
     }
     .noteswrap[data-isMelodyMode="false"] {
         opacity: 0.8;
+    }
+
+    .arrangenoteswrap {
+        display: inline-block;
+        position: relative;
+        z-index: 3;
     }
 </style>

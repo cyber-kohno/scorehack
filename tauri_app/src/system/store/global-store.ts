@@ -12,6 +12,7 @@ import ToastState from "./state/toast-state";
 import ConfirmDialogState from "./state/confirm-dialog-state";
 import ActionMenuState from "./state/action-menu-state";
 import FloatingTextInputState from "./state/floating-text-input-state";
+import TrackManagerState from "./state/track-manager-state";
 
 export const controlStore = writable<ControlState.Value>(ControlState.createInitial());
 export const dataStore = writable<DataState.Value>(DataState.createInitial());
@@ -26,3 +27,4 @@ export const toastStore = writable<ToastState.Value | null>(null);
 export const confirmDialogStore = writable<ConfirmDialogState.Value | null>(null);
 export const actionMenuStore = writable<ActionMenuState.Value | null>(null);
 export const floatingTextInputStore = writable<FloatingTextInputState.Value | null>(null);
+export const trackManagerStore = writable<TrackManagerState.Value | null>(null);

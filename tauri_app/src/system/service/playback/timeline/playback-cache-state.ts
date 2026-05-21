@@ -3,7 +3,6 @@ import type { PlaybackInstrument } from "../../../infra/audio/playback-instrumen
 import MelodyState from "../../../store/state/data/melody-state";
 import { get } from "svelte/store";
 import { playbackStore } from "../../../store/global-store";
-import SoundFontFile from "../../../infra/audio/soundfont-file";
 
 namespace PlaybackCacheState {
 

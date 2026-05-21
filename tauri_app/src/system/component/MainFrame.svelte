@@ -1,4 +1,4 @@
-<script lang="ts">  import { controlStore, terminalStore } from "../store/global-store";
+<script lang="ts">  import { controlStore, terminalStore, trackManagerStore } from "../store/global-store";
   import ArrangeFrame from "./arrange/ArrangeFrame.svelte";
   import ArrangeFinderFrame from "./arrange/finder/ArrangeFinderFrame.svelte";
   import ConfirmDialogLayer from "./common/ConfirmDialogLayer.svelte";
@@ -8,8 +8,10 @@
   import TerminalFrame from "./terminal/TerminalFrame.svelte";
   import TimelineFrame from "./timeline/TimelineFrame.svelte";
   import ToastLayer from "./common/ToastLayer.svelte";
+  import TrackManagerFrame from "./track/TrackManagerFrame.svelte";
 
     $: isDispTerminal = $terminalStore != null;
+    $: isDispTrackManager = $trackManagerStore != null && $controlStore.outline.arrange == null;
 
     $: isDispArrangeEditor = (() => {
         const arrange = $controlStore.outline.arrange;
@@ -38,6 +40,9 @@
     {/if}
     {#if isDispArrangeFinder}
         <ArrangeFinderFrame />
+    {/if}
+    {#if isDispTrackManager}
+        <TrackManagerFrame />
     {/if}
     <ConfirmDialogLayer />
     <FloatingTextInputLayer />

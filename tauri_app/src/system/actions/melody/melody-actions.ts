@@ -113,7 +113,6 @@ const createMelodyActions = () => {
         ctx.refUpdater.adjustGridScrollYFromCursor(note);
         ctx.playbackPitch(note.pitch);
         ctx.commitControl();
-        ctx.commitData();
     };
 
     const changeCursorDiv = (div: number) => {
@@ -211,7 +210,6 @@ const createMelodyActions = () => {
         ctx.refUpdater.adjustGridScrollYFromCursor(note);
         ctx.playbackPitch(note.pitch);
         ctx.commitControl();
-        ctx.commitData();
     };
 
     const moveFocusRange = (dir: -1 | 1) => {
@@ -232,7 +230,6 @@ const createMelodyActions = () => {
         ctx.refUpdater.adjustGridScrollXFromNote(note);
         ctx.refUpdater.adjustGridScrollYFromCursor(note);
         ctx.commitControl();
-        ctx.commitData();
     };
 
     const movePitchFocusNotes = (dir: -1 | 1) => {

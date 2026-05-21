@@ -183,6 +183,7 @@ const createOutlineActions = () => {
 
         ctx.commitControl();
         ctx.refUpdater.adjustGridScrollXFromOutline();
+        ctx.refUpdater.adjustGridScrollYFromOutlineArrange();
         ctx.refUpdater.adjustOutlineScroll();
     };
 
@@ -194,6 +195,7 @@ const createOutlineActions = () => {
 
         ctx.commitControl();
         ctx.refUpdater.adjustGridScrollXFromOutline();
+        ctx.refUpdater.adjustGridScrollYFromOutlineArrange();
         ctx.refUpdater.adjustOutlineScroll();
     };
 

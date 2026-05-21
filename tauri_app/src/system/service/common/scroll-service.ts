@@ -8,6 +8,7 @@ import type RefState from "../../store/state/ref-state";
 import type SettingsState from "../../store/state/settings-state";
 import type TerminalState from "../../store/state/terminal-state";
 import createArrangeSelector from "../arrange/arrange-selector";
+import ArrangeTimelineNoteResolver from "../arrange/arrange-timeline-note-resolver";
 import { get } from "svelte/store";
 import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../store/global-store";
 
@@ -117,6 +118,34 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
         const pos = (Layout.pitch.NUM - note.pitch) * Layout.pitch.ITEM_HEIGHT;
         adjustGridScrollY((height) => pos - height / 2);
     }
+    const adjustGridScrollYFromOutlineArrange = () => {
+        if (control.mode !== "harmonize") return;
+
+        const element = derived.elementCaches[control.outline.focus];
+        if (element == undefined || element.chordSeq === -1) return;
+
+        const track = data.arrange.tracks[control.outline.trackIndex];
+        const chordCache = derived.chordCaches[element.chordSeq];
+        if (track == undefined || chordCache == undefined) return;
+
+        const notes = ArrangeTimelineNoteResolver.resolveChordTrackNotes(
+            track,
+            control.outline.trackIndex,
+            chordCache,
+            derived.baseCaches,
+        );
+        if (notes.length === 0) return;
+
+        const pitches = notes
+            .map(item => item.note.pitch)
+            .sort((a, b) => a - b);
+        const centerPitch = pitches[Math.floor((pitches.length - 1) / 2)];
+        const centerY =
+            Layout.pitch.TOP_MARGIN +
+            Layout.getPitchTop(centerPitch) +
+            Layout.pitch.ITEM_HEIGHT / 2;
+        adjustGridScrollY((height) => centerY - height / 2);
+    }
     const adjustGridScrollXFromOutline = () => {
         const cache = derived;
 
@@ -211,6 +240,7 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
 
     return {
         adjustGridScrollXFromOutline,
+        adjustGridScrollYFromOutlineArrange,
         adjustOutlineScroll,
         adjustGridScrollXFromNote,
         adjustGridScrollYFromCursor,

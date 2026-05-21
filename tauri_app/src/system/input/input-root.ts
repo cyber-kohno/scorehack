@@ -1,17 +1,20 @@
 import { get } from "svelte/store";
 import InputState from "../store/state/input-state";
-import { actionMenuStore, confirmDialogStore, controlStore, floatingTextInputStore, inputStore, playbackStore, terminalStore } from "../store/global-store";
+import { actionMenuStore, confirmDialogStore, controlStore, floatingTextInputStore, inputStore, playbackStore, terminalStore, trackManagerStore } from "../store/global-store";
+import createTrackManagerActions from "../actions/track/track-manager-actions";
 import useInputActionMenu from "./input-action-menu";
 import useInputFloatingTextInput from "./input-floating-text-input";
 import useInputMelody from "./input-melody";
 import useInputOutline from "./input-outline";
 import useInputTerminal from "./input-terminal";
+import useInputTrackManager from "./input-track-manager";
 import InputRootController from "../service/common/input-root-controller";
 import createTerminalActions from "../actions/terminal/terminal-actions";
 import ConfirmDialog from "../service/common/confirm-dialog-controller";
 
 const useInputRoot = () => {
     const terminalActions = createTerminalActions();
+    const trackManagerActions = createTrackManagerActions();
 
     const inputOutline = useInputOutline();
     const inputMelody = useInputMelody();
@@ -19,6 +22,7 @@ const useInputRoot = () => {
     const isConfirmDialogActive = () => get(confirmDialogStore) != null;
     const isFloatingTextInputActive = () => get(floatingTextInputStore) != null;
     const isActionMenuActive = () => get(actionMenuStore) != null;
+    const isTrackManagerActive = () => get(trackManagerStore) != null;
 
     const controlKeyHold = (eventKey: string, isDown: boolean) => {
 
@@ -76,6 +80,13 @@ const useInputRoot = () => {
             e.stopPropagation();
             inputStore.set(InputState.createInitial());
             useInputActionMenu().control(e.key);
+            return;
+        }
+        if (isTrackManagerActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            useInputTrackManager().control(e.key);
             return;
         }
 
@@ -156,6 +167,12 @@ const useInputRoot = () => {
             inputStore.set(InputState.createInitial());
             return;
         }
+        if (isTrackManagerActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            return;
+        }
 
         controlKeyHold(e.key, false);
     }
@@ -174,6 +191,16 @@ const useInputRoot = () => {
             switch (eventKey.toLowerCase()) {
                 case "s": {
                     InputRootController.saveScore();
+                } break;
+            }
+        };
+
+        callbacks.holdShift = () => {
+            if (get(playbackStore).timerKeys != null) return;
+
+            switch (eventKey.toLowerCase()) {
+                case "r": {
+                    trackManagerActions.toggle();
                 } break;
             }
         };
