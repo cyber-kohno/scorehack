@@ -171,6 +171,7 @@ const createOutlineActions = () => {
             left: rect.left,
             top: rect.bottom + 10,
             width: Math.max(120, rect.width),
+            permit: (value) => value.length >= 1 && value.length <= 12,
             apply: renameSection,
         });
     };
@@ -207,7 +208,8 @@ const createOutlineActions = () => {
 
         const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
         const afterChordData = cloneChordData(beforeChordData);
-        afterChordData.degree = ChordTheory.getDiatonicDegreeChord("major", scaleIndex);
+        const scale = ctx.derivedSelector.getCurBase().scoreBase.tonality.scale;
+        afterChordData.degree = ChordTheory.getDiatonicDegreeChord(scale, scaleIndex);
 
         ctx.outlineUpdater.setChordData(afterChordData);
         backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);

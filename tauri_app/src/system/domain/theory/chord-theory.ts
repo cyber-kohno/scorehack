@@ -78,7 +78,7 @@ namespace ChordTheory {
             else if (degree.semitone === -1) return 'b';
             else if (degree.semitone === 1) return '#';
         }
-        const name = list[degree.index] + getSemitone();
+        const name = getSemitone() + list[degree.index];
         return name;
     }
 
@@ -101,9 +101,21 @@ namespace ChordTheory {
         { index: 6, symbol: 'm-5' },
     ];
 
+    export const MINOR_SCALE_DEGREE_CHORDS: DegreeChord[] = [
+        { index: 0, symbol: 'm' },
+        { index: 1, symbol: 'm-5' },
+        { index: 2, semitone: -1, symbol: '' },
+        { index: 3, symbol: 'm' },
+        { index: 4, symbol: '' },
+        { index: 5, semitone: -1, symbol: '' },
+        { index: 6, semitone: -1, symbol: '' },
+    ];
+
     export const getDiatonicDegreeChord = (scale: Scale, scaleIndex: number): DegreeChord => {
-        const list = scale === 'major' ? MAJOR_SCALE_DEGREE_CHORDS : [];
-        return JSON.parse(JSON.stringify(list[scaleIndex]));
+        const list = scale === 'major' ? MAJOR_SCALE_DEGREE_CHORDS : MINOR_SCALE_DEGREE_CHORDS;
+        const degreeChord = list[scaleIndex];
+        if (degreeChord == undefined) throw new Error(`scaleIndex is out of range. [${scaleIndex}]`);
+        return JSON.parse(JSON.stringify(degreeChord));
     }
 
     export type IntervalRelationName =

@@ -148,6 +148,7 @@ const createTrackManagerActions = () => {
             left,
             top,
             width,
+            permit: (value) => value.length >= 1 && value.length <= 32,
             apply: (value) => renameTrack(trackManager.focus, value),
         });
     };

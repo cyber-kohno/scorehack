@@ -6,6 +6,7 @@ namespace FloatingTextInputState {
         top: number;
         width: number;
         apply: (value: string) => void;
+        permit?: (str: string) => boolean;
     };
 
     export const createInitial = (): Value => ({

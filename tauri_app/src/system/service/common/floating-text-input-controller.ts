@@ -7,6 +7,10 @@ const clampCursor = (value: string, cursor: number) => {
     return Math.max(0, Math.min(value.length, cursor));
 };
 
+const isPermitted = (state: FloatingTextInputState.Value) => {
+    return state.permit?.(state.value) ?? true;
+};
+
 namespace FloatingTextInput {
     export const open = (props: FloatingTextInputState.Value) => {
         inputStore.set(InputState.createInitial());
@@ -23,6 +27,7 @@ namespace FloatingTextInput {
     export const apply = () => {
         const state = get(floatingTextInputStore);
         if (state == null) return;
+        if (!isPermitted(state)) return;
 
         const value = state.value;
         close();

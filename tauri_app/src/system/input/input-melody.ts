@@ -190,23 +190,8 @@ const useInputMelody = () => {
 
         callbacks.holdCtrl = () => {
             switch (eventKey) {
-                case 'a': {
-                    // timeline.focus = 0;
-                    // timeline.focusLock = layer.notes.length - 1;
-                    // update();
-                } break;
-                case 'c': {
-                    melodyActions.copyNotes();
-                } break;
-                // case 'x': {
-                //     copyNotes();
-                //     delRangeNotes(timeline);
-                //     melody.focusLock = -1;
-                //     commit();
-                // } break;
-                case 'v': {
-                    melodyActions.pasteClipboardNotes();
-                } break;
+                case 'c': melodyActions.copyNotes(); break;
+                case 'v': melodyActions.pasteClipboardNotes(); break;
                 case 'z': melodyActions.undoRedu(-1); break;
                 case 'y': melodyActions.undoRedu(1); break;
             }

@@ -4,10 +4,12 @@
   $: textInput = $floatingTextInputStore;
   $: before = textInput == null ? "" : textInput.value.slice(0, textInput.cursor);
   $: after = textInput == null ? "" : textInput.value.slice(textInput.cursor);
+  $: hasError = textInput?.permit?.(textInput.value) === false;
 </script>
 
 {#if textInput != null}
   <div
+    class:error={hasError}
     class="frame"
     style:left="{textInput.left}px"
     style:top="{textInput.top}px"
@@ -35,6 +37,11 @@
     line-height: 18px;
     white-space: pre;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+  }
+
+  .frame.error {
+    border-color: #ff8f8f;
+    background-color: #2a0505;
   }
 
   .cursor {
