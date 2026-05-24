@@ -1,9 +1,10 @@
 import MidiWriter from 'midi-writer-js';
 import pako from 'pako';
 import { get } from 'svelte/store';
-import { openMp3FilePath, openScoreFilePath, saveScoreFilePath, saveTextFilePath } from '../tauri/dialog';
+import FilePathRef from './file-path-ref';
+import { openAudioFilePath, openScoreFilePath, saveScoreFilePath, saveTextFilePath } from '../tauri/dialog';
 import { readBinaryFile, readUtf8TextFile, writeUtf8TextFile } from '../tauri/fs';
-import { dataStore, fileStore, refStore } from '../../store/global-store';
+import { dataStore, fileStore, refStore, settingsStore } from '../../store/global-store';
 import MelodyState from '../../store/state/data/melody-state';
 import type FileState from '../../store/state/file-state';
 import recalculate from '../../service/derived/recalculate-derived';
@@ -64,15 +65,13 @@ namespace FileUtil {
     ) => {
         (async () => {
             try {
-                const path = await openMp3FilePath();
+                const path = await openAudioFilePath();
                 if (path == null) {
                     cancel();
                     return;
                 }
 
-                const fileBytes = await readBinaryFile(path);
-                track.fileName = getFileName(path);
-                track.source = uint8ArrayToBase64(fileBytes);
+                track.pathRef = FilePathRef.createPathRef(path, get(settingsStore).envs.HOME_DIR);
                 success(toHandle(path));
             } catch (error) {
                 console.error('Failed to load audio file:', error);

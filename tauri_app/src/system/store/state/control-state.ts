@@ -15,13 +15,23 @@ namespace ControlState {
         focusLock: number;
         trackIndex: number;
         arrange: null | ArrangeState.EditorProps;
+        clipboard: {
+            elements: ElementState.Element[] | null;
+            chordSeqs: number[];
+            relationsByTrack: ArrangeState.Relation[][];
+        };
     }
 
     export const createInitialOutline = (): OutlineValue => ({
         focus: 1,
         focusLock: -1,
         trackIndex: 0,
-        arrange: null
+        arrange: null,
+        clipboard: {
+            elements: null,
+            chordSeqs: [],
+            relationsByTrack: [],
+        },
     });
 
 

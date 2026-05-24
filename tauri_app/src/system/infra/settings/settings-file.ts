@@ -44,6 +44,10 @@ namespace SettingsFile {
                     ...settings.view?.timeline,
                 },
             },
+            notation: {
+                ...initial.notation,
+                ...settings.notation,
+            },
             playback: {
                 ...initial.playback,
                 ...settings.playback,

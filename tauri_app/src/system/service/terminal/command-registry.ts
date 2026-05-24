@@ -1,26 +1,26 @@
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import type ElementState from "../../store/state/data/element-state";
 import TerminalCommand from "./terminal-command";
-import createChordCommands from "./command/chord-command-provider";
-import createGlobalCommands from "./command/global/global-command-provider";
-import createHarmonizeCommands from "./command/harmonize-command-provider";
-import createInitCommands from "./command/init-command-provider";
-import createMelodyCommands from "./command/melody-command-provider";
-import createModulateCommands from "./command/modulate-command-provider";
-import createPianoEditorCommands from "./command/piano-editor-command-provider";
-import createSectionCommands from "./command/section-command-provider";
+import createChordProvider from "./command/provider/chord-provider";
+import createGlobalProvider from "./command/provider/global-provider";
+import createHarmonizeProvider from "./command/provider/harmonize-provider";
+import createInitProvider from "./command/provider/init-provider";
+import createMelodyProvider from "./command/provider/melody-provider";
+import createModulateProvider from "./command/provider/modulate-provider";
+import createPianoEditorProvider from "./command/provider/piano-editor-provider";
+import createSectionProvider from "./command/provider/section-provider";
 
 const createCommandRegistry = (ctx: TerminalCommand.Context) => {
     const { terminal } = ctx;
 
-    const globalCommands = createGlobalCommands(ctx);
-    const harmonizeCommands = createHarmonizeCommands(ctx);
-    const initCommands = createInitCommands(ctx);
-    const sectionCommands = createSectionCommands(ctx);
-    const chordCommands = createChordCommands(ctx);
-    const melodyCommands = createMelodyCommands(ctx);
-    const modulateCommands = createModulateCommands(ctx);
-    const pianoEditorCommands = createPianoEditorCommands(ctx);
+    const globalProvider = createGlobalProvider(ctx);
+    const harmonizeProvider = createHarmonizeProvider(ctx);
+    const initProvider = createInitProvider(ctx);
+    const sectionProvider = createSectionProvider(ctx);
+    const chordProvider = createChordProvider(ctx);
+    const melodyProvider = createMelodyProvider(ctx);
+    const modulateProvider = createModulateProvider(ctx);
+    const pianoEditorProvider = createPianoEditorProvider(ctx);
 
     const buildAvailableFunctions = () => {
         const items: TerminalCommand.Props[] = [];
@@ -30,27 +30,27 @@ const createCommandRegistry = (ctx: TerminalCommand.Context) => {
 
         const sectors = terminal.target.split("\\");
 
-        add(globalCommands.list({ items }));
+        add(globalProvider.commands({ items }));
 
         switch (sectors[0]) {
             case "harmonize": {
                 const harmonizeSector = sectors[1] as ElementState.ElementType | "arrange";
                 if (harmonizeSector !== "arrange") {
-                    add(harmonizeCommands.list());
+                    add(harmonizeProvider.commands());
                     switch (harmonizeSector) {
-                        case "init": add(initCommands.list()); break;
-                        case "section": add(sectionCommands.list()); break;
-                        case "chord": add(chordCommands.list()); break;
-                        case "modulate": add(modulateCommands.list()); break;
+                        case "init": add(initProvider.commands()); break;
+                        case "section": add(sectionProvider.commands()); break;
+                        case "chord": add(chordProvider.commands()); break;
+                        case "modulate": add(modulateProvider.commands()); break;
                     }
                 } else {
                     const arrangeSector = sectors[2] as ArrangeState.ArrangeMedhod;
                     switch (arrangeSector) {
-                        case "piano": add(pianoEditorCommands.list()); break;
+                        case "piano": add(pianoEditorProvider.commands()); break;
                     }
                 }
             } break;
-            case "melody": add(melodyCommands.list()); break;
+            case "melody": add(melodyProvider.commands()); break;
         }
 
         terminal.availableFuncs = items;

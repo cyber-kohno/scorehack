@@ -2,11 +2,11 @@ import { get } from "svelte/store";
 import { createSpessaSynthInstrument } from "../../infra/audio/spessasynth-instrument";
 import UserSoundFontPath from "../../infra/audio/user-soundfont-path";
 import { playbackStore, settingsStore } from "../../store/global-store";
-import type { TrackSoundFontRef } from "../../store/state/data/track-soundfont-ref";
+import type { TrackInstRef } from "../../store/state/data/track-inst-ref";
 
-type UserTrackSoundFontRef = Extract<TrackSoundFontRef, { source: "user" }>;
+type UserTrackInstRef = Extract<TrackInstRef, { source: "soundfont" }>;
 
-const createKey = (ref: UserTrackSoundFontRef) => {
+const createKey = (ref: UserTrackInstRef) => {
     return `${ref.definitionName}:${ref.bank}:${ref.program}`;
 };
 
@@ -20,7 +20,7 @@ const useUserSoundfontLoader = () => {
     };
 
     const isLoadUserSoundFont = (
-        ref: UserTrackSoundFontRef,
+        ref: UserTrackInstRef,
     ) => {
         const playback = get(playbackStore);
         return playback.userSfItems.some((item) => {
@@ -32,7 +32,7 @@ const useUserSoundfontLoader = () => {
     };
 
     const loadUserSoundFont = async (
-        ref: UserTrackSoundFontRef,
+        ref: UserTrackInstRef,
     ) => {
         if (isLoadUserSoundFont(ref)) return;
 

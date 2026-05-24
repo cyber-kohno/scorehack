@@ -1,12 +1,12 @@
-import PianoBackingState from "../../../store/state/data/arrange/piano/piano-backing-state";
-import createArrangeSelector from "../../arrange/arrange-selector";
-import TerminalCommand from "../terminal-command";
+import PianoBackingState from "../../../../store/state/data/arrange/piano/piano-backing-state";
+import createArrangeSelector from "../../../arrange/arrange-selector";
+import TerminalCommand from "../../terminal-command";
 
-const createPianoEditorCommands = (ctx: TerminalCommand.Context) => {
+const createPianoEditorProvider = (ctx: TerminalCommand.Context) => {
     const { control, data, logger } = ctx;
     const { getPianoEditor } = createArrangeSelector({ control, data });
 
-    const list = (): TerminalCommand.Props[] => {
+    const commands = (): TerminalCommand.Props[] => {
 
         const defaultProps = TerminalCommand.createDefaultProps('piano');
         return [
@@ -46,7 +46,7 @@ const createPianoEditorCommands = (ctx: TerminalCommand.Context) => {
         ];
     };
     return {
-        list
+        commands
     };
 }
-export default createPianoEditorCommands;
+export default createPianoEditorProvider;

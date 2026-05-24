@@ -1,6 +1,6 @@
 import type DerivedState from "../../derived-state";
 import type ElementState from "../element-state";
-import type { TrackSoundFontRef } from "../track-soundfont-ref";
+import type { TrackInstRef } from "../track-inst-ref";
 import GuitarEditorState from "./guitar/guitar-editor-state";
 import PianoEditorState from "./piano/piano-editor-state";
 
@@ -12,7 +12,6 @@ namespace ArrangeState {
   export const createPianoTrackInitial = (name: string): Track => ({
     name,
     method: "piano",
-    soundFont: "",
     volume: 10,
     isMute: false,
     relations: [],
@@ -22,7 +21,6 @@ namespace ArrangeState {
   export const createGuitarTrackInitial = (name: string): Track => ({
     name,
     method: "guitar",
-    soundFont: "",
     volume: 10,
     isMute: false,
     relations: [],
@@ -50,8 +48,7 @@ namespace ArrangeState {
   export type Track = {
     name: string;
     method: ArrangeMedhod;
-    soundFont: string;
-    soundFontRef?: TrackSoundFontRef;
+    instRef?: TrackInstRef;
     volume: number;
     isMute: boolean;
 

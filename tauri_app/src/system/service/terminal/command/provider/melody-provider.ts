@@ -1,20 +1,26 @@
-import FileUtil from "../../../infra/file/fileUtil";
-import SoundFontFile from "../../../infra/audio/soundfont-file";
-import UserSoundFontCache from "../../../infra/audio/user-soundfont-cache";
-import UserSoundFontPath from "../../../infra/audio/user-soundfont-path";
-import type MelodyState from "../../../store/state/data/melody-state";
-import PlaybackState from "../../../store/state/playback-state";
-import useScrollService from "../../common/scroll-service";
-import { prepareUserSoundFont, UserSoundFontPrepareError } from "../../playback/user-soundfont-service";
-import TerminalCommand from "../terminal-command";
-import useSoundfontLoader from "../../playback/soundfont-loader";
+import FileUtil from "../../../../infra/file/fileUtil";
+import FilePathRef from "../../../../infra/file/file-path-ref";
+import SoundFontFile from "../../../../infra/audio/soundfont-file";
+import UserSoundFontCache from "../../../../infra/audio/user-soundfont-cache";
+import UserSoundFontPath from "../../../../infra/audio/user-soundfont-path";
+import type MelodyState from "../../../../store/state/data/melody-state";
+import PlaybackState from "../../../../store/state/playback-state";
+import useScrollService from "../../../common/scroll-service";
+import { prepareUserSoundFont, UserSoundFontPrepareError } from "../../../playback/user-soundfont-service";
+import TerminalCommand from "../../terminal-command";
+import useSoundfontLoader from "../../../playback/soundfont-loader";
+import useUserSoundfontLoader from "../../../playback/user-soundfont-loader";
+import createInstCatalog from "../catalog/inst-catalog";
+import createTrackCatalog from "../catalog/track-catalog";
+import createVoiceCatalog from "../catalog/voice-catalog";
 
-const createMelodyCommands = (ctx: TerminalCommand.Context) => {
+const createMelodyProvider = (ctx: TerminalCommand.Context) => {
     const { control, data, ref, settings, terminal, logger } = ctx;
     const { getCurrScoreTrack } = ctx.selectors.melody;
     const { isLoadSoundFont, loadSoundFont } = useSoundfontLoader();
+    const { isLoadUserSoundFont } = useUserSoundfontLoader();
 
-    const list = (): TerminalCommand.Props[] => {
+    const commands = (): TerminalCommand.Props[] => {
 
         const defaultProps = TerminalCommand.createDefaultProps('melody');
         const fileUtil = FileUtil.getUtil();
@@ -35,16 +41,19 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
             return settings.userSoundFonts.find((soundFont) => soundFont.name === name);
         };
         const formatTrackSoundFont = (track: MelodyState.ScoreTrack) => {
-            const ref = track.soundFontRef;
-            if (ref == undefined) return track.soundFont;
+            const ref = track.instRef;
+            if (ref == undefined) return "";
             switch (ref.source) {
                 case "builtin": return ref.name;
-                case "user": {
+                case "soundfont": {
                     return `${ref.definitionName} ${SoundFontFile.formatPresetKey(ref)}`;
                 }
             }
         };
         return [
+            createInstCatalog(ctx, "melody"),
+            createTrackCatalog(ctx, "melody"),
+            createVoiceCatalog(ctx, "melody"),
             {
                 ...defaultProps,
                 funcKey: 'lss',
@@ -71,7 +80,7 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                                     active + item.name,
                                     formatTrackSoundFont(item),
                                     item.volume.toString(),
-                                    item.isMute ? '●' : '',
+                                    item.isMute ? '*' : '',
                                     item.notes.length.toString()
                                 ]
                             }))()
@@ -102,9 +111,9 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                                 return [
                                     i.toString(),
                                     item.name,
-                                    item.fileName,
+                                    item.pathRef == undefined ? "" : FilePathRef.formatPathRef(item.pathRef),
                                     item.volume.toString(),
-                                    item.isMute ? '●' : '',
+                                    item.isMute ? '*' : '',
                                     item.adjust.toString()
                                 ]
                             }))()
@@ -124,7 +133,6 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                         name,
                         isMute: false,
                         volume: 10,
-                        soundFont: '',
                         notes: []
                     });
                     ref.trackArr.push([]);
@@ -145,11 +153,9 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                     const name = args[0] ?? `audio${audios.length}`;
                     audios.push({
                         name,
-                        fileName: '',
                         isMute: false,
                         volume: 10,
                         adjust: 0,
-                        source: ''
                     });
                     ref.trackArr.push([]);
                     logger.outputInfo(`Created a new audio. [${name}]`);
@@ -211,7 +217,7 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                     tracks.splice(delIndex, 1);
                     ref.trackArr.splice(delIndex, 1);
                     ref.noteRefs.splice(delIndex, 1);
-                    // 先頭以外が選択されている場合かつ、アクティブより上が削除され場合
+                    // 先頭以外が選択されてぁE��場合かつ、アクチE��ブより上が削除され場吁E
                     if (delIndex > 0 && delIndex <= melody.trackIndex) melody.trackIndex--;
                     logger.outputInfo(`Track deleted. [${name}].`);
                     ctx.commit.data();
@@ -236,7 +242,7 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
             //         const prev = melody.trackIndex;
             //         try {
             //             changeScoreTrack(nextIndex);
-            //             logger.outputInfo(`Active track changed. [${prev} → ${nextIndex}]`);
+            //             logger.outputInfo(`Active track changed. [${prev} ↁE${nextIndex}]`);
             //             reducer.updateTarget();
             //             lss();
             //         } catch {
@@ -266,7 +272,7 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                     try {
                         if (tracks[nextIndex] == undefined) throw new Error();
                         melody.trackIndex = nextIndex;
-                        logger.outputInfo(`Active track changed. [${prev} → ${arg0}]`);
+                        logger.outputInfo(`Active track changed. [${prev} ↁE${arg0}]`);
                         terminal.target = `melody\\${tracks[nextIndex].name}`;
                         ctx.commit.control();
                         ctx.commit.terminal();
@@ -288,8 +294,7 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                     try {
                         const sfName = PlaybackState.validateSFName(arg0);
                         const track = getCurrScoreTrack();
-                        track.soundFont = sfName;
-                        track.soundFontRef = {
+                        track.instRef = {
                             source: "builtin",
                             name: sfName,
                         };
@@ -354,19 +359,25 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
                         return;
                     }
 
+                    const instRef = {
+                        source: "soundfont",
+                        definitionName: arg0,
+                        bank: presetKey.bank,
+                        program: presetKey.program,
+                    } as const;
+
                     terminal.wait = true;
+                    if (!isLoadUserSoundFont(instRef)) {
+                        logger.outputInfo(`User SoundFont not yet loaded. [${arg0} ${arg1}]`);
+                        logger.outputInfo(`Loading...`);
+                        ctx.commit.terminal();
+                    }
+
                     (async () => {
-                        const soundFontRef = {
-                            source: "user",
-                            definitionName: arg0,
-                            bank: presetKey.bank,
-                            program: presetKey.program,
-                        } as const;
-                        const { preset } = await prepareUserSoundFont(soundFontRef);
+                        const { preset } = await prepareUserSoundFont(instRef);
 
                         const track = getCurrScoreTrack();
-                        track.soundFont = "";
-                        track.soundFontRef = soundFontRef;
+                        track.instRef = instRef;
                         logger.outputInfo(
                             `Set a user SoundFont as the active track. [${arg0} ${arg1} ${preset.name}]`,
                         );
@@ -423,7 +434,7 @@ const createMelodyCommands = (ctx: TerminalCommand.Context) => {
         ];
     };
     return {
-        list
+        commands
     };
 }
-export default createMelodyCommands;
+export default createMelodyProvider;

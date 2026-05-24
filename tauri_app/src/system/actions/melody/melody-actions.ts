@@ -212,6 +212,29 @@ const createMelodyActions = () => {
         ctx.commitControl();
     };
 
+    const focusSelectedEdge = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const { focus, focusLock } = ctx.melody;
+        if (focusLock === -1) return;
+
+        const [start, end] = focus < focusLock
+            ? [focus, focusLock]
+            : [focusLock, focus];
+        ctx.melody.focus = dir === -1 ? start : end;
+        ctx.melody.focusLock = -1;
+
+        const note = ctx.melodySelector.getFocusNote();
+        if (note == undefined) return;
+
+        ctx.melodyUpdater.setCursorRate(getFocusNoteDisplayRate(ctx, note));
+        ctx.outlineUpdater.syncChordSeqFromNote(note);
+        ctx.refUpdater.adjustOutlineScroll();
+        ctx.refUpdater.adjustGridScrollXFromNote(note);
+        ctx.refUpdater.adjustGridScrollYFromCursor(note);
+        ctx.playbackPitch(note.pitch);
+        ctx.commitControl();
+    };
+
     const moveFocusRange = (dir: -1 | 1) => {
         const ctx = createContext();
         const track = ctx.melodySelector.getCurrScoreTrack();
@@ -452,7 +475,6 @@ const createMelodyActions = () => {
         const ctx = createContext();
 
         ctx.melodyUpdater.copyNotes();
-        ctx.melodyUpdater.clearFocusLock();
         ctx.commitControl();
     };
 
@@ -535,6 +557,7 @@ const createMelodyActions = () => {
         changeCursorDiv,
         changeCursorRate,
         changeCursorTuplets,
+        focusSelectedEdge,
         focusInNearNote,
         focusOutNoteSide,
         moveCursor,

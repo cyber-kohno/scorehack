@@ -2,11 +2,11 @@ import SoundFontFile from "../../infra/audio/soundfont-file";
 import UserSoundFontCache from "../../infra/audio/user-soundfont-cache";
 import UserSoundFontPath from "../../infra/audio/user-soundfont-path";
 import { settingsStore } from "../../store/global-store";
-import type { TrackSoundFontRef } from "../../store/state/data/track-soundfont-ref";
+import type { TrackInstRef } from "../../store/state/data/track-inst-ref";
 import { get } from "svelte/store";
 import useUserSoundfontLoader from "./user-soundfont-loader";
 
-export type UserTrackSoundFontRef = Extract<TrackSoundFontRef, { source: "user" }>;
+export type UserTrackInstRef = Extract<TrackInstRef, { source: "soundfont" }>;
 
 export type PrepareUserSoundFontResult = {
     preset: SoundFontFile.Preset;
@@ -26,12 +26,12 @@ export class UserSoundFontPrepareError extends Error {
     }
 }
 
-export const formatUserSoundFontRef = (ref: UserTrackSoundFontRef) => {
+export const formatUserSoundFontRef = (ref: UserTrackInstRef) => {
     return `${ref.definitionName} ${SoundFontFile.formatPresetKey(ref)}`;
 };
 
 export const prepareUserSoundFont = async (
-    ref: UserTrackSoundFontRef,
+    ref: UserTrackInstRef,
 ): Promise<PrepareUserSoundFontResult> => {
     const settings = get(settingsStore);
     const definition = settings.userSoundFonts.find((soundFont) => {

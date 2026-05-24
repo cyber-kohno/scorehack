@@ -5,7 +5,7 @@ import { openSoundFontFilePath } from "../../../../infra/tauri/dialog";
 import type SettingsState from "../../../../store/state/settings-state";
 import TerminalCommand from "../../terminal-command";
 
-const createRfsCommand = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
+const createRfsCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
   const { logger, settings, terminal } = ctx;
   const defaultProps = TerminalCommand.createDefaultProps("system");
 
@@ -157,4 +157,4 @@ const createRfsCommand = (ctx: TerminalCommand.Context): TerminalCommand.Props =
   };
 };
 
-export default createRfsCommand;
+export default createRfsCatalog;

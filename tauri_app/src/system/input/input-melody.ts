@@ -57,8 +57,14 @@ const useInputMelody = () => {
             }
         } else {
             switch (eventKey) {
-                case 'ArrowLeft': melodyActions.moveFocusNormal(-1); break;
-                case 'ArrowRight': melodyActions.moveFocusNormal(1); break;
+                case 'ArrowLeft':
+                    if (isFocusLock()) melodyActions.focusSelectedEdge(-1);
+                    else melodyActions.moveFocusNormal(-1);
+                    break;
+                case 'ArrowRight':
+                    if (isFocusLock()) melodyActions.focusSelectedEdge(1);
+                    else melodyActions.moveFocusNormal(1);
+                    break;
                 case 'ArrowUp': melodyActions.movePitchFocusNotes(1); break;
                 case 'ArrowDown': melodyActions.movePitchFocusNotes(-1); break;
                 case 'Delete': {

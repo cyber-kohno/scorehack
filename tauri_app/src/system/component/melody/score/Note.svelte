@@ -4,6 +4,8 @@
   import MelodyState from "../../../store/state/data/melody-state";
   import type RefState from "../../../store/state/ref-state";
   import TonalityTheory from "../../../domain/theory/tonality-theory";
+  import DegreeBasis from "../../../service/notation/degree-basis";
+  import { settingsStore } from "../../../store/global-store";
   import Factors from "./Factors.svelte";
   import UnitDisplay from "../UnitDisplay.svelte";
   import { getNoteDisplayUnit, getProtrusionHeight } from "./note-display-util";
@@ -58,8 +60,11 @@
       Math.abs(scrollLimitProps.scrollMiddleX - middle) <=
         scrollLimitProps.rectWidth ||
       Math.abs(cursorMiddle - middle) <= scrollLimitProps.rectWidth;
-    const scaleIndex = TonalityTheory.getKeyIndex(note.pitch, tonality.key12);
-    const scaleDegreeLabel = TonalityTheory.getScaleDegreeLabel(scaleIndex);
+    const scaleDegreeLabel = DegreeBasis.getScaleDegreeLabel(
+      note.pitch,
+      tonality,
+      $settingsStore.notation.degreeBasis,
+    );
     return [isDisp, left, scaleDegreeLabel, width];
   })();
 

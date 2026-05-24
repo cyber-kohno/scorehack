@@ -15,6 +15,7 @@ import createOutlineEventActions from "./outline-event-actions";
 import ScoreHistory from "../../infra/tauri/history/score-history";
 import useMelodySelector from "../../service/melody/melody-selector";
 import FloatingTextInput from "../../service/common/floating-text-input-controller";
+import DegreeBasis from "../../service/notation/degree-basis";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -35,6 +36,7 @@ const createContext = () => {
         control,
         data,
         derived,
+        settings,
         outline,
         derivedSelector: useDerivedSelector(derived, control),
         melodySelector: useMelodySelector({ data, control }),
@@ -143,6 +145,53 @@ const createOutlineActions = () => {
         ctx.refUpdater.adjustOutlineScroll();
     };
 
+    const copyFocusElements = () => {
+        const ctx = createContext();
+        const { focus, focusLock } = ctx.outline;
+        const [start, end] = focusLock === -1
+            ? [focus, focus]
+            : focus < focusLock
+                ? [focus, focusLock]
+                : [focusLock, focus];
+
+        const includesInit = ctx.data.elements
+            .slice(start, end + 1)
+            .some(element => element.type === "init");
+        if (includesInit) {
+            Toast.create({
+                ...ToastState.createInitial(),
+                x: 12,
+                y: 48,
+                width: 320,
+                text: "Cannot copy: Init block is not copyable.",
+            });
+            return;
+        }
+
+        ctx.outlineUpdater.copyFocusElements();
+        ctx.commitControl();
+    };
+
+    const pasteClipboardElements = () => {
+        const ctx = createContext();
+        const pasted = ctx.outlineUpdater.pasteClipboardElements();
+        if (!pasted) {
+            Toast.create({
+                ...ToastState.createInitial(),
+                x: 12,
+                y: 48,
+                width: 320,
+                text: "Clipboard is empty.",
+            });
+            return;
+        }
+
+        ctx.commitControl();
+        ctx.commitDataAndRecalculate();
+        ctx.refUpdater.adjustGridScrollXFromOutline();
+        ctx.refUpdater.adjustOutlineScroll();
+    };
+
     const renameSection = (value: string) => {
         const ctx = createContext();
         const element = ctx.outlineSelector.getCurrentElement();
@@ -188,6 +237,23 @@ const createOutlineActions = () => {
         ctx.refUpdater.adjustOutlineScroll();
     };
 
+    const focusSelectedEdge = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const { focus, focusLock } = ctx.outline;
+        if (focusLock === -1) return;
+
+        const [start, end] = focus < focusLock
+            ? [focus, focusLock]
+            : [focusLock, focus];
+        ctx.outline.focus = dir === -1 ? start : end;
+        ctx.outline.focusLock = -1;
+
+        ctx.commitControl();
+        ctx.refUpdater.adjustGridScrollXFromOutline();
+        ctx.refUpdater.adjustGridScrollYFromOutlineArrange();
+        ctx.refUpdater.adjustOutlineScroll();
+    };
+
     const moveSection = (dir: -1 | 1) => {
         const ctx = createContext();
         const moved = ctx.outlineUpdater.moveSection(dir);
@@ -208,8 +274,10 @@ const createOutlineActions = () => {
 
         const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
         const afterChordData = cloneChordData(beforeChordData);
-        const scale = ctx.derivedSelector.getCurBase().scoreBase.tonality.scale;
-        afterChordData.degree = ChordTheory.getDiatonicDegreeChord(scale, scaleIndex);
+        const tonality = ctx.derivedSelector.getCurBase().scoreBase.tonality;
+        const displayTonality = DegreeBasis.getDisplayTonality(tonality, ctx.settings.notation.degreeBasis);
+        const degree = ChordTheory.getDiatonicDegreeChord(displayTonality.scale, scaleIndex);
+        afterChordData.degree = DegreeBasis.toStoredDegree(degree, tonality, ctx.settings.notation.degreeBasis);
 
         ctx.outlineUpdater.setChordData(afterChordData);
         backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
@@ -336,6 +404,8 @@ const createOutlineActions = () => {
     return {
         ...backingActions,
         ...eventActions,
+        copyFocusElements,
+        focusSelectedEdge,
         insertChord,
         insertSection,
         modBeat,
@@ -347,6 +417,7 @@ const createOutlineActions = () => {
         moveRange,
         moveSection,
         openSectionNameInput,
+        pasteClipboardElements,
         renameSection,
         removeFocusElement,
         setDegree,

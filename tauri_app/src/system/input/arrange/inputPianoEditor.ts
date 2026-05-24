@@ -53,8 +53,8 @@ const useInputPianoEditor = () => {
                 {
                   // const name = TonalityTheory.getKey12FullName(struct.key12 +  voicing.cursorX + struct.carryForwardOctave);
 
-                  // const instrumentName = store.arrange.layers[outline.layerIndex].soundFont;
-                  // const sf = store.soundFontCaches.find(sf => sf.instrumentName === instrumentName);
+                  // const instrumentName = store.arrange.layers[outline.layerIndex].inst;
+                  // const sf = store.instCaches.find(sf => sf.instrumentName === instrumentName);
                   // if (sf == undefined) throw new Error('sfがundefinedであってはならない。');
                   // sf.player.play(name, 0, { gain: 10, duration: 1 });
                   // console.log(name);

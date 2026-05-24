@@ -40,9 +40,9 @@ namespace PlaybackCacheState {
 
   export const playbackSF = (track: MelodyState.ScoreTrack, pitchIndex: number) => {
     const preview = get(playbackStore);
-    const ref = track.soundFontRef;
+    const ref = track.instRef;
     const player = (() => {
-      if (ref?.source === "user") {
+      if (ref?.source === "soundfont") {
         return preview.userSfItems.find((item) => {
           return item.definitionName === ref.definitionName
             && item.bank === ref.bank
@@ -50,7 +50,7 @@ namespace PlaybackCacheState {
         })?.player;
       }
 
-      const sfName = ref?.source === "builtin" ? ref.name : track.soundFont;
+      const sfName = ref?.source === "builtin" ? ref.name : "";
       if (sfName === "") return undefined;
       return preview.sfItems.find(item => item.instrumentName === sfName)?.player;
     })();

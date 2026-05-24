@@ -1,11 +1,11 @@
-import ElementState from "../../../store/state/data/element-state";
-import TerminalCommand from "../terminal-command";
+import ElementState from "../../../../store/state/data/element-state";
+import TerminalCommand from "../../terminal-command";
 
-const createModulateCommands = (ctx: TerminalCommand.Context) => {
+const createModulateProvider = (ctx: TerminalCommand.Context) => {
   const { logger } = ctx;
   const outlineSelector = ctx.selectors.outline;
 
-  const list = (): TerminalCommand.Props[] => {
+  const commands = (): TerminalCommand.Props[] => {
     const defaultProps = TerminalCommand.createDefaultProps("modulate");
     const getCurrDispValue = (data: ElementState.DataModulate) =>
       `[${data.method}${data.val ? " " + data.val : ""}]`;
@@ -31,7 +31,7 @@ const createModulateCommands = (ctx: TerminalCommand.Context) => {
           const prev = getCurrDispValue(data);
           const value = args[0];
 
-          // 数値の変換チェック
+          // 数値の変換チェチE��
           if (!ElementState.DommVals.includes(value)) {
             logger.outputError(`The specified value[${value}] is invalid.`);
           }
@@ -57,7 +57,7 @@ const createModulateCommands = (ctx: TerminalCommand.Context) => {
           const prev = getCurrDispValue(data);
           const value = args[0];
 
-          // 数値の変換チェック
+          // 数値の変換チェチE��
           if (!ElementState.DommVals.includes(value)) {
             logger.outputError(`The specified value[${value}] is invalid.`);
           }
@@ -104,7 +104,7 @@ const createModulateCommands = (ctx: TerminalCommand.Context) => {
     ];
   };
   return {
-    list,
+    commands,
   };
 };
-export default createModulateCommands;
+export default createModulateProvider;

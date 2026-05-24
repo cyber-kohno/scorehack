@@ -34,6 +34,7 @@ const useInputOutline = () => {
     const arrange = get(controlStore).outline.arrange;
     return arrange != null && arrange.finder != undefined;
   };
+  const isOutlineRangeSelected = () => get(controlStore).outline.focusLock !== -1;
 
   const control = (eventKey: string) => {
     if (isArrangeFinderActive()) {
@@ -60,8 +61,14 @@ const useInputOutline = () => {
       case "m": ActionMenu.open(); break;
       case "Delete": outlineActions.removeFocusElement(); break;
 
-      case "ArrowUp": outlineActions.moveFocus(-1); break;
-      case "ArrowDown": outlineActions.moveFocus(1); break;
+      case "ArrowUp":
+        if (isOutlineRangeSelected()) outlineActions.focusSelectedEdge(-1);
+        else outlineActions.moveFocus(-1);
+        break;
+      case "ArrowDown":
+        if (isOutlineRangeSelected()) outlineActions.focusSelectedEdge(1);
+        else outlineActions.moveFocus(1);
+        break;
       case "ArrowLeft": outlineActions.moveSection(-1); break;
       case "ArrowRight": outlineActions.moveSection(1); break;
       case "1":
@@ -225,6 +232,8 @@ const useInputOutline = () => {
 
     callbacks.holdCtrl = () => {
       switch (eventKey) {
+        case 'c': outlineActions.copyFocusElements(); break;
+        case 'v': outlineActions.pasteClipboardElements(); break;
         case 'z': outlineActions.undoRedu(-1); break;
         case 'y': outlineActions.undoRedu(1); break;
       }

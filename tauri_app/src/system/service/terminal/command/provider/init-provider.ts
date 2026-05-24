@@ -1,14 +1,14 @@
-import RhythmTheory from "../../../domain/theory/rhythm-theory";
-import TonalityTheory from "../../../domain/theory/tonality-theory";
-import TerminalCommand from "../terminal-command";
+import RhythmTheory from "../../../../domain/theory/rhythm-theory";
+import TonalityTheory from "../../../../domain/theory/tonality-theory";
+import TerminalCommand from "../../terminal-command";
 
-const createInitCommands = (ctx: TerminalCommand.Context) => {
+const createInitProvider = (ctx: TerminalCommand.Context) => {
   const { logger, terminal } = ctx;
   const { getCurrentInitData } = ctx.selectors.outline;
   const feelTypes = ["straight", "swing"] as const;
   const swingTargets = ["8", "16"] as const;
 
-  const list = (): TerminalCommand.Props[] => {
+  const commands = (): TerminalCommand.Props[] => {
     const defaultProps = TerminalCommand.createDefaultProps("init");
     return [
       {
@@ -133,7 +133,7 @@ const createInitCommands = (ctx: TerminalCommand.Context) => {
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
           const next = arg0;
-          // スケールの存在チェック
+          // スケールの存在チェチE��
           if (!TonalityTheory.VALID_SCALE_NAMES.includes(args[0])) {
             logger.outputError(`The specified scale[${next}] is invalid.`);
             return;
@@ -148,7 +148,7 @@ const createInitCommands = (ctx: TerminalCommand.Context) => {
     ];
   };
   return {
-    list,
+    commands,
   };
 };
-export default createInitCommands;
+export default createInitProvider;

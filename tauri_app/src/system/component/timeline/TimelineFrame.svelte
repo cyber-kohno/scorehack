@@ -2,6 +2,7 @@
   import GridRootFrame from "./grid/GridRootFrame.svelte";
   import BeatMeasureFrame from "./header/BeatMeasureFrame.svelte";
   import ChordListFrame from "./header/ChordListFrame.svelte";
+  import ClipboardStatus from "./status/ClipboardStatus.svelte";
   import ProgressInfo from "./header/ProgressInfo.svelte";
   import PitchListFrame from "./pitch/PitchListFrame.svelte";  import RefState from "../../store/state/ref-state";
   import PianoViewFrame from "./grid/PianoViewFrame.svelte";
@@ -52,7 +53,9 @@
 
 <div class="wrap" data-isArrangeEditorActive={isArrangeEditorActive}>
   <div class="header">
-    <div class="blank"></div>
+    <div class="blank">
+      <ClipboardStatus />
+    </div>
     <div class="active" bind:this={$refStore.header}>
       {#if scrollLimitProps != null}
         <ChordListFrame {scrollLimitProps} />

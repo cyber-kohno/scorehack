@@ -34,16 +34,19 @@ export const saveScoreFilePath = async (extension: string, defaultDirectory?: st
   });
 };
 
-export const openMp3FilePath = async () => {
+export const openAudioFilePath = async (defaultDirectory?: string) => {
   const path = await open({
     multiple: false,
     directory: false,
-    filters: [{ name: "MP3 Files", extensions: ["mp3"] }],
+    defaultPath: defaultDirectory === "" ? undefined : defaultDirectory,
+    filters: [{ name: "Audio Files", extensions: ["mp3", "wav", "ogg"] }],
   });
 
   if (path == null || Array.isArray(path)) return null;
   return path;
 };
+
+export const openMp3FilePath = openAudioFilePath;
 
 export const openDirectoryPath = async (defaultPath?: string, recursive = false) => {
   const path = await open({

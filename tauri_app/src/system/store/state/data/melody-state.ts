@@ -1,6 +1,7 @@
 import type TonalityTheory from "../../../domain/theory/tonality-theory";
+import type FilePathRef from "../../../infra/file/file-path-ref";
 import Layout from "../../../layout/layout-constant";
-import type { TrackSoundFontRef as SharedTrackSoundFontRef } from "./track-soundfont-ref";
+import type { TrackInstRef as SharedTrackInstRef } from "./track-inst-ref";
 
 namespace MelodyState {
 
@@ -26,11 +27,10 @@ namespace MelodyState {
     volume: number;
   }
 
-  export type TrackSoundFontRef = SharedTrackSoundFontRef;
+  export type TrackInstRef = SharedTrackInstRef;
 
   export interface ScoreTrack extends Track {
-    soundFont: string;
-    soundFontRef?: TrackSoundFontRef;
+    instRef?: TrackInstRef;
     notes: VocalNote[];
   }
   export const createMelodyTrackScoreInitial = (): ScoreTrack => {
@@ -39,12 +39,10 @@ namespace MelodyState {
       volume: 10,
       isMute: false,
       notes: [],
-      soundFont: "",
     };
   };
   export interface AudioTrack extends Track {
-    source: string;
-    fileName: string;
+    pathRef?: FilePathRef.Value;
     adjust: number;
   }
 

@@ -8,7 +8,14 @@
   export let item: ArrangeTimelineNoteResolver.TimelineNote;
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
-  const COLOR_ARR = ["#ff2f91", "#ff4fb3", "#d936ff", "#ff6c9f", "#e91e83", "#ff3fcf"];
+  const COLOR_ARR = [
+    "#ff2f91",
+    "#ff4fb3",
+    "#d936ff",
+    "#ff6c9f",
+    "#e91e83",
+    "#ff3fcf",
+  ];
 
   $: noteColor = COLOR_ARR[item.trackIndex % COLOR_ARR.length];
   $: note = item.note;
@@ -35,7 +42,8 @@
   >
     <div
       class="note"
-      style:top="{Layout.getPitchTop(note.pitch) + (Layout.pitch.ITEM_HEIGHT - HEIGHT) / 2}px"
+      style:top="{Layout.getPitchTop(note.pitch) +
+        (Layout.pitch.ITEM_HEIGHT - HEIGHT) / 2}px"
       style:height="{HEIGHT}px"
       style:--note-color={noteColor}
       data-method={item.method}
@@ -72,7 +80,7 @@
   }
 
   .note[data-active="true"] {
-    background-color: var(--note-color);
+    background-color: color-mix(in srgb, var(--note-color) 62%, transparent);
   }
 
   .note[data-method="guitar"] {

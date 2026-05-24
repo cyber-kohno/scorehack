@@ -23,6 +23,16 @@ const createOutlineUpdater = (ctx: Context) => {
         return data.elements[outline.focus];
     };
 
+    const clone = <T>(value: T): T => {
+        return JSON.parse(JSON.stringify(value));
+    };
+
+    const getSelectedRange = (): [number, number] => {
+        const { focus, focusLock } = outline;
+        if (focusLock === -1) return [focus, focus];
+        return focus < focusLock ? [focus, focusLock] : [focusLock, focus];
+    };
+
     const insertElement = (element: ElementState.Element) => {
         const lastChordSeq = derived.elementCaches[outline.focus].lastChordSeq;
 
@@ -221,10 +231,7 @@ const createOutlineUpdater = (ctx: Context) => {
     const removeFocusElement = () => {
         const { focus, focusLock } = outline;
 
-        let [start, end] = [focus, focus];
-        if (focusLock !== -1) {
-            [start, end] = focus < focusLock ? [focus, focusLock] : [focusLock, focus];
-        }
+        const [start, end] = getSelectedRange();
 
         // 一つでもコード要素以外が含まれていたら削除できない
         if (start !== end) {
@@ -241,6 +248,79 @@ const createOutlineUpdater = (ctx: Context) => {
         }
         outline.focus = start - 1;
         outline.focusLock = -1;
+        return true;
+    };
+
+    const copyFocusElements = () => {
+        const [start, end] = getSelectedRange();
+        const elements = data.elements.slice(start, end + 1);
+        const chordSeqs = derived.elementCaches
+            .slice(start, end + 1)
+            .filter(element => element.chordSeq !== -1)
+            .map(element => element.chordSeq);
+
+        outline.clipboard.elements = clone(elements);
+        outline.clipboard.chordSeqs = chordSeqs.slice();
+        outline.clipboard.relationsByTrack = data.arrange.tracks.map(track => {
+            return clone(track.relations.filter(relation => {
+                return chordSeqs.includes(relation.chordSeq);
+            }));
+        });
+    };
+
+    const pasteClipboardElements = () => {
+        const elements = outline.clipboard.elements;
+        if (elements == null || elements.length === 0) return false;
+
+        const [, end] = getSelectedRange();
+        const insertIndex = end + 1;
+        const lastChordSeq = derived.elementCaches[end].lastChordSeq;
+        const sourceChordSeqs = outline.clipboard.chordSeqs;
+        const chordSeqMap = new Map<number, number>();
+
+        let nextChordSeq = lastChordSeq;
+        let chordIndex = 0;
+        elements.forEach(element => {
+            if (element.type !== "chord") return;
+
+            const sourceChordSeq = sourceChordSeqs[chordIndex];
+            nextChordSeq++;
+            chordSeqMap.set(sourceChordSeq, nextChordSeq);
+            chordIndex++;
+        });
+
+        const pastedChordCount = nextChordSeq - lastChordSeq;
+        if (pastedChordCount > 0) {
+            data.arrange.tracks.forEach(track => {
+                track.relations.forEach(relation => {
+                    if (relation.chordSeq > lastChordSeq) {
+                        relation.chordSeq += pastedChordCount;
+                    }
+                });
+            });
+        }
+
+        data.elements.splice(insertIndex, 0, ...clone(elements));
+
+        data.arrange.tracks.forEach((track, trackIndex) => {
+            const relations = outline.clipboard.relationsByTrack[trackIndex] ?? [];
+            const pastedRelations = relations.flatMap(relation => {
+                const chordSeq = chordSeqMap.get(relation.chordSeq);
+                if (chordSeq == undefined) return [];
+                return [{ ...clone(relation), chordSeq }];
+            });
+
+            track.relations.push(...pastedRelations);
+            track.relations.sort((a, b) => a.chordSeq - b.chordSeq);
+        });
+
+        outline.focus = insertIndex;
+        outline.focusLock = insertIndex + elements.length - 1;
+        if (outline.focusLock === outline.focus) outline.focusLock = -1;
+        outline.clipboard.elements = null;
+        outline.clipboard.chordSeqs = [];
+        outline.clipboard.relationsByTrack = [];
+
         return true;
     };
 
@@ -321,11 +401,13 @@ const createOutlineUpdater = (ctx: Context) => {
     };
 
     return {
+        copyFocusElements,
         insertElement,
         moveFocus,
         moveSection,
         openArrangeEditor,
         openArrangeFinder,
+        pasteClipboardElements,
         removeFocusElement,
         setChordData,
         setSectionName,

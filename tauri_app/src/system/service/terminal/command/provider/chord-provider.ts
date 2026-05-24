@@ -1,10 +1,10 @@
-import ChordTheory from "../../../domain/theory/chord-theory";
-import TerminalCommand from "../terminal-command";
+import ChordTheory from "../../../../domain/theory/chord-theory";
+import TerminalCommand from "../../terminal-command";
 
-const createChordCommands = (ctx: TerminalCommand.Context) => {
+const createChordProvider = (ctx: TerminalCommand.Context) => {
     const { terminal } = ctx;
 
-    const list = (): TerminalCommand.Props[] => {
+    const commands = (): TerminalCommand.Props[] => {
 
         const defaultProps = TerminalCommand.createDefaultProps('chord');
         return [
@@ -33,7 +33,7 @@ const createChordCommands = (ctx: TerminalCommand.Context) => {
         ];
     };
     return {
-        list
+        commands
     };
 }
-export default createChordCommands;
+export default createChordProvider;

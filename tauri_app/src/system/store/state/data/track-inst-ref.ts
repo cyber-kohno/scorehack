@@ -1,10 +1,10 @@
-export type TrackSoundFontRef =
+export type TrackInstRef =
   | {
     source: "builtin";
     name: string;
   }
   | {
-    source: "user";
+    source: "soundfont";
     definitionName: string;
     bank: number;
     program: number;

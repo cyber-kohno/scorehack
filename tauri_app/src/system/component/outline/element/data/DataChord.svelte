@@ -1,6 +1,7 @@
 <script lang="ts">
   import ChordTheory from "../../../../domain/theory/chord-theory";
-  import { derivedStore } from "../../../../store/global-store";
+  import DegreeBasis from "../../../../service/notation/degree-basis";
+  import { derivedStore, settingsStore } from "../../../../store/global-store";
   import type ElementState from "../../../../store/state/data/element-state";
 
   export let data!: ElementState.DataChord;
@@ -31,7 +32,15 @@
   $: degreeName = (() => {
     const degree = data.degree;
     if (degree == undefined) return "-";
-    return ChordTheory.getDegreeChordName(degree);
+    const chordCache = chordCaches[chordSeq];
+    const baseCache = $derivedStore.baseCaches[chordCache.baseSeq];
+    return ChordTheory.getDegreeChordName(
+      DegreeBasis.toDisplayDegree(
+        degree,
+        baseCache.scoreBase.tonality,
+        $settingsStore.notation.degreeBasis,
+      ),
+    );
   })();
 
   $: chordCache = chordCaches[chordSeq];
@@ -124,7 +133,7 @@
     text-align: center;
     font-size: 22px;
     font-weight: 600;
-    color: #d4e3e5;
+    color: #e3f0f2;
   }
   .chorddiv {
     display: inline-block;

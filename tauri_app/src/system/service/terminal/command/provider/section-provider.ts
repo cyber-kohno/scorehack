@@ -1,10 +1,10 @@
-import TerminalCommand from "../terminal-command";
+import TerminalCommand from "../../terminal-command";
 
-const createSectionCommands = (ctx: TerminalCommand.Context) => {
+const createSectionProvider = (ctx: TerminalCommand.Context) => {
     const { logger } = ctx;
     const { getCurrentSectionData } = ctx.selectors.outline;
 
-    const list = (): TerminalCommand.Props[] => {
+    const commands = (): TerminalCommand.Props[] => {
 
         const defaultProps = TerminalCommand.createDefaultProps('section');
         return [
@@ -25,7 +25,7 @@ const createSectionCommands = (ctx: TerminalCommand.Context) => {
         ];
     };
     return {
-        list
+        commands
     };
 }
-export default createSectionCommands;
+export default createSectionProvider;

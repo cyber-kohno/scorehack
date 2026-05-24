@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { controlStore, dataStore, derivedStore, playbackStore, refStore, settingsStore } from "../../../store/global-store";
 import useScrollService from "../../common/scroll-service";
 import useDerivedSelector from "../../derived/derived-selector";
@@ -11,7 +12,7 @@ import ArrangeState from "../../../store/state/data/arrange/arrange-state";
 import PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import GuitarArrangePlaybackUtil from "../arrange/guitar-arrange-playback-util";
 import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
-import FileUtil from "../../../infra/file/fileUtil";
+import FilePathRef from "../../../infra/file/file-path-ref";
 import stopPlaybackTimeline from "./stop-playback-timeline";
 import type PlaybackCacheState from "./playback-cache-state";
 import convertNoteToPlayer from "./convert-note-to-player";
@@ -70,8 +71,8 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
 
     const trackPlayList: PlaybackCacheState.TrackPlayer[] = [];
     const findScoreTrackPlayer = (track: MelodyState.ScoreTrack) => {
-        const ref = track.soundFontRef;
-        if (ref?.source === "user") {
+        const ref = track.instRef;
+        if (ref?.source === "soundfont") {
             return playback.userSfItems.find((sf) => {
                 return sf.definitionName === ref.definitionName
                     && sf.bank === ref.bank
@@ -79,13 +80,13 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
             })?.player;
         }
 
-        const instrumentName = ref?.source === "builtin" ? ref.name : track.soundFont;
+        const instrumentName = ref?.source === "builtin" ? ref.name : "";
         if (instrumentName === "") return undefined;
         return playback.sfItems.find((sf) => sf.instrumentName === instrumentName)?.player;
     };
     const findArrangeTrackPlayer = (track: ArrangeState.Track) => {
-        const ref = track.soundFontRef;
-        if (ref?.source === "user") {
+        const ref = track.instRef;
+        if (ref?.source === "soundfont") {
             return playback.userSfItems.find((sf) => {
                 return sf.definitionName === ref.definitionName
                     && sf.bank === ref.bank
@@ -93,7 +94,7 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
             })?.player;
         }
 
-        const instrumentName = ref?.source === "builtin" ? ref.name : track.soundFont;
+        const instrumentName = ref?.source === "builtin" ? ref.name : "";
         if (instrumentName === "") return undefined;
         return playback.sfItems.find((sf) => sf.instrumentName === instrumentName)?.player;
     };
@@ -110,7 +111,7 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
             const trackScore = track as MelodyState.ScoreTrack;
 
             const player = findScoreTrackPlayer(trackScore);
-            if (player == undefined) throw new Error();
+            if (player == undefined) return 1;
 
             const notes: PlaybackCacheState.SoundTimePlayer[] = [];
             trackPlayList.push({
@@ -141,14 +142,14 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
             // 繝溘Η繝ｼ繝医・蝣ｴ蜷医さ繝ｳ繝・ぅ繝九Η繝ｼ
             if (track.isMute) return 1;
 
-            const layerAudio = track as MelodyState.AudioTrack;
-            // 髻ｳ貅先悴險ｭ螳壹・蝣ｴ蜷医さ繝ｳ繝・ぅ繝九Η繝ｼ
-            if (layerAudio.source === "") return 1;
+            if (track.pathRef == undefined) return 1;
 
-            // console.log(layerAudio.source);
-            const blob = FileUtil.base64ToBlob(layerAudio.source, "audio/mp3");
-            const url = URL.createObjectURL(blob);
+            const path = FilePathRef.resolvePath(track.pathRef, settings.envs.HOME_DIR);
+            if (path === "") return 1;
+
+            const url = convertFileSrc(path);
             const audio = new Audio(url);
+            audio.volume = Math.max(0, Math.min(1, track.volume / 10));
 
             playback.audios.push({
                 element: audio,
@@ -167,7 +168,7 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
             if (track.isMute) return 1;
 
             const player = findArrangeTrackPlayer(track);
-            if (player == undefined) throw new Error();
+            if (player == undefined) return 1;
 
             const notePlayers: PlaybackCacheState.SoundTimePlayer[] = [];
             trackPlayList.push({
@@ -327,8 +328,10 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
     });
 
     // 繧ｪ繝ｼ繝・ぅ繧ｪ繝輔ぃ繧､繝ｫ繧貞・逕・
-    audioTracks.forEach((track, i) => {
-        const audio = playback.audios[i];
+    playback.audios.forEach((audio) => {
+        const track = audioTracks[audio.referIndex];
+        if (track == undefined) return;
+
         let lateTime = 0;
         const adjustTime = track.adjust + playback.progressTime;
         if (adjustTime < 0) {

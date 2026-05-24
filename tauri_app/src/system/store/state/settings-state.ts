@@ -1,6 +1,9 @@
+import type FilePathRef from "../../infra/file/file-path-ref";
+
 namespace SettingsState {
 
     export type TimelineChordNameMode = "absolute" | "degree";
+    export type DegreeBasis = "tonality" | "relative-major";
     export type SoundFontFileFormat = "sf2" | "sf3";
     export type EnvKey = "HOME_DIR" | "SF_FILE_DIR" | "SCH_FILE_DIR";
 
@@ -8,20 +11,10 @@ namespace SettingsState {
 
     export type Envs = Record<EnvKey, string>;
 
-    export type SoundFontPathRef =
-        | {
-            kind: "home";
-            relativePath: string;
-        }
-        | {
-            kind: "external";
-            path: string;
-        };
-
     export type UserSoundFontDefinition = {
         name: string;
         filePath?: string;
-        pathRef?: SoundFontPathRef;
+        pathRef?: FilePathRef.Value;
         format: SoundFontFileFormat;
     };
 
@@ -41,8 +34,13 @@ namespace SettingsState {
         };
     };
 
+    export type Notation = {
+        degreeBasis: DegreeBasis;
+    };
+
     export type Value = {
         view: View;
+        notation: Notation;
         playback: Playback;
         userSoundFonts: UserSoundFontDefinition[];
         envs: Envs;
@@ -54,6 +52,9 @@ namespace SettingsState {
                 beatWidth: 120,
                 chordNameMode: "degree"
             }
+        },
+        notation: {
+            degreeBasis: "tonality",
         },
         playback: {
             swing: {

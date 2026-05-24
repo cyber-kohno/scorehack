@@ -1,16 +1,22 @@
-import ArrangeState from "../../../store/state/data/arrange/arrange-state";
-import SoundFontFile from "../../../infra/audio/soundfont-file";
-import UserSoundFontCache from "../../../infra/audio/user-soundfont-cache";
-import UserSoundFontPath from "../../../infra/audio/user-soundfont-path";
-import PlaybackState from "../../../store/state/playback-state";
-import { prepareUserSoundFont, UserSoundFontPrepareError } from "../../playback/user-soundfont-service";
-import TerminalCommand from "../terminal-command";
-import useSoundfontLoader from "../../playback/soundfont-loader";
+import ArrangeState from "../../../../store/state/data/arrange/arrange-state";
+import SoundFontFile from "../../../../infra/audio/soundfont-file";
+import UserSoundFontCache from "../../../../infra/audio/user-soundfont-cache";
+import UserSoundFontPath from "../../../../infra/audio/user-soundfont-path";
+import PlaybackState from "../../../../store/state/playback-state";
+import type SettingsState from "../../../../store/state/settings-state";
+import { prepareUserSoundFont, UserSoundFontPrepareError } from "../../../playback/user-soundfont-service";
+import TerminalCommand from "../../terminal-command";
+import useSoundfontLoader from "../../../playback/soundfont-loader";
+import useUserSoundfontLoader from "../../../playback/user-soundfont-loader";
+import createInstCatalog from "../catalog/inst-catalog";
+import createTrackCatalog from "../catalog/track-catalog";
+import createVoiceCatalog from "../catalog/voice-catalog";
 
-const createHarmonizeCommands = (ctx: TerminalCommand.Context) => {
+const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
   const { control, data, ref, settings, terminal, logger } = ctx;
 
   const { isLoadSoundFont, loadSoundFont } = useSoundfontLoader();
+  const { isLoadUserSoundFont } = useUserSoundfontLoader();
 
   const { getCurrHarmonizeTrack } = ctx.selectors.outline;
 
@@ -25,18 +31,21 @@ const createHarmonizeCommands = (ctx: TerminalCommand.Context) => {
   };
 
   const formatTrackSoundFont = (track: ArrangeState.Track) => {
-    const soundFontRef = track.soundFontRef;
-    if (soundFontRef == undefined) return track.soundFont;
+    const instRef = track.instRef;
+    if (instRef == undefined) return "";
 
-    switch (soundFontRef.source) {
-      case "builtin": return soundFontRef.name;
-      case "user": return `${soundFontRef.definitionName} ${SoundFontFile.formatPresetKey(soundFontRef)}`;
+    switch (instRef.source) {
+      case "builtin": return instRef.name;
+      case "soundfont": return `${instRef.definitionName} ${SoundFontFile.formatPresetKey(instRef)}`;
     }
   };
 
-  const list = (): TerminalCommand.Props[] => {
+  const commands = (): TerminalCommand.Props[] => {
     const defaultProps = TerminalCommand.createDefaultProps("harmonize");
     return [
+      createInstCatalog(ctx, "harmonize"),
+      createTrackCatalog(ctx, "harmonize"),
+      createVoiceCatalog(ctx, "harmonize"),
       {
         ...defaultProps,
         funcKey: "lsh",
@@ -78,7 +87,7 @@ const createHarmonizeCommands = (ctx: TerminalCommand.Context) => {
                     item.method,
                     formatTrackSoundFont(item),
                     item.volume.toString(),
-                    item.isMute ? "●" : "",
+                    item.isMute ? "*" : "",
                   ];
                 }))(),
             },
@@ -126,7 +135,7 @@ const createHarmonizeCommands = (ctx: TerminalCommand.Context) => {
           try {
             if (tracks[nextIndex] == undefined) throw new Error();
             outline.trackIndex = nextIndex;
-            logger.outputInfo(`Active track changed. [${prev} → ${arg0}]`);
+            logger.outputInfo(`Active track changed. [${prev} ↁE${arg0}]`);
             ctx.commit.control();
             lsh();
           } catch {
@@ -192,8 +201,7 @@ const createHarmonizeCommands = (ctx: TerminalCommand.Context) => {
           try {
             const sfName = PlaybackState.validateSFName(arg0);
             const track = getCurrHarmonizeTrack();
-            track.soundFont = sfName;
-            track.soundFontRef = {
+            track.instRef = {
               source: "builtin",
               name: sfName,
             };
@@ -262,19 +270,25 @@ const createHarmonizeCommands = (ctx: TerminalCommand.Context) => {
             return;
           }
 
+          const instRef = {
+            source: "soundfont",
+            definitionName: arg0,
+            bank: presetKey.bank,
+            program: presetKey.program,
+          } as const;
+
           terminal.wait = true;
+          if (!isLoadUserSoundFont(instRef)) {
+            logger.outputInfo(`User SoundFont not yet loaded. [${arg0} ${arg1}]`);
+            logger.outputInfo(`Loading...`);
+            ctx.commit.terminal();
+          }
+
           (async () => {
-            const soundFontRef = {
-              source: "user",
-              definitionName: arg0,
-              bank: presetKey.bank,
-              program: presetKey.program,
-            } as const;
-            const { preset } = await prepareUserSoundFont(soundFontRef);
+            const { preset } = await prepareUserSoundFont(instRef);
 
             const track = getCurrHarmonizeTrack();
-            track.soundFont = "";
-            track.soundFontRef = soundFontRef;
+            track.instRef = instRef;
             logger.outputInfo(
               `Set a user SoundFont as the active track. [${arg0} ${arg1} ${preset.name}]`,
             );
@@ -295,6 +309,43 @@ const createHarmonizeCommands = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
+        funcKey: "notation",
+        usage: "Change notation settings.",
+        args: [
+          {
+            name: "property: degree-basis",
+            getCandidate: () => ["degree-basis"],
+          },
+          {
+            name: "value: tonality | relative-major",
+            getCandidate: (args) => args[0] === "degree-basis"
+              ? ["tonality", "relative-major"]
+              : [],
+          },
+        ],
+        callback: (args) => {
+          const prop = logger.validateRequired(args[0], 1);
+          if (prop == null) return;
+          const value = logger.validateRequired(args[1], 2);
+          if (value == null) return;
+
+          if (prop !== "degree-basis") {
+            logger.outputError(`The specified notation property does not exist. [${prop}]`);
+            return;
+          }
+          if (value !== "tonality" && value !== "relative-major") {
+            logger.outputError(`The specified degree basis does not exist. [${value}]`);
+            return;
+          }
+
+          const prev = settings.notation.degreeBasis;
+          settings.notation.degreeBasis = value as SettingsState.DegreeBasis;
+          ctx.commit.settings();
+          logger.outputInfo(`Changed degree basis. [${prev} -> ${value}]`);
+        },
+      },
+      {
+        ...defaultProps,
         funcKey: "volume",
         usage: "Adjust volume for the active track.",
         args: [{ name: "value" }],
@@ -306,14 +357,14 @@ const createHarmonizeCommands = (ctx: TerminalCommand.Context) => {
           const track = getCurrHarmonizeTrack();
           const prev = track.volume;
           track.volume = arg0Number;
-          logger.outputInfo(`Changed volume. [${prev} → ${arg0}]`);
+          logger.outputInfo(`Changed volume. [${prev} ↁE${arg0}]`);
           ctx.commit.data();
         },
       },
     ];
   };
   return {
-    list,
+    commands,
   };
 };
-export default createHarmonizeCommands;
+export default createHarmonizeProvider;

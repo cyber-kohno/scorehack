@@ -21,8 +21,8 @@ const startPlaybackPianoEditor = () => {
     if (track.isMute) return;
 
     const player = (() => {
-        const ref = track.soundFontRef;
-        if (ref?.source === "user") {
+        const ref = track.instRef;
+        if (ref?.source === "soundfont") {
             return playback.userSfItems.find((item) => {
                 return item.definitionName === ref.definitionName
                     && item.bank === ref.bank
@@ -30,7 +30,7 @@ const startPlaybackPianoEditor = () => {
             })?.player;
         }
 
-        const instrumentName = ref?.source === "builtin" ? ref.name : track.soundFont;
+        const instrumentName = ref?.source === "builtin" ? ref.name : "";
         if (instrumentName === "") return undefined;
         return playback.sfItems.find(item => item.instrumentName === instrumentName)?.player;
     })();

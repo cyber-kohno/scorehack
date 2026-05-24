@@ -6,6 +6,7 @@
   import TimelineLastMargin from "../TimelineTailMargin.svelte";
   import useDerivedSelector from "../../../service/derived/derived-selector";
   import type ElementState from "../../../store/state/data/element-state";
+  import DegreeBasis from "../../../service/notation/degree-basis";
 
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
@@ -35,7 +36,13 @@
 
       const data = element.data as ElementState.DataChord;
       if (data.degree == undefined) return "-";
-      return ChordTheory.getDegreeChordName(data.degree);
+      return ChordTheory.getDegreeChordName(
+        DegreeBasis.toDisplayDegree(
+          data.degree,
+          $derivedStore.baseCaches[cache.baseSeq].scoreBase.tonality,
+          $settingsStore.notation.degreeBasis,
+        ),
+      );
     }
 
     const compiledChord = cache.compiledChord;

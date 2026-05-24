@@ -67,6 +67,7 @@ export const createSpessaSynthInstrument = async (
     });
 
     let channelCursor = 0;
+    let timerKeys: number[] = [];
 
     return {
         play: (note, when = 0, playOptions) => {
@@ -74,18 +75,36 @@ export const createSpessaSynthInstrument = async (
 
             const midiNote = clamp(NoteName.toMidiNumber(note), 0, 127);
             const velocity = toVelocity(playOptions);
-            const startTime = context.currentTime + when;
             const channel = CHANNELS[channelCursor];
             channelCursor = (channelCursor + 1) % CHANNELS.length;
 
-            synth.noteOn(channel, midiNote, velocity, { time: startTime });
+            const start = () => {
+                synth.noteOn(channel, midiNote, velocity);
 
-            const duration = playOptions?.duration;
-            if (duration != undefined) {
-                synth.noteOff(channel, midiNote, { time: startTime + duration });
+                const duration = playOptions?.duration;
+                if (duration == undefined) return;
+
+                const offKey = window.setTimeout(() => {
+                    synth.noteOff(channel, midiNote);
+                    timerKeys = timerKeys.filter((key) => key !== offKey);
+                }, duration * 1000);
+                timerKeys.push(offKey);
+            };
+
+            if (when <= 0) {
+                start();
+                return;
             }
+
+            const onKey = window.setTimeout(() => {
+                start();
+                timerKeys = timerKeys.filter((key) => key !== onKey);
+            }, when * 1000);
+            timerKeys.push(onKey);
         },
         stop: () => {
+            timerKeys.forEach((key) => window.clearTimeout(key));
+            timerKeys = [];
             synth.stopAll(true);
         },
     };
