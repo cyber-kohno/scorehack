@@ -93,6 +93,46 @@ const createMelodyActions = () => {
         ctx.commitControl();
     };
 
+    const moveCursorOrFocusNote = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const cursor = ctx.melody.cursor;
+        const targetPos = cursor.pos - (dir === -1 ? cursor.len : 0);
+        const [targetBeatPos, targetBeatLen] = [targetPos, cursor.len].map(size =>
+            MelodyState.calcBeat(cursor.norm, size)
+        );
+        const tailBeatNote = ctx.derivedSelector.getBeatNoteTail();
+
+        if (targetBeatPos < 0 || targetBeatPos + targetBeatLen > tailBeatNote) return;
+
+        const targetCursor = { ...cursor, pos: targetPos };
+        const track = ctx.melodySelector.getCurrScoreTrack();
+        const noteIndex = track.notes.findIndex(note =>
+            MelodyState.judgeOverlapNotes(targetCursor, note)
+        );
+
+        if (noteIndex === -1) {
+            ctx.melodyUpdater.moveCursor(dir);
+            ctx.refUpdater.adjustGridScrollXFromNote(cursor);
+            ctx.outlineUpdater.syncChordSeqFromNote(cursor);
+            ctx.refUpdater.adjustOutlineScroll();
+            ctx.melodyUpdater.judgeOverlap();
+            ctx.commitControl();
+            return;
+        }
+
+        ctx.melody.focus = noteIndex;
+        ctx.melodyUpdater.clearFocusLock();
+
+        const note = track.notes[noteIndex];
+        ctx.melodyUpdater.setCursorRate(getFocusNoteDisplayRate(ctx, note));
+        ctx.outlineUpdater.syncChordSeqFromNote(note);
+        ctx.refUpdater.adjustOutlineScroll();
+        ctx.refUpdater.adjustGridScrollXFromNote(note);
+        ctx.refUpdater.adjustGridScrollYFromCursor(note);
+        ctx.playbackPitch(note.pitch);
+        ctx.commitControl();
+    };
+
     const addNoteFromCursor = () => {
         const ctx = createContext();
         const track = ctx.melodySelector.getCurrScoreTrack();
@@ -561,6 +601,7 @@ const createMelodyActions = () => {
         focusInNearNote,
         focusOutNoteSide,
         moveCursor,
+        moveCursorOrFocusNote,
         moveCursorPitchInScale,
         moveNoteLen,
         moveNotePos,

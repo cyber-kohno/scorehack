@@ -11,6 +11,7 @@ import TerminalCommand from "../../terminal-command";
 import useSoundfontLoader from "../../../playback/soundfont-loader";
 import useUserSoundfontLoader from "../../../playback/user-soundfont-loader";
 import createInstCatalog from "../catalog/inst-catalog";
+import createPronCatalog from "../catalog/pron-catalog";
 import createTrackCatalog from "../catalog/track-catalog";
 import createVoiceCatalog from "../catalog/voice-catalog";
 
@@ -52,6 +53,7 @@ const createMelodyProvider = (ctx: TerminalCommand.Context) => {
         };
         return [
             createInstCatalog(ctx, "melody"),
+            createPronCatalog(ctx),
             createTrackCatalog(ctx, "melody"),
             createVoiceCatalog(ctx, "melody"),
             {

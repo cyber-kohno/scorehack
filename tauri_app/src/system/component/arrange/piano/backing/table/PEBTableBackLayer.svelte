@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getPianoBacking } from "../../piano-editor-context";
+  import PianoBackingState from "../../../../../store/state/data/arrange/piano/piano-backing-state";
 
   const bp = getPianoBacking();
   $: backing = $bp.backing;
@@ -8,12 +9,9 @@
 
   $: isExist = (x: number, y: number) => {
     const currentKey = `${x}.${y}`;
-    return layerSub.items
-      .map((item) => {
-        const [x, y] = item.split(".");
-        return `${x}.${y}`;
-      })
-      .includes(currentKey);
+    return PianoBackingState.convRemoveOptionNotes(layerSub.items).includes(
+      currentKey
+    );
   };
 </script>
 

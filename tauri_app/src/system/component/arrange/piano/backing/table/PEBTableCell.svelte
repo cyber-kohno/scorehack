@@ -19,15 +19,9 @@
     const currentKey = `${x}.${y}`;
     const isFocus = isEditActive && currentKey === cursorKey;
 
-    const convRemoveOptionNotes = (items: string[]) => {
-      return items.map((item) => {
-        const [x, y] = item.split(".");
-        return `${x}.${y}`;
-      });
-    };
-    const isSelected = convRemoveOptionNotes($bp.getCurLayer().items).includes(
-      currentKey
-    );
+    const isSelected = PianoBackingState.convRemoveOptionNotes(
+      $bp.getCurLayer().items
+    ).includes(currentKey);
     return [isFocus, isSelected];
   })();
 </script>

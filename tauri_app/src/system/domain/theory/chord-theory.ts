@@ -343,6 +343,16 @@ namespace ChordTheory {
         return structs;
     };
 
+    export const isScaleSafeKeyChord = (tonality: Tonality, keyChord: KeyChordProps) => {
+        return getStructsFromKeyChord(keyChord).every(struct =>
+            TonalityTheory.isScaleStructPitch(struct.key12, tonality)
+        );
+    };
+
+    export const isScaleSafeDegreeChord = (tonality: Tonality, degree: DegreeChord) => {
+        return isScaleSafeKeyChord(tonality, getKeyChordFromDegree(tonality, degree));
+    };
+
     export const DEGREE7_LIST = [
         'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'
     ];

@@ -1,14 +1,14 @@
-<script>
+<script lang="ts">
   import PEBTableBackLayer from "./PEBTableBackLayer.svelte";
+  import PEBOptionLayer from "./PEBOptionLayer.svelte";
   import { refStore } from "../../../../../store/global-store";
   import PEBTableMainLayer from "./PEBTableMainLayer.svelte.svelte";
   $: pianoRef = $refStore.arrange.piano;
 </script>
 
-import {refStore} from "../../../../../store/global-store";
-
 <div class="wrap" bind:this={pianoRef.table}>
   <PEBTableMainLayer />
+  <PEBOptionLayer />
   <PEBTableBackLayer />
 </div>
 

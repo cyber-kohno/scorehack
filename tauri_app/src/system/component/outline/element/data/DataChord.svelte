@@ -44,6 +44,13 @@
   })();
 
   $: chordCache = chordCaches[chordSeq];
+  $: isScaleSafe = (() => {
+    const degree = data.degree;
+    if (degree == undefined) return true;
+
+    const baseCache = $derivedStore.baseCaches[chordCache.baseSeq];
+    return ChordTheory.isScaleSafeDegreeChord(baseCache.scoreBase.tonality, degree);
+  })();
   $: chordName = (() => {
     const compiledChord = chordCache.compiledChord;
     if (compiledChord == undefined) return null;
@@ -68,7 +75,7 @@
       ></div>
     {/each}
   </div>
-  <div class="degreediv">{degreeName}</div>
+  <div class:borrowed={!isScaleSafe} class="degreediv">{degreeName}</div>
   {#if chordName != null}
     <div class="chorddiv">{chordName}</div>
   {/if}
@@ -131,9 +138,12 @@
     width: 100%;
     height: var(--chord-degree-height);
     text-align: center;
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 600;
-    color: #e3f0f2;
+    color: #ffffffeb;
+  }
+  .degreediv.borrowed {
+    color: #f5ff83;
   }
   .chorddiv {
     display: inline-block;

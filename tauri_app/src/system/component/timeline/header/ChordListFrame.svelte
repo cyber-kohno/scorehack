@@ -50,9 +50,24 @@
     return ChordTheory.getKeyChordName(compiledChord.chord);
   };
 
+  const isScaleSafe = (
+    cache: DerivedState.ChordCache,
+    elements: typeof $dataStore.elements,
+  ) => {
+    const element = elements[cache.elementSeq];
+    if (element.type !== "chord") return true;
+
+    const data = element.data as ElementState.DataChord;
+    if (data.degree == undefined) return true;
+
+    const tonality = $derivedStore.baseCaches[cache.baseSeq].scoreBase.tonality;
+    return ChordTheory.isScaleSafeDegreeChord(tonality, data.degree);
+  };
+
   $: chordItems = chordCaches.map((chordCache) => ({
     ...chordCache,
     name: getChordName(chordCache, chordNameMode, $dataStore.elements),
+    isScaleSafe: isScaleSafe(chordCache, $dataStore.elements),
   }));
 </script>
 
@@ -67,6 +82,7 @@
         class="inner"
         data-isFocus={focus === chordCache.elementSeq}
         data-isError={chordCache.error != undefined}
+        data-isBorrowed={!chordCache.isScaleSafe}
       >
         {chordCache.name}
       </div>
@@ -99,7 +115,8 @@
     width: calc(100% - 4px);
     font-size: 22px;
     line-height: 36px;
-    color: #ffffffc5;
+    color: #ffffffed;
+    font-weight: 600;
     text-align: center;
   }
 
@@ -109,5 +126,9 @@
 
   .inner[data-isError="true"] {
     background-color: #c92929d9;
+  }
+
+  .inner[data-isBorrowed="true"] {
+    color: #ffe35a;
   }
 </style>

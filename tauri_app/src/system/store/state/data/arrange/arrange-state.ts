@@ -58,14 +58,14 @@ namespace ArrangeState {
   };
 
   /**
-   * 繧ｳ繝ｼ繝芽ｦ∫ｴ縺ｨ繧｢繝ｬ繝ｳ繧ｸ縺ｮ邏舌▼縺代ｒ邂｡逅・☆繧九・繝ｭ繝代ユ繧｣
+   * コード要素とアレンジの紐づけを管理するプロパティ
    */
   export interface Relation {
     chordSeq: number;
 
-    /** 繝舌ャ繧ｭ繝ｳ繧ｰ繝代ち繝ｼ繝ｳ */
+    /** バッキングパターン */
     bkgPatt: number;
-    /** 讒区・髻ｳ繝代ち繝ｼ繝ｳ */
+    /** 構成音パターン */
     sndsPatt: number;
   }
 
@@ -78,7 +78,7 @@ namespace ArrangeState {
   }
 
   /**
-   * 蛻ｩ逕ｨ縺励※縺・↑縺・ヱ繧ｿ繝ｼ繝ｳ縺ｮ蜑企勁
+   * 利用していないパターンの削除
    * @param target
    * @param patts
    * @param isUsePreset
@@ -92,15 +92,15 @@ namespace ArrangeState {
   ) => {
     for (let i = patts.length - 1; i >= 0; i--) {
       const patt = patts[i];
-      // 繝励Μ繧ｻ繝・ヨ逋ｻ骭ｲ縺輔ｌ縺ｦ縺・ｋ繝代ち繝ｼ繝ｳ縺ｯ蜑企勁縺励↑縺・
+      // プリセット登録されているパターンは削除しない
       if (isUsePreset(patt)) continue;
       let isRefer = false;
 
       if (layer.relations.map((r) => r[target]).includes(patt.no)) {
         isRefer = true;
       }
-      // 蜿ら・縺瑚ｦ九▽縺九ｉ縺ｪ縺・ｴ蜷亥炎髯､
-      // console.log(`蜑企勁縺励∪縺吶・{target}- no:[${patts[i].no}]`);
+      // 参照が見つからない場合削除
+      // console.log(`削除します。${target}- no:[${patts[i].no}]`);
       if (!isRefer) patts.splice(i, 1);
     }
   };

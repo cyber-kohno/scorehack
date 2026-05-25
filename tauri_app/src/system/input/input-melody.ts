@@ -43,8 +43,8 @@ const useInputMelody = () => {
         }
         if (isCursor()) {
             switch (eventKey) {
-                case 'ArrowLeft': melodyActions.moveCursor(-1); break;
-                case 'ArrowRight': melodyActions.moveCursor(1); break;
+                case 'ArrowLeft': melodyActions.moveCursorOrFocusNote(-1); break;
+                case 'ArrowRight': melodyActions.moveCursorOrFocusNote(1); break;
                 case '1': { melodyActions.changeCursorRate(0); } break;
                 case '2': { melodyActions.changeCursorRate(1); } break;
                 case '3': { melodyActions.changeCursorRate(2); } break;
@@ -59,11 +59,11 @@ const useInputMelody = () => {
             switch (eventKey) {
                 case 'ArrowLeft':
                     if (isFocusLock()) melodyActions.focusSelectedEdge(-1);
-                    else melodyActions.moveFocusNormal(-1);
+                    else melodyActions.focusOutNoteSide(-1);
                     break;
                 case 'ArrowRight':
                     if (isFocusLock()) melodyActions.focusSelectedEdge(1);
-                    else melodyActions.moveFocusNormal(1);
+                    else melodyActions.focusOutNoteSide(1);
                     break;
                 case 'ArrowUp': melodyActions.movePitchFocusNotes(1); break;
                 case 'ArrowDown': melodyActions.movePitchFocusNotes(-1); break;
@@ -117,8 +117,8 @@ const useInputMelody = () => {
                 }
             } else {
                 switch (eventKey) {
-                    case 'ArrowLeft': melodyActions.focusOutNoteSide(-1); break;
-                    case 'ArrowRight': melodyActions.focusOutNoteSide(1); break;
+                    case 'ArrowLeft': melodyActions.moveFocusNormal(-1); break;
+                    case 'ArrowRight': melodyActions.moveFocusNormal(1); break;
                     case 'Delete': melodyActions.removeFocusNotes({ focusPrevious: true }); break;
                 }
             }
@@ -182,6 +182,8 @@ const useInputMelody = () => {
 
             if (isCursor()) {
                 switch (eventKey) {
+                    case 'ArrowLeft': melodyActions.moveCursor(-1); break;
+                    case 'ArrowRight': melodyActions.moveCursor(1); break;
                     case '#': melodyActions.changeCursorTuplets(3); break;
                     case ' ': togglePlayback('tl-focus-layer'); break;
                 }

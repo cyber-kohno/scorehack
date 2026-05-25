@@ -17,6 +17,8 @@ namespace InputRootController {
         if (mode === 'harmonize') {
             createMelodyUpdater({ control, data }).syncCursorFromElementSeq(derived);
         }
+        control.outline.focusLock = -1;
+        control.melody.focusLock = -1;
         control.mode = mode === 'harmonize' ? 'melody' : 'harmonize';
         ref.trackArr.forEach(t => t.length = 0);
         ref.noteRefs.forEach(t => t.length = 0);

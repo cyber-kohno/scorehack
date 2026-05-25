@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import Layout from "../../layout/layout-constant";
-import type PianoBackingState from "../../store/state/data/arrange/piano/piano-backing-state";
+import PianoBackingState from "../../store/state/data/arrange/piano/piano-backing-state";
 import type InputState from "../../store/state/input-state";
 import createArrangeSelector from "../../service/arrange/arrange-selector";
 import useScrollService from "../../service/common/scroll-service";
@@ -17,6 +17,15 @@ const useInputPianoEditor = () => {
   const outline = controlStoreValue.outline;
   const arrange = outline.arrange;
   const updateControl = ()=> controlStore.set({...controlStoreValue});
+
+  const updateNotePosition = (
+    item: string,
+    updater: (note: PianoBackingState.NoteItem) => PianoBackingState.NoteItem,
+  ) => {
+    return PianoBackingState.formatNoteItem(
+      updater(PianoBackingState.convNotesInfo(item)),
+    );
+  };
 
   const control = (eventKey: string) => {
     if (arrange == null) throw new Error();
@@ -179,9 +188,12 @@ const useInputPianoEditor = () => {
                   if (!isLimit()) {
                     cols.splice(backing.cursorX, 0, createInitialCol());
                     layer.items.forEach((item, i) => {
-                      const [c, r] = item.split(".").map((v) => Number(v));
-                      if (backing.cursorX < c) {
-                        layer.items[i] = `${c + 1}.${r}`;
+                      const note = PianoBackingState.convNotesInfo(item);
+                      if (backing.cursorX < note.colIndex) {
+                        layer.items[i] = updateNotePosition(item, (note) => ({
+                          ...note,
+                          colIndex: note.colIndex + 1,
+                        }));
                       }
                     });
                     updateControl();
@@ -193,16 +205,19 @@ const useInputPianoEditor = () => {
                   if (backing.cursorX !== -1) {
                     for (let i = layer.items.length - 1; i >= 0; i--) {
                       const item = layer.items[i];
-                      const [c, r] = item.split(".").map((v) => Number(v));
+                      const note = PianoBackingState.convNotesInfo(item);
                       // console.log(`r, c = ${r}, ${c}`);
-                      if (backing.cursorX === c) {
+                      if (backing.cursorX === note.colIndex) {
                         layer.items.splice(i, 1);
                       }
                     }
                     layer.items.forEach((item, i) => {
-                      const [c, r] = item.split(".").map((v) => Number(v));
-                      if (backing.cursorX < c) {
-                        layer.items[i] = `${c - 1}.${r}`;
+                      const note = PianoBackingState.convNotesInfo(item);
+                      if (backing.cursorX < note.colIndex) {
+                        layer.items[i] = updateNotePosition(item, (note) => ({
+                          ...note,
+                          colIndex: note.colIndex - 1,
+                        }));
                       }
                     });
 
@@ -272,10 +287,13 @@ const useInputPianoEditor = () => {
                     else {
                       layers.forEach((l) => {
                         l.items.forEach((item, i) => {
-                          const [c, r] = item.split(".").map((v) => Number(v));
+                          const note = PianoBackingState.convNotesInfo(item);
                           // console.log(`r, c = ${r}, ${c}`);
-                          if (backing.cursorY < r) {
-                            l.items[i] = `${c}.${r + 1}`;
+                          if (backing.cursorY < note.recordIndex) {
+                            l.items[i] = updateNotePosition(item, (note) => ({
+                              ...note,
+                              recordIndex: note.recordIndex + 1,
+                            }));
                           }
                         });
                       });
@@ -290,16 +308,19 @@ const useInputPianoEditor = () => {
                     layers.forEach((l) => {
                       for (let i = l.items.length - 1; i >= 0; i--) {
                         const item = l.items[i];
-                        const [c, r] = item.split(".").map((v) => Number(v));
+                        const note = PianoBackingState.convNotesInfo(item);
                         // console.log(`r, c = ${r}, ${c}`);
-                        if (backing.cursorY === r) {
+                        if (backing.cursorY === note.recordIndex) {
                           l.items.splice(i, 1);
                         }
                       }
                       l.items.forEach((item, i) => {
-                        const [c, r] = item.split(".").map((v) => Number(v));
-                        if (backing.cursorY < r) {
-                          l.items[i] = `${c}.${r - 1}`;
+                        const note = PianoBackingState.convNotesInfo(item);
+                        if (backing.cursorY < note.recordIndex) {
+                          l.items[i] = updateNotePosition(item, (note) => ({
+                            ...note,
+                            recordIndex: note.recordIndex - 1,
+                          }));
                         }
                       });
                     });
@@ -384,21 +405,15 @@ const useInputPianoEditor = () => {
                   }
                   const key = `${backing.cursorX}.${backing.cursorY}`;
                   if (
-                    !layer.items
-                      .map((item) => {
-                        const props = item.split(".");
-                        return `${props[0]}.${props[1]}`;
-                      })
-                      .includes(key)
+                    !PianoBackingState.convRemoveOptionNotes(
+                      layer.items
+                    ).includes(key)
                   ) {
                     layer.items.push(key);
                   } else {
-                    const pos = layer.items
-                      .map((item) => {
-                        const props = item.split(".");
-                        return `${props[0]}.${props[1]}`;
-                      })
-                      .findIndex((i) => i === key);
+                    const pos = PianoBackingState.convRemoveOptionNotes(
+                      layer.items
+                    ).findIndex((i) => i === key);
                     layer.items.splice(pos, 1);
                   }
                   updateControl();
@@ -470,6 +485,59 @@ const useInputPianoEditor = () => {
             if (eventKey === "ArrowUp") pianoActions.shiftControl("col");
             if (eventKey === "ArrowLeft") pianoActions.shiftControl("record");
           }
+          break;
+      }
+    };
+
+    callbacks.holdC = () => {
+      if (editor.phase !== "edit" || editor.control !== "notes") return;
+      const backing = editor.backing;
+      if (backing == null) return;
+
+      const layer = backing.layers[backing.layerIndex];
+      const itemIndex = layer.items.findIndex((item) => {
+        const note = PianoBackingState.convNotesInfo(item);
+        return (
+          note.colIndex === backing.cursorX &&
+          note.recordIndex === backing.cursorY
+        );
+      });
+      if (itemIndex === -1) return;
+
+      const modifyNote = (
+        modifier: (note: PianoBackingState.NoteItem) => PianoBackingState.NoteItem,
+      ) => {
+        const item = layer.items[itemIndex];
+        layer.items[itemIndex] = PianoBackingState.formatNoteItem(
+          modifier(PianoBackingState.convNotesInfo(item)),
+        );
+        updateControl();
+      };
+
+      switch (eventKey) {
+        case "ArrowUp":
+          modifyNote((note) => ({
+            ...note,
+            velocity: Math.min(20, note.velocity + 1),
+          }));
+          break;
+        case "ArrowDown":
+          modifyNote((note) => ({
+            ...note,
+            velocity: Math.max(1, note.velocity - 1),
+          }));
+          break;
+        case "ArrowLeft":
+          modifyNote((note) => ({
+            ...note,
+            delay: Math.max(-3, note.delay - 1),
+          }));
+          break;
+        case "ArrowRight":
+          modifyNote((note) => ({
+            ...note,
+            delay: Math.min(3, note.delay + 1),
+          }));
           break;
       }
     };

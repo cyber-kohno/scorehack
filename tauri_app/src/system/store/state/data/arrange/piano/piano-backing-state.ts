@@ -27,6 +27,12 @@ namespace PianoBackingState {
         cols: Col[];
         items: string[];
     }
+    export type NoteItem = {
+        colIndex: number;
+        recordIndex: number;
+        velocity: number;
+        delay: number;
+    };
     export type PedalState = 0 | 1 | 2;
     export interface Col extends MelodyState.Norm {
         dot?: number;
@@ -35,6 +41,31 @@ namespace PianoBackingState {
     export const createInitialLayers = (): Layer[] => {
         return [{ cols: [], items: [] }, { cols: [], items: [] }]
     }
+
+    export const convRemoveOptionNotes = (items: string[]) => {
+        return items.map((item) => {
+            const note = convNotesInfo(item);
+            return `${note.colIndex}.${note.recordIndex}`;
+        });
+    };
+
+    export const convNotesInfo = (src: string): NoteItem => {
+        const items = src.split(".").map((v) => Number(v));
+        const [colIndex, recordIndex] = items;
+        let velocity = 10;
+        let delay = 0;
+        if (items.length !== 2) {
+            velocity = items[2];
+            delay = items[3];
+        }
+        return { colIndex, recordIndex, velocity, delay };
+    };
+
+    export const formatNoteItem = (note: NoteItem) => {
+        const base = `${note.colIndex}.${note.recordIndex}`;
+        if (note.velocity === 10 && note.delay === 0) return base;
+        return `${base}.${note.velocity}.${note.delay}`;
+    };
 
     export const getColWidthCriteriaBeatWidth = (
         col: PianoBackingState.Col,
@@ -49,7 +80,7 @@ namespace PianoBackingState {
                 case 2:
                     return 1.75;
             }
-            throw new Error(`col.dot縺梧Φ螳壹＠縺ｦ縺・↑縺・､縺ｧ縺ゅｋ縲・${col.dot}]`);
+            throw new Error(`col.dotが想定していない値である。[${col.dot}]`);
         };
         return Math.floor((beatWidth / col.div) * getDotRate());
     };

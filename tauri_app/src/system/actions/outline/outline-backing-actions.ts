@@ -53,8 +53,15 @@ const createOutlineBackingActions = (
         const { chordSeq, baseSeq } = ctx.derived.elementCaches[ctx.outline.focus];
         if (chordSeq === -1 || track.pianoLib == undefined) return false;
 
-        const relation = track.relations.find(r => r.chordSeq === chordSeq);
-        if (relation == undefined) return false;
+        const relationIndex = track.relations.findIndex(r => r.chordSeq === chordSeq);
+        if (relationIndex === -1) return false;
+
+        const relation = track.relations[relationIndex];
+        if (relation.bkgPatt === -1) {
+            track.relations.splice(relationIndex, 1);
+            PianoEditorState.deleteUnreferUnit(track);
+            return true;
+        }
 
         const chordCache = ctx.derived.chordCaches[chordSeq];
         const scoreBase = ctx.derived.baseCaches[baseSeq].scoreBase;
@@ -74,6 +81,7 @@ const createOutlineBackingActions = (
         );
 
         relation.sndsPatt = soundsPattNo;
+        PianoEditorState.deleteUnreferUnit(track);
         return true;
     };
 

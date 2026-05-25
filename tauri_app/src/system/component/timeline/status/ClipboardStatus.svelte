@@ -31,13 +31,13 @@
     top: 8px;
     z-index: 5;
     box-sizing: border-box;
-    min-width: 88px;
-    padding: 5px 8px;
-    background-color: rgba(18, 29, 34, 0.8);
+    min-width: 132px;
+    padding: 7px 12px;
+    background-color: rgba(9, 63, 178, 0.8);
     color: rgba(255, 255, 255, 0.92);
-    font-size: 11px;
+    font-size: 17px;
     font-weight: 600;
-    line-height: 14px;
+    line-height: 21px;
     letter-spacing: 0;
     pointer-events: none;
   }

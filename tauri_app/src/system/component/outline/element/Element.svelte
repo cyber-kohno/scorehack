@@ -71,7 +71,7 @@
         display: inline-block;
         position: absolute;
         /*background-color: rgba(30, 255, 0, 0.57);*/
-        width: 180px;
+        width: 190px;
         /* min-height: 60px; */
         /* margin-top: 4px; */
         left: 25px;
