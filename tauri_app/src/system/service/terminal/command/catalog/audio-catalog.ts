@@ -6,7 +6,7 @@ import TerminalCommand from "../../terminal-command";
 const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
   const { data, logger, settings, terminal } = ctx;
   const defaultProps = TerminalCommand.createDefaultProps("system");
-  const actions = ["list", "add", "delete", "rename", "update"];
+  const actions = ["list", "add", "delete", "rename", "update", "adjust"];
 
   const findTrack = (name: string) => {
     return data.audioTracks.find((track) => track.name === name);
@@ -44,6 +44,7 @@ const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props
           ["audio delete <name>", "Delete an audio track."],
           ["audio rename <name> <newName>", "Rename an audio track."],
           ["audio update <name>", "Change the audio file for an audio track."],
+          ["audio adjust <name> <ms>", "Set audio track timing adjustment in milliseconds."],
         ],
       },
     });
@@ -61,8 +62,8 @@ const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props
       type: "table",
       table: {
         cols: [
-          { headerName: "Name", width: 150, attr: "def" },
-          { headerName: "Path", width: 440, attr: "resource" },
+          { headerName: "Name", width: 120, attr: "def" },
+          { headerName: "Path", width: 320, attr: "resource" },
           { headerName: "Adjust", width: 90, attr: "sentence", isNumber: true },
           { headerName: "Mute", width: 70, attr: "sentence" },
           { headerName: "Vol", width: 70, attr: "sentence", isNumber: true },
@@ -181,6 +182,28 @@ const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props
     }).finally(finishDataWait);
   };
 
+  const adjustTrack = (name: string | undefined, ms: string | undefined) => {
+    const trackName = logger.validateRequired(name, 2);
+    if (trackName == null) return;
+
+    const adjustMsText = logger.validateRequired(ms, 3);
+    if (adjustMsText == null) return;
+
+    const adjustMs = logger.validateNumber(adjustMsText, 3);
+    if (adjustMs == null) return;
+
+    const track = findTrack(trackName);
+    if (track == undefined) {
+      logger.outputError(`The specified audio track does not exist. [${trackName}]`);
+      return;
+    }
+
+    track.adjust = adjustMs;
+    logger.outputInfo(`Updated audio track adjustment. [${trackName} ${adjustMs}ms]`);
+    ctx.commit.data();
+    ctx.commit.terminal();
+  };
+
   const outputUnknownAction = (action: string) => {
     logger.outputError(`Unknown audio action. [${action}]`);
     ctx.commit.terminal();
@@ -198,11 +221,11 @@ const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props
       {
         name: "audioTrackName?: string",
         getCandidate: (args) => {
-          return ["delete", "rename", "update"].includes(args[0]) ? trackNames() : [];
+          return ["delete", "rename", "update", "adjust"].includes(args[0]) ? trackNames() : [];
         },
       },
       {
-        name: "newName?: string",
+        name: "newNameOrMs?: string",
       },
     ],
     callback: (args) => {
@@ -228,6 +251,9 @@ const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props
           break;
         case "update":
           updateTrack(args[1]);
+          break;
+        case "adjust":
+          adjustTrack(args[1], args[2]);
           break;
         default:
           outputUnknownAction(action);

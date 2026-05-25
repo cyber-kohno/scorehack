@@ -31,7 +31,10 @@ const stopPlaybackTimeline = () => {
         if (sf.player) sf.player.stop();
     });
 
-    playback.audios.forEach((audio) => audio.element.pause());
+    playback.audios.forEach((audio) => {
+        audio.element.pause();
+        if (audio.objectUrl != undefined) URL.revokeObjectURL(audio.objectUrl);
+    });
     playback.audios.length = 0;
 
     // メロディモード時はカーソルを同期

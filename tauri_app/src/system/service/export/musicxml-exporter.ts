@@ -1,7 +1,8 @@
 import type DerivedState from "../../store/state/derived-state";
 import MelodyState from "../../store/state/data/melody-state";
 import type TonalityTheory from "../../domain/theory/tonality-theory";
-import type RhythmTheory from "../../domain/theory/rhythm-theory";
+import RhythmTheory from "../../domain/theory/rhythm-theory";
+import RomajiPronunciation from "../../domain/lyric/romaji-pronunciation";
 
 namespace MusicXmlExporter {
     const DIVISIONS = 480;
@@ -21,6 +22,15 @@ namespace MusicXmlExporter {
         tieStart: boolean;
         tieStop: boolean;
     };
+
+    export type LyricError = {
+        measure: number;
+        pron: string;
+    };
+
+    export type Result =
+        | { ok: true; xml: string }
+        | { ok: false; errors: LyricError[] };
 
     const escapeXml = (value: string) => {
         return value
@@ -191,9 +201,11 @@ namespace MusicXmlExporter {
             lines.push(`${indent}  </notations>`);
         }
         if (segment.note?.pron != undefined) {
+            const lyric = RomajiPronunciation.toHiragana(segment.note.pron);
+            if (lyric == null) throw new Error(`Invalid pronunciation. [${segment.note.pron}]`);
             lines.push(`${indent}  <lyric>`);
             lines.push(`${indent}    <syllabic>single</syllabic>`);
-            lines.push(`${indent}    <text>${escapeXml(segment.note.pron)}</text>`);
+            lines.push(`${indent}    <text>${escapeXml(lyric)}</text>`);
             lines.push(`${indent}  </lyric>`);
         }
         lines.push(`${indent}</note>`);
@@ -246,6 +258,27 @@ namespace MusicXmlExporter {
         return segments;
     };
 
+    const validateLyrics = (
+        track: MelodyState.ScoreTrack,
+        measures: MeasureInfo[],
+    ): LyricError[] => {
+        return track.notes.flatMap((note) => {
+            if (note.pron == undefined) return [];
+
+            const lyric = RomajiPronunciation.toHiragana(note.pron);
+            if (lyric != null) return [];
+
+            const side = MelodyState.calcBeatSide(note);
+            const measure = measures.find((item) => {
+                return side.pos >= item.start - 1e-9 && side.pos < item.end - 1e-9;
+            });
+            return [{
+                measure: measure?.number ?? 0,
+                pron: note.pron,
+            }];
+        });
+    };
+
     const renderAttributes = (
         measure: MeasureInfo,
         prevBase: DerivedState.BaseCache | undefined,
@@ -293,10 +326,14 @@ namespace MusicXmlExporter {
         const tempo = measure.base.scoreBase.tempo;
         if (prevBase != undefined && prevBase.scoreBase.tempo === tempo) return [];
 
+        const beatRate = RhythmTheory.getBeatDiv16Count(measure.base.scoreBase.rhythm.ts) / 4;
+        const soundTempo = tempo * beatRate;
+        const beatUnitDot = beatRate === 1.5 ? "<beat-unit-dot/>" : "";
+
         return [
             `      <direction placement="above">`,
-            `        <direction-type><metronome><beat-unit>quarter</beat-unit><per-minute>${tempo}</per-minute></metronome></direction-type>`,
-            `        <sound tempo="${tempo}"/>`,
+            `        <direction-type><metronome><beat-unit>quarter</beat-unit>${beatUnitDot}<per-minute>${tempo}</per-minute></metronome></direction-type>`,
+            `        <sound tempo="${soundTempo}"/>`,
             `      </direction>`,
         ];
     };
@@ -305,9 +342,17 @@ namespace MusicXmlExporter {
         title: string;
         track: MelodyState.ScoreTrack;
         derived: DerivedState.Value;
-    }) => {
+    }): Result => {
         const title = escapeXml(props.title);
         const measures = buildMeasures(props.derived, props.track);
+        const lyricErrors = validateLyrics(props.track, measures);
+        if (lyricErrors.length > 0) {
+            return {
+                ok: false,
+                errors: lyricErrors,
+            };
+        }
+
         const lines = [
             `<?xml version="1.0" encoding="UTF-8" standalone="no"?>`,
             `<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">`,
@@ -339,7 +384,10 @@ namespace MusicXmlExporter {
 
         lines.push(`  </part>`);
         lines.push(`</score-partwise>`);
-        return lines.join("\n");
+        return {
+            ok: true,
+            xml: lines.join("\n"),
+        };
     };
 }
 

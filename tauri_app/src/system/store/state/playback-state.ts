@@ -10,7 +10,7 @@ namespace PlaybackState {
         progressTime: number;
         linePos: number;
 
-        audios: { element: HTMLAudioElement, referIndex: number }[];
+        audios: { element: HTMLAudioElement, referIndex: number, objectUrl?: string }[];
 
         sfItems: SFItem[];
         userSfItems: UserSFItem[];

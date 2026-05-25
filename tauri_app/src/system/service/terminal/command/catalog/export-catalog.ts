@@ -18,11 +18,30 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
   const exportMusicXml = () => {
     const track = ctx.selectors.melody.getCurrScoreTrack();
     const derived = get(derivedStore);
-    const xml = MusicXmlExporter.create({
+    const result = MusicXmlExporter.create({
       title: track.name,
       track,
       derived,
     });
+
+    if (!result.ok) {
+      logger.outputError("Cannot export MusicXML: invalid lyric pronunciation.");
+      terminal.outputs.push({
+        type: "table",
+        table: {
+          cols: [
+            { headerName: "Measure", width: 100, attr: "sentence", isNumber: true },
+            { headerName: "Pron", width: 180, attr: "def" },
+          ],
+          table: result.errors.map((error) => [
+            error.measure === 0 ? "unknown" : `${error.measure}`,
+            error.pron,
+          ]),
+        },
+      });
+      ctx.commit.terminal();
+      return;
+    }
 
     logger.outputInfo("Select the file to export.");
     terminal.wait = true;
@@ -30,7 +49,7 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       defaultDirectory: settings.envs.SCH_FILE_DIR,
       extension: "musicxml",
       filterName: "MusicXML File",
-      plainData: xml,
+      plainData: result.xml,
       success: (handle) => {
         logger.outputInfo(`MusicXML exported successfully. [${handle.name}]`);
         finishWaiting();

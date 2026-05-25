@@ -1,5 +1,4 @@
 import { get } from "svelte/store";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { controlStore, dataStore, derivedStore, playbackStore, refStore, settingsStore } from "../../../store/global-store";
 import useScrollService from "../../common/scroll-service";
 import useDerivedSelector from "../../derived/derived-selector";
@@ -13,11 +12,12 @@ import PianoEditorState from "../../../store/state/data/arrange/piano/piano-edit
 import GuitarArrangePlaybackUtil from "../arrange/guitar-arrange-playback-util";
 import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
 import FilePathRef from "../../../infra/file/file-path-ref";
+import { readBinaryFile } from "../../../infra/tauri/fs";
 import stopPlaybackTimeline from "./stop-playback-timeline";
 import type PlaybackCacheState from "./playback-cache-state";
 import convertNoteToPlayer from "./convert-note-to-player";
 
-const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
+const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
     const controlStoreValue = get(controlStore);
     const { outline, melody } = controlStoreValue;
     const { chordCaches, elementCaches, baseCaches } = get(derivedStore);
@@ -135,27 +135,35 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
             });
         });
 
-        audioTracks.forEach((track, i) => {
+        for (let i = 0; i < audioTracks.length; i++) {
+            const track = audioTracks[i];
             if (option.target === "tl-focus-layer") {
-                if (melody.trackIndex !== i) return 1;
+                if (melody.trackIndex !== i) continue;
             }
-            // ミュート�E場合コンチE��ニュー
-            if (track.isMute) return 1;
+            // ???????????????????????
+            if (track.isMute) continue;
 
-            if (track.pathRef == undefined) return 1;
+            if (track.pathRef == undefined) continue;
 
             const path = FilePathRef.resolvePath(track.pathRef, settings.envs.HOME_DIR);
-            if (path === "") return 1;
+            if (path === "") continue;
 
-            const url = convertFileSrc(path);
-            const audio = new Audio(url);
-            audio.volume = Math.max(0, Math.min(1, track.volume / 10));
+            try {
+                const bytes = await readBinaryFile(path);
+                const blob = new Blob([bytes]);
+                const objectUrl = URL.createObjectURL(blob);
+                const audio = new Audio(objectUrl);
+                audio.volume = Math.max(0, Math.min(1, track.volume / 10));
 
-            playback.audios.push({
-                element: audio,
-                referIndex: i,
-            });
-        });
+                playback.audios.push({
+                    element: audio,
+                    referIndex: i,
+                    objectUrl,
+                });
+            } catch (error) {
+                console.error("Failed to load audio track:", error);
+            }
+        }
     }
 
     // アレンジのノ�Eトを収集
@@ -333,7 +341,7 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
         if (track == undefined) return;
 
         let lateTime = 0;
-        const adjustTime = track.adjust + playback.progressTime;
+        const adjustTime = startTime - track.adjust;
         if (adjustTime < 0) {
             lateTime = -adjustTime;
         } else if (adjustTime > 0) {
@@ -342,7 +350,9 @@ const startPlaybackTimeline = (option: PlaybackCacheState.Option) => {
             audio.element.currentTime = fastTime / 1000;
         }
         const key = setTimeout(() => {
-            audio.element.play();
+            void audio.element.play().catch((error) => {
+                console.warn("Audio playback was interrupted:", error);
+            });
         }, lateTime);
         getTimerKeys().push(key);
     });
