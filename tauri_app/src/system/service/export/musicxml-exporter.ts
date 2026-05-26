@@ -24,7 +24,7 @@ namespace MusicXmlExporter {
     };
 
     export type LyricError = {
-        measure: number;
+        chordSeq: number;
         pron: string;
     };
 
@@ -260,7 +260,7 @@ namespace MusicXmlExporter {
 
     const validateLyrics = (
         track: MelodyState.ScoreTrack,
-        measures: MeasureInfo[],
+        derived: DerivedState.Value,
     ): LyricError[] => {
         return track.notes.flatMap((note) => {
             if (note.pron == undefined) return [];
@@ -269,11 +269,13 @@ namespace MusicXmlExporter {
             if (lyric != null) return [];
 
             const side = MelodyState.calcBeatSide(note);
-            const measure = measures.find((item) => {
-                return side.pos >= item.start - 1e-9 && side.pos < item.end - 1e-9;
+            const chord = derived.chordCaches.find((item) => {
+                const start = item.startBeatNote;
+                const end = item.startBeatNote + item.lengthBeatNote;
+                return side.pos >= start - 1e-9 && side.pos < end - 1e-9;
             });
             return [{
-                measure: measure?.number ?? 0,
+                chordSeq: chord?.chordSeq ?? 0,
                 pron: note.pron,
             }];
         });
@@ -345,7 +347,7 @@ namespace MusicXmlExporter {
     }): Result => {
         const title = escapeXml(props.title);
         const measures = buildMeasures(props.derived, props.track);
-        const lyricErrors = validateLyrics(props.track, measures);
+        const lyricErrors = validateLyrics(props.track, props.derived);
         if (lyricErrors.length > 0) {
             return {
                 ok: false,

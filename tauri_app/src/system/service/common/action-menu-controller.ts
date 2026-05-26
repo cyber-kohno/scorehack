@@ -42,18 +42,59 @@ const clampPath = (actionMenu: ActionMenuState.Value) => {
     );
 };
 
+const normalizePath = (
+    items: ActionMenuState.Item[],
+    path: number[],
+) => {
+    const nextPath = [...path];
+    for (let depth = 0; depth < nextPath.length; depth++) {
+        const levelPath = nextPath.slice(0, depth + 1);
+        const levelItems = getLevelItems(items, levelPath);
+        if (levelItems.length === 0) return nextPath.slice(0, Math.max(1, depth));
+
+        nextPath[depth] = Math.max(
+            0,
+            Math.min(nextPath[depth], levelItems.length - 1),
+        );
+
+        if (depth < nextPath.length - 1) {
+            const item = levelItems[nextPath[depth]];
+            if (item?.type !== "parent" || item.children.length === 0) {
+                return nextPath.slice(0, depth + 1);
+            }
+        }
+    }
+    return nextPath.length === 0 ? [0] : nextPath;
+};
+
 namespace ActionMenu {
+    const createRootItems = () => {
+        const control = get(controlStore);
+        if (control.mode === "harmonize" && control.outline.arrange == null) {
+            return OutlineMenuProvider.createItems();
+        }
+
+        return [];
+    };
+
+    const refreshKeepingPath = (path: number[]) => {
+        const items = createRootItems();
+        if (items.length === 0) {
+            actionMenuStore.set(null);
+            return;
+        }
+
+        actionMenuStore.set({
+            ...ActionMenuState.createInitial(),
+            path: normalizePath(items, path),
+            items,
+        });
+    };
+
     export const open = () => {
         inputStore.set(InputState.createInitial());
 
-        const control = get(controlStore);
-        const items = (() => {
-            if (control.mode === "harmonize" && control.outline.arrange == null) {
-                return OutlineMenuProvider.createItems();
-            }
-
-            return [];
-        })();
+        const items = createRootItems();
 
         if (items.length === 0) {
             actionMenuStore.set(null);
@@ -99,14 +140,22 @@ namespace ActionMenu {
             return;
         }
 
-        close();
-
+        const keepOpen = item.keepOpen === true;
+        const prevPath = [...actionMenu.path];
+        if (!keepOpen) close();
         const result = item.callback();
         if (result instanceof Promise) {
-            result.catch(error => {
-                console.error("Action menu callback failed:", error);
-            });
+            result
+                .then(() => {
+                    if (keepOpen) refreshKeepingPath(prevPath);
+                })
+                .catch(error => {
+                    console.error("Action menu callback failed:", error);
+                });
+            return;
         }
+
+        if (keepOpen) refreshKeepingPath(prevPath);
     };
 
     export const apply = enter;

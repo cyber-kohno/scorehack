@@ -26,18 +26,8 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
 
     if (!result.ok) {
       logger.outputError("Cannot export MusicXML: invalid lyric pronunciation.");
-      terminal.outputs.push({
-        type: "table",
-        table: {
-          cols: [
-            { headerName: "Measure", width: 100, attr: "sentence", isNumber: true },
-            { headerName: "Pron", width: 180, attr: "def" },
-          ],
-          table: result.errors.map((error) => [
-            error.measure === 0 ? "unknown" : `${error.measure}`,
-            error.pron,
-          ]),
-        },
+      result.errors.forEach((error) => {
+        logger.outputInfo(`block: ${error.chordSeq}, pron: ${error.pron}`);
       });
       ctx.commit.terminal();
       return;

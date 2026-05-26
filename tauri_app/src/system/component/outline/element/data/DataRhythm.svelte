@@ -21,7 +21,7 @@
 
 <div class="wrap">
   <div class="method">
-    Rhy
+    Rhythm
   </div>
   <div class="val" data-isNoChange={isNoChange}>
     {nextRhythm}

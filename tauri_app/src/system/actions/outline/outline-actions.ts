@@ -1,6 +1,7 @@
 import { get } from "svelte/store";
 import ChordTheory from "../../domain/theory/chord-theory";
 import RhythmTheory from "../../domain/theory/rhythm-theory";
+import TonalityTheory from "../../domain/theory/tonality-theory";
 import useScrollService from "../../service/common/scroll-service";
 import useDerivedSelector from "../../service/derived/derived-selector";
 import { createCommitDataAndRecalculate } from "../../service/derived/recalculate-derived";
@@ -225,6 +226,94 @@ const createOutlineActions = () => {
         });
     };
 
+    const setInitKey = (key12: number) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "init") return;
+
+        const initData = element.data as ElementState.DataInit;
+        initData.tonality.key12 = key12;
+        ctx.commitDataAndRecalculate();
+    };
+
+    const setInitScale = (scale: TonalityTheory.Scale) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "init") return;
+
+        const initData = element.data as ElementState.DataInit;
+        initData.tonality.scale = scale;
+        ctx.commitDataAndRecalculate();
+    };
+
+    const setInitRhythm = (tsName: string) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "init") return;
+
+        const ts = RhythmTheory.parseTS(tsName);
+        if (ts == undefined) return;
+
+        const initData = element.data as ElementState.DataInit;
+        initData.rhythm.ts = ts;
+        initData.rhythm.feel = { type: "straight" };
+        ctx.commitDataAndRecalculate();
+    };
+
+    const setInitFeel = (feel: RhythmTheory.RhythmFeel) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "init") return;
+
+        const initData = element.data as ElementState.DataInit;
+        const availableFeels = RhythmTheory.getAvailableFeels(initData.rhythm.ts);
+        const isAvailable = availableFeels.some(item =>
+            RhythmTheory.isSameFeel(item, feel)
+        );
+        if (!isAvailable) return;
+
+        initData.rhythm.feel = { ...feel };
+        ctx.commitDataAndRecalculate();
+    };
+
+    const setInitTempo = (value: string) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "init") return;
+
+        const tempo = Number(value.trim());
+        if (!Number.isFinite(tempo) || tempo <= 0) return;
+
+        const initData = element.data as ElementState.DataInit;
+        initData.tempo = tempo;
+        ctx.commitDataAndRecalculate();
+    };
+
+    const openInitTempoInput = () => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+        if (element.type !== "init") return;
+
+        const initData = element.data as ElementState.DataInit;
+        const elementRef = get(refStore).elementRefs.find((item) => item.seq === ctx.outline.focus)?.ref;
+        if (elementRef == undefined) return;
+
+        const value = `${initData.tempo}`;
+        const rect = elementRef.getBoundingClientRect();
+        FloatingTextInput.open({
+            value,
+            cursor: value.length,
+            left: rect.left,
+            top: rect.bottom + 10,
+            width: Math.max(120, rect.width),
+            permit: (value) => {
+                const tempo = Number(value.trim());
+                return value.trim().length > 0 && Number.isFinite(tempo) && tempo > 0;
+            },
+            apply: setInitTempo,
+        });
+    };
+
     const moveFocus = (dir: -1 | 1) => {
         const ctx = createContext();
         const moved = ctx.outlineUpdater.moveFocus(dir);
@@ -336,6 +425,22 @@ const createOutlineActions = () => {
         ctx.refUpdater.adjustGridScrollXFromOutline();
     };
 
+    const setChordBeat = (beat: number) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "chord") {
+            throw new Error("setChordBeat requires a chord element.");
+        }
+
+        if (beat < 1 || beat > 4) return;
+
+        const chordData = element.data as ElementState.DataChord;
+        chordData.beat = beat;
+        ctx.commitDataAndRecalculate();
+        ctx.refUpdater.adjustGridScrollXFromOutline();
+    };
+
     const modOn = (dir: -1 | 1) => {
         const ctx = createContext();
         const element = ctx.outlineSelector.getCurrentElement();
@@ -381,6 +486,85 @@ const createOutlineActions = () => {
         ctx.refUpdater.adjustGridScrollXFromOutline();
     };
 
+    const setChordEat = (eat: number) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "chord") {
+            throw new Error("setChordEat requires a chord element.");
+        }
+
+        if (eat < -2 || eat > 2) return;
+
+        const chordData = element.data as ElementState.DataChord;
+        chordData.eat = eat;
+        ctx.commitDataAndRecalculate();
+        ctx.refUpdater.adjustGridScrollXFromOutline();
+    };
+
+    const setChordRoot = (root: ChordTheory.DegreeKey) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "chord") {
+            throw new Error("setChordRoot requires a chord element.");
+        }
+
+        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
+        const afterChordData = cloneChordData(beforeChordData);
+        const symbol = afterChordData.degree?.symbol ?? "";
+        afterChordData.degree = {
+            symbol,
+            ...root,
+        };
+
+        ctx.outlineUpdater.setChordData(afterChordData);
+        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        ctx.commitDataAndRecalculate();
+    };
+
+    const setChordOn = (on: ChordTheory.DegreeKey | undefined) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "chord") {
+            throw new Error("setChordOn requires a chord element.");
+        }
+
+        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
+        const afterChordData = cloneChordData(beforeChordData);
+        const degree = afterChordData.degree ?? ChordTheory.getDiatonicDegreeChord("major", 0);
+        if (on == undefined) {
+            delete degree.on;
+        } else {
+            degree.on = { ...on };
+        }
+        afterChordData.degree = degree;
+
+        ctx.outlineUpdater.setChordData(afterChordData);
+        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        ctx.commitDataAndRecalculate();
+    };
+
+    const setChordSymbol = (symbol: ChordTheory.ChordSymol) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "chord") {
+            throw new Error("setChordSymbol requires a chord element.");
+        }
+
+        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
+        const afterChordData = cloneChordData(beforeChordData);
+        const degree = afterChordData.degree ?? ChordTheory.getDiatonicDegreeChord("major", 0);
+        degree.symbol = symbol;
+        afterChordData.degree = degree;
+
+        ctx.outlineUpdater.setChordData(afterChordData);
+        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        ctx.commitDataAndRecalculate();
+    };
+
     const moveRange = (dir: -1 | 1) => {
         const ctx = createContext();
         const moved = ctx.outlineUpdater.moveRange(dir);
@@ -417,10 +601,20 @@ const createOutlineActions = () => {
         moveRange,
         moveSection,
         openSectionNameInput,
+        openInitTempoInput,
         pasteClipboardElements,
         renameSection,
         removeFocusElement,
         setDegree,
+        setChordBeat,
+        setChordEat,
+        setChordOn,
+        setChordRoot,
+        setChordSymbol,
+        setInitKey,
+        setInitFeel,
+        setInitRhythm,
+        setInitScale,
         undoRedu
     };
 };

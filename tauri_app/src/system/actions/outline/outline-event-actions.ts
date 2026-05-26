@@ -1,5 +1,8 @@
+import { get } from "svelte/store";
 import RhythmTheory from "../../domain/theory/rhythm-theory";
+import FloatingTextInput from "../../service/common/floating-text-input-controller";
 import ElementState from "../../store/state/data/element-state";
+import { refStore } from "../../store/global-store";
 import type { OutlineActionContext } from "./outline-actions";
 
 const createOutlineEventActions = (
@@ -216,6 +219,103 @@ const createOutlineEventActions = (
         ctx.commitDataAndRecalculate();
     };
 
+    const setEventModMethod = (method: Exclude<ElementState.ModulateMedhod, "domm" | "key">) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "modulate") {
+            throw new Error("setEventModMethod requires a modulate element.");
+        }
+
+        const data = element.data as ElementState.DataModulate;
+        data.method = method;
+        data.val = undefined;
+        ctx.commitDataAndRecalculate();
+    };
+
+    const setEventModMethodValue = (
+        method: Extract<ElementState.ModulateMedhod, "domm" | "key">,
+        val: number,
+    ) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "modulate") {
+            throw new Error("setEventModMethodValue requires a modulate element.");
+        }
+
+        if (val < -3 || val > 3) return;
+
+        const data = element.data as ElementState.DataModulate;
+        data.method = method;
+        data.val = val;
+        ctx.commitDataAndRecalculate();
+    };
+
+    const setTempoEventMethodForInput = (
+        data: ElementState.DataTempo,
+        method: ElementState.TempoMedhod,
+    ) => {
+        if (data.method === method) return false;
+
+        data.method = method;
+        data.val = method === "rate" ? 100 : 0;
+        return true;
+    };
+
+    const setEventTempoValue = (value: string) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "tempo") return;
+
+        const data = element.data as ElementState.DataTempo;
+        const prev = getCurrentTempoEventPrev(ctx);
+        const nextVal = Number(value.trim());
+        if (!Number.isFinite(nextVal)) return;
+
+        const nextTempo = getTempoEventNext(prev, data.method, nextVal);
+        if (nextTempo < 10 || nextTempo > 250) return;
+
+        data.val = nextVal;
+        ctx.commitDataAndRecalculate();
+    };
+
+    const openEventTempoInput = (method: ElementState.TempoMedhod) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "tempo") {
+            throw new Error("openEventTempoInput requires a tempo element.");
+        }
+
+        const data = element.data as ElementState.DataTempo;
+        const changed = setTempoEventMethodForInput(data, method);
+        if (changed) ctx.commitDataAndRecalculate();
+
+        const prev = getCurrentTempoEventPrev(ctx);
+        const value = `${data.val}`;
+        const elementRef = get(refStore).elementRefs.find((item) => item.seq === ctx.outline.focus)?.ref;
+        if (elementRef == undefined) return;
+
+        const rect = elementRef.getBoundingClientRect();
+        FloatingTextInput.open({
+            value,
+            cursor: value.length,
+            left: rect.left,
+            top: rect.bottom + 10,
+            width: Math.max(120, rect.width),
+            permit: (value) => {
+                const nextVal = Number(value.trim());
+                if (!Number.isFinite(nextVal)) return false;
+
+                const nextTempo = getTempoEventNext(prev, method, nextVal);
+                return nextTempo >= 10 && nextTempo <= 250;
+            },
+            apply: setEventTempoValue,
+        });
+    };
+
     const eventTS = (dir: -1 | 1) => {
         const ctx = createContext();
         const element = ctx.outlineSelector.getCurrentElement();
@@ -238,6 +338,23 @@ const createOutlineEventActions = (
         ctx.commitDataAndRecalculate();
     };
 
+    const setEventTS = (tsName: string) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "rhythm") {
+            throw new Error("setEventTS requires a rhythm element.");
+        }
+
+        const ts = RhythmTheory.parseTS(tsName);
+        if (ts == undefined) return;
+
+        const data = element.data as ElementState.DataRhythm;
+        data.newRhythm.ts = ts;
+        data.newRhythm.feel = { type: "straight" };
+        ctx.commitDataAndRecalculate();
+    };
+
     const eventFeel = (dir: -1 | 1) => {
         const ctx = createContext();
         const element = ctx.outlineSelector.getCurrentElement();
@@ -257,6 +374,23 @@ const createOutlineEventActions = (
         ctx.commitDataAndRecalculate();
     };
 
+    const setEventFeel = (feel: RhythmTheory.RhythmFeel) => {
+        const ctx = createContext();
+        const element = ctx.outlineSelector.getCurrentElement();
+
+        if (element.type !== "rhythm") {
+            throw new Error("setEventFeel requires a rhythm element.");
+        }
+
+        const data = element.data as ElementState.DataRhythm;
+        const feels = RhythmTheory.getAvailableFeels(data.newRhythm.ts);
+        const isAvailable = feels.some(item => RhythmTheory.isSameFeel(item, feel));
+        if (!isAvailable) return;
+
+        data.newRhythm.feel = { ...feel };
+        ctx.commitDataAndRecalculate();
+    };
+
     return {
         eventFeel,
         eventModKind,
@@ -272,6 +406,11 @@ const createOutlineEventActions = (
         insertEventMod,
         insertEventRhythm,
         insertEventTempo,
+        openEventTempoInput,
+        setEventModMethod,
+        setEventModMethodValue,
+        setEventFeel,
+        setEventTS,
     };
 };
 

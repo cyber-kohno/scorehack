@@ -2,7 +2,7 @@
   import MelodyState from "../../../store/state/data/melody-state";
   import RefState from "../../../store/state/ref-state";
 
-  import { controlStore, dataStore, derivedStore, inputStore, playbackStore, refStore, settingsStore } from "../../../store/global-store";  import Note from "./Note.svelte";
+  import { controlStore, dataStore, derivedStore, inputStore, playbackStore, refStore, settingsStore, terminalStore } from "../../../store/global-store";  import Note from "./Note.svelte";
   import useMelodySelector from "../../../service/melody/melody-selector";
 
   $: selector = useMelodySelector({ control: $controlStore, data: $dataStore });
@@ -14,6 +14,7 @@
   $: scrollLimitProps = RefState.getScrollLimitProps($refStore.grid);
   $: beatWidth = $settingsStore.view.timeline.beatWidth;
   $: isPlayback = $playbackStore.timerKeys != null;
+  $: isTerminalActive = $terminalStore != null;
   $: input = $inputStore;
   $: focusRange = (() => {
     if (melody.focusLock === -1) return [melody.focus, melody.focus];
@@ -40,6 +41,7 @@
   ): OperationStatus => {
     if (playback) return "playback";
     if (!isFocus) return "focus";
+    if (isTerminalActive) return "none";
 
     if (inputState.holdD) return "move";
     if (inputState.holdF && focusLock === -1) return "len";

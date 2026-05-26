@@ -70,6 +70,7 @@
           class="item"
           class:focus={index === level.focus}
           class:parent-focus={level.hasFocusedChild && index === level.focus && item.type === "parent"}
+          class:parent-sibling-muted={level.hasFocusedChild && index !== level.focus}
           data-role={item.type === "action" ? item.role ?? "normal" : "normal"}
           on:click={() => {
             if (!level.active) return;
@@ -140,6 +141,10 @@
     border-color: #6aa7c8;
     background-color: #214763;
     color: #d6f7ff;
+  }
+
+  .item.parent-sibling-muted {
+    color: rgba(200, 243, 255, 0.38);
   }
 
   .item[data-role="danger"] {

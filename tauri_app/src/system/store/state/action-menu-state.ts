@@ -6,7 +6,13 @@ namespace ActionMenuState {
         type: "action";
         label: string;
         role?: ItemRole;
+        keepOpen?: boolean;
         callback: () => void | Promise<void>;
+    };
+
+    export type ActionOptions = {
+        role?: ItemRole;
+        keepOpen?: boolean;
     };
 
     export type ParentItem = {
@@ -31,14 +37,19 @@ namespace ActionMenuState {
         action: (
             label: string,
             callback: ActionItem["callback"],
-            role?: ItemRole,
+            option?: ItemRole | ActionOptions,
         ): ActionItem => {
             const item: ActionItem = {
                 type: "action",
                 label,
                 callback,
             };
-            if (role != undefined) item.role = role;
+            if (typeof option === "string") {
+                item.role = option;
+            } else if (option != undefined) {
+                if (option.role != undefined) item.role = option.role;
+                if (option.keepOpen != undefined) item.keepOpen = option.keepOpen;
+            }
             return item;
         },
         parent: (
