@@ -16,6 +16,44 @@ const createMelodyUpdater = (ctx: Context) => {
     const melody = ctx.control.melody;
     const track = data.scoreTracks[melody.trackIndex] as MelodyState.ScoreTrack;
 
+    const isNearInteger = (value: number) => {
+        return Math.abs(value - Math.round(value)) < 0.000001;
+    };
+
+    const getChordHeadBeatNote = (
+        chordCache: DerivedState.ChordCache,
+        baseCache: DerivedState.BaseCache,
+    ) => {
+        const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.rhythm.ts);
+        const beatRate = beatDiv16Cnt / 4;
+
+        return chordCache.startBeatNote + (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
+    };
+
+    const setCursorFromBeatNote = (
+        pos: number,
+        ts: RhythmTheory.TimeSignature,
+    ) => {
+        const cursor = melody.cursor;
+        const rates = RhythmTheory.getMelodyInputRates(ts);
+        const rate = [...rates]
+            .reverse()
+            .find((rate) => isNearInteger(pos / MelodyState.calcBeat({ div: rate.div }, 1)))
+            ?? rates[0];
+        const unitBeat = MelodyState.calcBeat({ div: rate.div }, 1);
+        const normalizedPos = pos / unitBeat;
+
+        if (!isNearInteger(normalizedPos)) {
+            throw new Error(`Cannot represent cursor position. [${pos}]`);
+        }
+
+        cursor.norm.div = rate.div;
+        cursor.norm.tuplets = undefined;
+        cursor.pos = Math.round(normalizedPos);
+        cursor.len = rate.len;
+        MelodyState.normalize(cursor);
+    };
+
     const getFocusNote = () => {
         return track.notes[melody.focus];
     };
@@ -29,20 +67,16 @@ const createMelodyUpdater = (ctx: Context) => {
         // 先頭以降の要素
         if (lastChordSeq !== -1) {
             const chordCache = derived.chordCaches[lastChordSeq];
+            const baseCache = derived.baseCaches[chordCache.baseSeq];
 
-            pos = chordCache.startBeatNote;
+            pos = getChordHeadBeatNote(chordCache, baseCache);
             // コード要素
             if (chordSeq === -1) pos += chordCache.lengthBeatNote;
         }
 
-        const cursor = melody.cursor;
         const baseCache = derived.baseCaches[elementCache.baseSeq];
-        const rate = RhythmTheory.getMelodyInputRates(baseCache.scoreBase.rhythm.ts)[2];
 
-        cursor.norm.div = rate.div;
-        cursor.norm.tuplets = undefined;
-        cursor.pos = pos / MelodyState.calcBeat(cursor.norm, 1);
-        cursor.len = rate.len;
+        setCursorFromBeatNote(pos, baseCache.scoreBase.rhythm.ts);
         melody.focus = -1;
     };
 
@@ -340,6 +374,90 @@ const createMelodyUpdater = (ctx: Context) => {
         note.len = len;
     };
 
+    const splitFocusNote = () => {
+        const source = getFocusNote() as MelodyState.VocalNote | undefined;
+        if (source == undefined) return false;
+
+        const noteBeat = MelodyState.calcBeatSide(source);
+        const cursorUnitBeat = MelodyState.calcBeat(melody.cursor.norm, melody.cursor.len);
+        if (cursorUnitBeat >= noteBeat.len - 1e-9) return false;
+
+        const count = noteBeat.len / cursorUnitBeat;
+        const roundedCount = Math.round(count);
+        if (Math.abs(count - roundedCount) > 1e-9) {
+            throw new Error("Focused note length must be divisible by cursor unit.");
+        }
+
+        const unitBeat = MelodyState.calcBeat(melody.cursor.norm, 1);
+        const rawStart = noteBeat.pos / unitBeat;
+        const rawLen = cursorUnitBeat / unitBeat;
+        const start = Math.round(rawStart);
+        const len = Math.round(rawLen);
+        if (Math.abs(rawStart - start) > 1e-9 || Math.abs(rawLen - len) > 1e-9) {
+            throw new Error("Focused note cannot be represented by cursor unit.");
+        }
+
+        const notes = [...Array(roundedCount).keys()].map((index): MelodyState.VocalNote => {
+            const note: MelodyState.VocalNote = {
+                norm: { ...melody.cursor.norm },
+                pos: start + index * len,
+                len,
+                pitch: source.pitch,
+            };
+            if (index === 0 && source.pron != undefined) note.pron = source.pron;
+            return note;
+        });
+
+        const focusIndex = melody.focus;
+        track.notes.splice(focusIndex, 1, ...notes);
+        melody.focus = focusIndex;
+        melody.focusLock = focusIndex + notes.length - 1;
+        if (melody.focusLock === melody.focus) melody.focusLock = -1;
+
+        return true;
+    };
+
+    const mergeFocusNotes = () => {
+        const [start, end] = getFocusRange();
+        if (start === end) return false;
+
+        const targets = track.notes.slice(start, end + 1) as MelodyState.VocalNote[];
+        const pitch = targets[0].pitch;
+        const firstSide = MelodyState.calcBeatSide(targets[0]);
+        let tail = firstSide.pos + firstSide.len;
+
+        for (let i = 1; i < targets.length; i++) {
+            const note = targets[i];
+            if (note.pitch !== pitch) return false;
+
+            const side = MelodyState.calcBeatSide(note);
+            if (Math.abs(side.pos - tail) > 1e-9) return false;
+            tail = side.pos + side.len;
+        }
+
+        const unitBeat = MelodyState.calcBeat(targets[0].norm, 1);
+        const rawLen = (tail - firstSide.pos) / unitBeat;
+        const len = Math.round(rawLen);
+        if (Math.abs(rawLen - len) > 1e-9) {
+            throw new Error("Merged note length cannot be represented by the first note unit.");
+        }
+
+        const merged: MelodyState.VocalNote = {
+            norm: { ...targets[0].norm },
+            pos: targets[0].pos,
+            len,
+            pitch,
+        };
+        if (targets[0].pron != undefined) merged.pron = targets[0].pron;
+        MelodyState.normalize(merged);
+
+        track.notes.splice(start, targets.length, merged);
+        melody.focus = start;
+        melody.focusLock = -1;
+
+        return true;
+    };
+
     const moveNoteLen = (note: MelodyState.Note, dir: -1 | 1, baseTail: number) => {
         const nextNote: MelodyState.Note = JSON.parse(JSON.stringify(note));
         scaleNoteByUnit(nextNote, { ...melody.cursor, pos: dir * melody.cursor.len });
@@ -544,6 +662,8 @@ const createMelodyUpdater = (ctx: Context) => {
         changeCursorDiv,
         changeCursorRate,
         setCursorRate,
+        splitFocusNote,
+        mergeFocusNotes,
         changeCursorTuplets,
         moveFocus,
         moveNoteByUnit,
@@ -563,6 +683,7 @@ const createMelodyUpdater = (ctx: Context) => {
         setNotePron,
         setNoOverlap,
         syncCursorFromElementSeq,
+        setCursorFromBeatNote,
     };
 };
 

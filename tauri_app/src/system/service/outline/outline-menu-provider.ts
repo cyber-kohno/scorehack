@@ -20,13 +20,15 @@ namespace OutlineMenuProvider {
     const createInsertChildren = (
         outlineActions: ReturnType<typeof createOutlineActions>,
     ): ActionMenuState.Item[] => {
-        const { action } = ActionMenuState.createFactory();
+        const { action, parent } = ActionMenuState.createFactory();
         return [
             action("Chord", outlineActions.insertChord),
             action("Section", outlineActions.insertSection),
-            action("Modulation", outlineActions.insertEventMod),
-            action("Tempo Change", outlineActions.insertEventTempo),
-            action("Rhythm Change", outlineActions.insertEventRhythm),
+            parent("Event", [
+                action("Modulation", outlineActions.insertEventMod),
+                action("Tempo Change", outlineActions.insertEventTempo),
+                action("Rhythm Change", outlineActions.insertEventRhythm),
+            ]),
         ];
     };
 

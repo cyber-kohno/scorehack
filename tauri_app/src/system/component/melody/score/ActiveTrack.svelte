@@ -96,8 +96,7 @@
   $: visibleNotes = (() => {
     if (scrollLimitProps == null) return [];
 
-    return notes
-      .map((note, index) => {
+    return notes.flatMap((note, index) => {
         const beatSide = MelodyState.calcBeatSide(note);
         const [left, width] = [beatSide.pos, beatSide.len].map(
           (v) => v * beatWidth
@@ -107,6 +106,8 @@
           Math.abs(scrollLimitProps.scrollMiddleX - middle) <=
             scrollLimitProps.rectWidth ||
           Math.abs(cursorMiddle - middle) <= scrollLimitProps.rectWidth;
+        if (!isDisp) return [];
+
         const base = $derivedStore.baseCaches.find((base) => {
           return (
             base.startBeatNote <= beatSide.pos &&
@@ -115,7 +116,7 @@
         });
         if (base == undefined) throw new Error();
 
-        return {
+        return [{
           index,
           isCriteria: $controlStore.mode === "melody" && melody.focus === index,
           isDisp,
@@ -125,9 +126,8 @@
             focusRange[1] >= index,
           note,
           scoreBase: base.scoreBase,
-        };
-      })
-      .filter((item) => item.isDisp);
+        }];
+      });
   })();
 </script>
 

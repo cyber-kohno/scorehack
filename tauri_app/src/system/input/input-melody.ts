@@ -76,6 +76,9 @@ const useInputMelody = () => {
                 case 'w': {
                     melodyActions.openPronInput();
                 } break;
+                case 'q': {
+                    melodyActions.splitOrMergeFocusNotes();
+                } break;
                 case '1': { melodyActions.changeCursorRate(0); } break;
                 case '2': { melodyActions.changeCursorRate(1); } break;
                 case '3': { melodyActions.changeCursorRate(2); } break;
@@ -155,6 +158,11 @@ const useInputMelody = () => {
             }
         }
         callbacks.holdC = () => {
+            switch (eventKey) {
+                case 'ArrowLeft': melodyActions.moveCursorToChordBlock(-1); return;
+                case 'ArrowRight': melodyActions.moveCursorToChordBlock(1); return;
+            }
+
             if (isCursor()) {
                 switch (eventKey) {
                     case 'ArrowUp': melodyActions.moveCursorPitchInScale(1); break;

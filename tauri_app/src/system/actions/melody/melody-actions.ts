@@ -11,6 +11,8 @@ import useMelodySelector from "../../service/melody/melody-selector";
 import { getNoteDisplayRate } from "../../component/melody/score/note-display-util";
 import ScoreHistory from "../../infra/tauri/history/score-history";
 import FloatingTextInput from "../../service/common/floating-text-input-controller";
+import Toast from "../../service/common/toast-controller";
+import ToastState from "../../store/state/toast-state";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -29,6 +31,7 @@ const createContext = () => {
     return {
         control,
         data,
+        derived,
         ref,
         settings,
         melody,
@@ -55,6 +58,20 @@ const createContext = () => {
 };
 
 const createMelodyActions = () => {
+
+    const isNear = (left: number, right: number) => {
+        return Math.abs(left - right) < 0.000001;
+    };
+
+    const getChordHeadBeatNote = (
+        chordCache: ReturnType<typeof createContext>["derived"]["chordCaches"][number],
+        baseCache: ReturnType<typeof createContext>["derived"]["baseCaches"][number],
+    ) => {
+        const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.rhythm.ts);
+        const beatRate = beatDiv16Cnt / 4;
+
+        return chordCache.startBeatNote + (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
+    };
 
     const getFocusNoteDisplayRate = (
         ctx: ReturnType<typeof createContext>,
@@ -130,6 +147,51 @@ const createMelodyActions = () => {
         ctx.refUpdater.adjustGridScrollXFromNote(note);
         ctx.refUpdater.adjustGridScrollYFromCursor(note);
         ctx.playbackPitch(note.pitch);
+        ctx.commitControl();
+    };
+
+    const moveCursorToChordBlock = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const target = ctx.melodySelector.getFocusNote() ?? ctx.melody.cursor;
+        const currentPos = MelodyState.calcBeat(target.norm, target.pos);
+        const chordEntries = ctx.derived.chordCaches.map((chordCache, index) => {
+            const baseCache = ctx.derived.baseCaches[chordCache.baseSeq];
+            const head = getChordHeadBeatNote(chordCache, baseCache);
+
+            return {
+                chordCache,
+                baseCache,
+                head,
+                tail: head + chordCache.lengthBeatNote,
+                index,
+            };
+        });
+        const currentIndex = chordEntries.findIndex(({ head, tail }) =>
+            head <= currentPos + 0.000001 && currentPos < tail - 0.000001,
+        );
+        const previousIndex = () => {
+            for (let i = chordEntries.length - 1; i >= 0; i--) {
+                if (chordEntries[i].head < currentPos - 0.000001) return i;
+            }
+            return -1;
+        };
+        const nextIndex = () => chordEntries.findIndex(({ head }) => head > currentPos + 0.000001);
+        const targetIndex = dir === -1
+            ? currentIndex === -1 || isNear(currentPos, chordEntries[currentIndex].head)
+                ? previousIndex()
+                : currentIndex
+            : nextIndex();
+
+        const entry = chordEntries[targetIndex];
+        if (entry == undefined) return;
+
+        ctx.melodyUpdater.setCursorFromBeatNote(entry.head, entry.baseCache.scoreBase.rhythm.ts);
+        ctx.melody.focus = -1;
+        ctx.melody.focusLock = -1;
+        ctx.control.outline.focus = entry.chordCache.elementSeq;
+        ctx.melodyUpdater.judgeOverlap();
+        ctx.refUpdater.adjustOutlineScroll();
+        ctx.refUpdater.adjustGridScrollXFromNote(ctx.melody.cursor);
         ctx.commitControl();
     };
 
@@ -448,6 +510,65 @@ const createMelodyActions = () => {
         ctx.commitData();
     };
 
+    const splitFocusNote = () => {
+        const ctx = createContext();
+        const note = ctx.melodySelector.getFocusNote();
+        if (note == undefined || ctx.melody.focusLock !== -1) return;
+
+        const split = ctx.melodyUpdater.splitFocusNote();
+        if (!split) return;
+
+        const focusNote = ctx.melodySelector.getFocusNote();
+        if (focusNote != undefined) {
+            ctx.outlineUpdater.syncChordSeqFromNote(focusNote);
+            ctx.refUpdater.adjustOutlineScroll();
+            ctx.refUpdater.adjustGridScrollXFromNote(focusNote);
+            ctx.refUpdater.adjustGridScrollYFromCursor(focusNote);
+        }
+        ctx.commitControl();
+        ctx.commitData();
+    };
+
+    const mergeFocusNotes = () => {
+        const ctx = createContext();
+        if (ctx.melody.focusLock === -1) return;
+
+        const [start] = ctx.melodyUpdater.getFocusRange();
+        const merged = ctx.melodyUpdater.mergeFocusNotes();
+        if (!merged) {
+            const noteRef = ctx.ref.noteRefs[ctx.melody.trackIndex]?.find((item) => item.seq === start)?.ref;
+            const rect = noteRef?.getBoundingClientRect();
+            Toast.create({
+                ...ToastState.createInitial(),
+                x: rect?.left ?? 12,
+                y: rect?.bottom ?? 48,
+                width: 360,
+                text: "Cannot merge: selected notes must be adjacent and have the same pitch.",
+            });
+            return;
+        }
+
+        const focusNote = ctx.melodySelector.getFocusNote();
+        if (focusNote != undefined) {
+            ctx.melodyUpdater.setCursorRate(getFocusNoteDisplayRate(ctx, focusNote));
+            ctx.outlineUpdater.syncChordSeqFromNote(focusNote);
+            ctx.refUpdater.adjustOutlineScroll();
+            ctx.refUpdater.adjustGridScrollXFromNote(focusNote);
+            ctx.refUpdater.adjustGridScrollYFromCursor(focusNote);
+        }
+        ctx.commitControl();
+        ctx.commitData();
+    };
+
+    const splitOrMergeFocusNotes = () => {
+        const ctx = createContext();
+        if (ctx.melody.focusLock === -1) {
+            splitFocusNote();
+            return;
+        }
+        mergeFocusNotes();
+    };
+
     const moveNotePos = (dir: -1 | 1) => {
         const ctx = createContext();
         const note = ctx.melodySelector.getFocusNote();
@@ -531,6 +652,8 @@ const createMelodyActions = () => {
 
     const openPronInput = () => {
         const ctx = createContext();
+        if (ctx.melody.focusLock !== -1) return;
+
         const note = ctx.melodySelector.getFocusNote() as MelodyState.VocalNote | undefined;
         const noteIndex = ctx.melody.focus;
 
@@ -601,6 +724,7 @@ const createMelodyActions = () => {
         focusInNearNote,
         focusOutNoteSide,
         moveCursor,
+        moveCursorToChordBlock,
         moveCursorOrFocusNote,
         moveCursorPitchInScale,
         moveNoteLen,
@@ -619,6 +743,7 @@ const createMelodyActions = () => {
         pasteClipboardNotes,
         openPronInput,
         removeFocusNotes,
+        splitOrMergeFocusNotes,
         toggleChordNameMode,
         undoRedu
     };
