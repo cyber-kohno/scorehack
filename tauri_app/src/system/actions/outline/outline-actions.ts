@@ -68,6 +68,38 @@ const createOutlineActions = () => {
         return JSON.parse(JSON.stringify(chordData));
     };
 
+    const canChangeScoreTail = (
+        ctx: ReturnType<typeof createContext>,
+        deltaBeatNote: number,
+    ) => {
+        if (deltaBeatNote >= 0) return true;
+
+        const nextTail = ctx.derivedSelector.getBeatNoteTail() + deltaBeatNote;
+        const melodyTail = ctx.melodySelector.getAllScoreTracksTailBeatNote();
+        if (melodyTail <= nextTail + 1e-9) return true;
+
+        Toast.create({
+            ...ToastState.createInitial(),
+            x: 12,
+            y: 48,
+            width: 320,
+            text: "Cannot change beat: melody notes exceed the new score length.",
+        });
+        return false;
+    };
+
+    const calcBeatChangeDeltaBeatNote = (
+        ctx: ReturnType<typeof createContext>,
+        currentBeat: number,
+        nextBeat: number,
+    ) => {
+        const chordCache = ctx.derivedSelector.getCurChord();
+        const baseCache = ctx.derived.baseCaches[chordCache.baseSeq];
+        const beatRate = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.rhythm.ts) / 4;
+
+        return (nextBeat - currentBeat) * beatRate;
+    };
+
     const getInitialBeat = (ctx: ReturnType<typeof createContext>) => {
         const element = ctx.outlineSelector.getCurrentElement();
         if (element.type === "chord") {
@@ -417,6 +449,13 @@ const createOutlineActions = () => {
             throw new Error("modBeat requires a chord element.");
         }
 
+        const chordData = element.data as ElementState.DataChord;
+        const nextBeat = chordData.beat + dir;
+        if (!canChangeScoreTail(
+            ctx,
+            calcBeatChangeDeltaBeatNote(ctx, chordData.beat, nextBeat),
+        )) return;
+
         const changed = ctx.outlineUpdater.modBeat(dir);
 
         if (!changed) return;
@@ -436,6 +475,11 @@ const createOutlineActions = () => {
         if (beat < 1 || beat > 4) return;
 
         const chordData = element.data as ElementState.DataChord;
+        if (!canChangeScoreTail(
+            ctx,
+            calcBeatChangeDeltaBeatNote(ctx, chordData.beat, beat),
+        )) return;
+
         chordData.beat = beat;
         ctx.commitDataAndRecalculate();
         ctx.refUpdater.adjustGridScrollXFromOutline();
