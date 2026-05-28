@@ -1,5 +1,4 @@
 import { get } from "svelte/store";
-import ChordTheory from "../../domain/theory/chord-theory";
 import RhythmTheory from "../../domain/theory/rhythm-theory";
 import TonalityTheory from "../../domain/theory/tonality-theory";
 import useScrollService from "../../service/common/scroll-service";
@@ -13,10 +12,10 @@ import Toast from "../../service/common/toast-controller";
 import ToastState from "../../store/state/toast-state";
 import createOutlineBackingActions from "./outline-backing-actions";
 import createOutlineEventActions from "./outline-event-actions";
+import createOutlineChordActions from "./outline-chord-actions";
 import ScoreHistory from "../../infra/tauri/history/score-history";
 import useMelodySelector from "../../service/melody/melody-selector";
 import FloatingTextInput from "../../service/common/floating-text-input-controller";
-import DegreeBasis from "../../service/notation/degree-basis";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -63,42 +62,7 @@ export type OutlineActionContext = ReturnType<typeof createContext>;
 const createOutlineActions = () => {
     const backingActions = createOutlineBackingActions(createContext);
     const eventActions = createOutlineEventActions(createContext);
-
-    const cloneChordData = (chordData: ElementState.DataChord): ElementState.DataChord => {
-        return JSON.parse(JSON.stringify(chordData));
-    };
-
-    const canChangeScoreTail = (
-        ctx: ReturnType<typeof createContext>,
-        deltaBeatNote: number,
-    ) => {
-        if (deltaBeatNote >= 0) return true;
-
-        const nextTail = ctx.derivedSelector.getBeatNoteTail() + deltaBeatNote;
-        const melodyTail = ctx.melodySelector.getAllScoreTracksTailBeatNote();
-        if (melodyTail <= nextTail + 1e-9) return true;
-
-        Toast.create({
-            ...ToastState.createInitial(),
-            x: 12,
-            y: 48,
-            width: 320,
-            text: "Cannot change beat: melody notes exceed the new score length.",
-        });
-        return false;
-    };
-
-    const calcBeatChangeDeltaBeatNote = (
-        ctx: ReturnType<typeof createContext>,
-        currentBeat: number,
-        nextBeat: number,
-    ) => {
-        const chordCache = ctx.derivedSelector.getCurChord();
-        const baseCache = ctx.derived.baseCaches[chordCache.baseSeq];
-        const beatRate = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.rhythm.ts) / 4;
-
-        return (nextBeat - currentBeat) * beatRate;
-    };
+    const chordActions = createOutlineChordActions(createContext, backingActions);
 
     const getInitialBeat = (ctx: ReturnType<typeof createContext>) => {
         const element = ctx.outlineSelector.getCurrentElement();
@@ -147,7 +111,7 @@ const createOutlineActions = () => {
         const sectionCount = ctx.data.elements.filter(e => e.type === "section").length;
         const isLastSection = element.type === "section" && sectionCount === 1;
 
-        // 初期値ブロックと、最後の1つのセクションは消せない
+        // 初期値ブロチE��と、最後�E1つのセクションは消せなぁE
         if (element.type === "init" || isLastSection) {
             Toast.create({ ...ToastState.createInitial(), text: 'test', x: 50, y: 50 });
             return;
@@ -387,228 +351,6 @@ const createOutlineActions = () => {
         ctx.refUpdater.adjustOutlineScroll();
     };
 
-    const setDegree = (scaleIndex: number) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") return;
-
-        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
-        const afterChordData = cloneChordData(beforeChordData);
-        const tonality = ctx.derivedSelector.getCurBase().scoreBase.tonality;
-        const displayTonality = DegreeBasis.getDisplayTonality(tonality, ctx.settings.notation.degreeBasis);
-        const degree = ChordTheory.getDiatonicDegreeChord(displayTonality.scale, scaleIndex);
-        afterChordData.degree = DegreeBasis.toStoredDegree(degree, tonality, ctx.settings.notation.degreeBasis);
-
-        ctx.outlineUpdater.setChordData(afterChordData);
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
-        ctx.commitDataAndRecalculate();
-    };
-
-    const modSymbol = (dir: "prev" | "next" | "lower" | "upper") => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("modSymbol requires a chord element.");
-        }
-
-        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
-        const changed = ctx.outlineUpdater.modSymbol(dir);
-
-        if (!changed) return;
-
-        const afterChordData = element.data as ElementState.DataChord;
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
-        ctx.commitDataAndRecalculate();
-    };
-
-    const modRoot = (dir: -1 | 1) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("modRoot requires a chord element.");
-        }
-
-        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
-        const changed = ctx.outlineUpdater.modRoot(dir);
-
-        if (!changed) return;
-
-        const afterChordData = element.data as ElementState.DataChord;
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
-        ctx.commitDataAndRecalculate();
-    };
-
-    const modBeat = (dir: -1 | 1) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("modBeat requires a chord element.");
-        }
-
-        const chordData = element.data as ElementState.DataChord;
-        const nextBeat = chordData.beat + dir;
-        if (!canChangeScoreTail(
-            ctx,
-            calcBeatChangeDeltaBeatNote(ctx, chordData.beat, nextBeat),
-        )) return;
-
-        const changed = ctx.outlineUpdater.modBeat(dir);
-
-        if (!changed) return;
-
-        ctx.commitDataAndRecalculate();
-        ctx.refUpdater.adjustGridScrollXFromOutline();
-    };
-
-    const setChordBeat = (beat: number) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("setChordBeat requires a chord element.");
-        }
-
-        if (beat < 1 || beat > 4) return;
-
-        const chordData = element.data as ElementState.DataChord;
-        if (!canChangeScoreTail(
-            ctx,
-            calcBeatChangeDeltaBeatNote(ctx, chordData.beat, beat),
-        )) return;
-
-        chordData.beat = beat;
-        ctx.commitDataAndRecalculate();
-        ctx.refUpdater.adjustGridScrollXFromOutline();
-    };
-
-    const modOn = (dir: -1 | 1) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("modOn requires a chord element.");
-        }
-
-        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
-        const chordData = element.data as ElementState.DataChord;
-        const degree = chordData.degree;
-        if (degree == undefined) return;
-
-        if (degree.on == undefined) {
-            degree.on = ChordTheory.getDegree12Props(dir === 1 ? 0 : 11, dir === -1);
-        } else {
-            const nextIndex = ChordTheory.getDegree12Index(degree.on) + dir;
-            if (nextIndex < 0 || nextIndex > 11) {
-                degree.on = undefined;
-            } else {
-                degree.on = ChordTheory.getDegree12Props(nextIndex, dir === -1);
-            }
-        }
-
-        const afterChordData = element.data as ElementState.DataChord;
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
-        ctx.commitDataAndRecalculate();
-    };
-
-    const modEat = (dir: -1 | 1) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("modEat requires a chord element.");
-        }
-
-        const changed = ctx.outlineUpdater.modEat(dir);
-
-        if (!changed) return;
-
-        ctx.commitDataAndRecalculate();
-        ctx.refUpdater.adjustGridScrollXFromOutline();
-    };
-
-    const setChordEat = (eat: number) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("setChordEat requires a chord element.");
-        }
-
-        if (eat < -2 || eat > 2) return;
-
-        const chordData = element.data as ElementState.DataChord;
-        chordData.eat = eat;
-        ctx.commitDataAndRecalculate();
-        ctx.refUpdater.adjustGridScrollXFromOutline();
-    };
-
-    const setChordRoot = (root: ChordTheory.DegreeKey) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("setChordRoot requires a chord element.");
-        }
-
-        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
-        const afterChordData = cloneChordData(beforeChordData);
-        const symbol = afterChordData.degree?.symbol ?? "";
-        afterChordData.degree = {
-            symbol,
-            ...root,
-        };
-
-        ctx.outlineUpdater.setChordData(afterChordData);
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
-        ctx.commitDataAndRecalculate();
-    };
-
-    const setChordOn = (on: ChordTheory.DegreeKey | undefined) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("setChordOn requires a chord element.");
-        }
-
-        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
-        const afterChordData = cloneChordData(beforeChordData);
-        const degree = afterChordData.degree ?? ChordTheory.getDiatonicDegreeChord("major", 0);
-        if (on == undefined) {
-            delete degree.on;
-        } else {
-            degree.on = { ...on };
-        }
-        afterChordData.degree = degree;
-
-        ctx.outlineUpdater.setChordData(afterChordData);
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
-        ctx.commitDataAndRecalculate();
-    };
-
-    const setChordSymbol = (symbol: ChordTheory.ChordSymol) => {
-        const ctx = createContext();
-        const element = ctx.outlineSelector.getCurrentElement();
-
-        if (element.type !== "chord") {
-            throw new Error("setChordSymbol requires a chord element.");
-        }
-
-        const beforeChordData = cloneChordData(element.data as ElementState.DataChord);
-        const afterChordData = cloneChordData(beforeChordData);
-        const degree = afterChordData.degree ?? ChordTheory.getDiatonicDegreeChord("major", 0);
-        degree.symbol = symbol;
-        afterChordData.degree = degree;
-
-        ctx.outlineUpdater.setChordData(afterChordData);
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
-        ctx.commitDataAndRecalculate();
-    };
-
     const moveRange = (dir: -1 | 1) => {
         const ctx = createContext();
         const moved = ctx.outlineUpdater.moveRange(dir);
@@ -632,15 +374,11 @@ const createOutlineActions = () => {
     return {
         ...backingActions,
         ...eventActions,
+        ...chordActions,
         copyFocusElements,
         focusSelectedEdge,
         insertChord,
         insertSection,
-        modBeat,
-        modEat,
-        modOn,
-        modRoot,
-        modSymbol,
         moveFocus,
         moveRange,
         moveSection,
@@ -649,12 +387,6 @@ const createOutlineActions = () => {
         pasteClipboardElements,
         renameSection,
         removeFocusElement,
-        setDegree,
-        setChordBeat,
-        setChordEat,
-        setChordOn,
-        setChordRoot,
-        setChordSymbol,
         setInitKey,
         setInitFeel,
         setInitRhythm,

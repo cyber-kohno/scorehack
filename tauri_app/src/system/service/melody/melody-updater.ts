@@ -5,6 +5,9 @@ import MelodyState from "../../store/state/data/melody-state";
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
 import type DerivedState from "../../store/state/derived-state";
+import createNoteClipboardUpdater from "./note-clipboard-updater";
+import createNoteComposeUpdater from "./note-compose-updater";
+import createNotePositionUpdater from "./note-position-updater";
 
 type Context = {
     control: ControlState.Value;
@@ -15,57 +18,16 @@ const createMelodyUpdater = (ctx: Context) => {
     const { data } = ctx;
     const melody = ctx.control.melody;
     const track = data.scoreTracks[melody.trackIndex] as MelodyState.ScoreTrack;
+    const noteComposeUpdater = createNoteComposeUpdater({ melody, track });
+    const notePositionUpdater = createNotePositionUpdater({ melody, track });
+    const noteClipboardUpdater = createNoteClipboardUpdater({
+        melody,
+        track,
+        moveNoteByUnit: notePositionUpdater.moveNoteByUnit,
+    });
 
     const isNearInteger = (value: number) => {
         return Math.abs(value - Math.round(value)) < 0.000001;
-    };
-
-    const findRepresentableSide = (
-        baseNorm: MelodyState.Norm,
-        posBeat: number,
-        lenBeat: number,
-        extraNorms: MelodyState.Norm[],
-    ) => {
-        const candidates: MelodyState.Norm[] = [];
-        const seen = new Set<string>();
-
-        const addCandidate = (norm: MelodyState.Norm) => {
-            const tuplets = norm.tuplets === 1 ? undefined : norm.tuplets;
-            const key = `${norm.div}:${tuplets ?? ""}`;
-            if (seen.has(key)) return;
-
-            candidates.push(tuplets == undefined ? { div: norm.div } : { div: norm.div, tuplets });
-            seen.add(key);
-        };
-
-        const addCandidateSeq = (norm: MelodyState.Norm) => {
-            for (let i = 0; i < 12; i++) {
-                addCandidate({ ...norm, div: norm.div * (2 ** i) });
-            }
-        };
-
-        addCandidateSeq(baseNorm);
-        extraNorms.forEach(addCandidateSeq);
-        [undefined, 3].forEach(tuplets => {
-            for (let div = 1; div <= 2048; div *= 2) {
-                addCandidate(tuplets == undefined ? { div } : { div, tuplets });
-            }
-        });
-
-        for (const norm of candidates) {
-            const unitBeat = MelodyState.calcBeat(norm, 1);
-            const rawPos = posBeat / unitBeat;
-            const rawLen = lenBeat / unitBeat;
-            if (!isNearInteger(rawPos) || !isNearInteger(rawLen)) continue;
-
-            return {
-                norm,
-                pos: Math.round(rawPos),
-                len: Math.round(rawLen),
-            };
-        }
-
-        return undefined;
     };
 
     const getChordHeadBeatNote = (
@@ -112,7 +74,7 @@ const createMelodyUpdater = (ctx: Context) => {
         const { lastChordSeq, chordSeq } = elementCache;
         let pos = 0;
 
-        // 先頭以降の要素
+        // 先頭以降�E要素
         if (lastChordSeq !== -1) {
             const chordCache = derived.chordCaches[lastChordSeq];
             const baseCache = derived.baseCaches[chordCache.baseSeq];
@@ -372,41 +334,6 @@ const createMelodyUpdater = (ctx: Context) => {
         note.pron = nextValue;
     };
 
-    const copyNotes = () => {
-        const [start, end] = getFocusRange();
-        const notes = track.notes.filter((_, i) => {
-            return i >= start && i <= end;
-        });
-        melody.clipboard.notes = JSON.parse(JSON.stringify(notes));
-    };
-
-    const sortTrackNotes = (track: MelodyState.ScoreTrack) => {
-        track.notes.sort((a, b) => {
-            const [aX, bX] = [a, b].map(n => MelodyState.calcBeatSide(n).pos);
-            return aX - bX;
-        });
-    };
-
-    const pasteClipboardNotes = () => {
-        const clipNotes = melody.clipboard.notes;
-        if (clipNotes == null || clipNotes.length === 0) return;
-
-        const criteria: MelodyState.Note = JSON.parse(JSON.stringify(clipNotes[0]));
-        const cursor = melody.cursor;
-        criteria.pos *= -1;
-        clipNotes.forEach(note => {
-            moveNoteByUnit(note, criteria);
-            moveNoteByUnit(note, cursor);
-            track.notes.push(note);
-        });
-        sortTrackNotes(track);
-
-        const focusIndex = track.notes.findIndex(note => note == clipNotes[0]);
-        melody.focus = focusIndex;
-        melody.focusLock = focusIndex + clipNotes.length - 1;
-        melody.clipboard.notes = null;
-    };
-
     const changeFocusNoteDiv = (
         note: MelodyState.Note,
         div: number,
@@ -422,278 +349,6 @@ const createMelodyUpdater = (ctx: Context) => {
         note.len = len;
     };
 
-    const splitFocusNote = () => {
-        const source = getFocusNote() as MelodyState.VocalNote | undefined;
-        if (source == undefined) return false;
-
-        const noteBeat = MelodyState.calcBeatSide(source);
-        const cursorUnitBeat = MelodyState.calcBeat(melody.cursor.norm, melody.cursor.len);
-        if (cursorUnitBeat >= noteBeat.len - 1e-9) return false;
-
-        const count = noteBeat.len / cursorUnitBeat;
-        const roundedCount = Math.round(count);
-        if (Math.abs(count - roundedCount) > 1e-9) {
-            throw new Error("Focused note length must be divisible by cursor unit.");
-        }
-
-        const unitBeat = MelodyState.calcBeat(melody.cursor.norm, 1);
-        const rawStart = noteBeat.pos / unitBeat;
-        const rawLen = cursorUnitBeat / unitBeat;
-        const start = Math.round(rawStart);
-        const len = Math.round(rawLen);
-        if (Math.abs(rawStart - start) > 1e-9 || Math.abs(rawLen - len) > 1e-9) {
-            throw new Error("Focused note cannot be represented by cursor unit.");
-        }
-
-        const notes = [...Array(roundedCount).keys()].map((index): MelodyState.VocalNote => {
-            const note: MelodyState.VocalNote = {
-                norm: { ...melody.cursor.norm },
-                pos: start + index * len,
-                len,
-                pitch: source.pitch,
-            };
-            if (index === 0 && source.pron != undefined) note.pron = source.pron;
-            return note;
-        });
-
-        const focusIndex = melody.focus;
-        track.notes.splice(focusIndex, 1, ...notes);
-        melody.focus = focusIndex;
-        melody.focusLock = focusIndex + notes.length - 1;
-        if (melody.focusLock === melody.focus) melody.focusLock = -1;
-
-        return true;
-    };
-
-    const mergeFocusNotes = () => {
-        const [start, end] = getFocusRange();
-        if (start === end) return false;
-
-        const targets = track.notes.slice(start, end + 1) as MelodyState.VocalNote[];
-        const pitch = targets[0].pitch;
-        const firstSide = MelodyState.calcBeatSide(targets[0]);
-        let tail = firstSide.pos + firstSide.len;
-
-        for (let i = 1; i < targets.length; i++) {
-            const note = targets[i];
-            if (note.pitch !== pitch) return false;
-
-            const side = MelodyState.calcBeatSide(note);
-            if (Math.abs(side.pos - tail) > 1e-9) return false;
-            tail = side.pos + side.len;
-        }
-
-        const mergedSide = findRepresentableSide(
-            targets[0].norm,
-            firstSide.pos,
-            tail - firstSide.pos,
-            targets.slice(1).map(note => note.norm),
-        );
-        if (mergedSide == undefined) return false;
-
-        const merged: MelodyState.VocalNote = {
-            norm: { ...mergedSide.norm },
-            pos: mergedSide.pos,
-            len: mergedSide.len,
-            pitch,
-        };
-        if (targets[0].pron != undefined) merged.pron = targets[0].pron;
-        MelodyState.normalize(merged);
-
-        track.notes.splice(start, targets.length, merged);
-        melody.focus = start;
-        melody.focusLock = -1;
-
-        return true;
-    };
-
-    const moveNoteLen = (note: MelodyState.Note, dir: -1 | 1, baseTail: number) => {
-        const nextNote: MelodyState.Note = JSON.parse(JSON.stringify(note));
-        scaleNoteByUnit(nextNote, { ...melody.cursor, pos: dir * melody.cursor.len });
-        if (nextNote.len <= 0) return false;
-
-        const nextSide = MelodyState.calcBeatSide(nextNote);
-        if (nextSide.pos < 0) return false;
-        if (nextSide.pos + nextSide.len > baseTail) return false;
-
-        const otherNotes = track.notes.slice();
-        otherNotes.splice(melody.focus, 1);
-        const isOverlap = otherNotes.find(n => MelodyState.judgeOverlapNotes(n, nextNote)) != undefined;
-
-        if (isOverlap) return false;
-
-        scaleNoteByUnit(note, { ...melody.cursor, pos: dir * melody.cursor.len });
-        MelodyState.normalize(note);
-        return true;
-    };
-
-    const scaleNoteByUnit = (
-        note: MelodyState.Note,
-        unit: MelodyState.Note,
-    ) => {
-        const size = unit.pos;
-        if (unit.norm.div > note.norm.div) {
-            const rate = unit.norm.div / note.norm.div;
-            note.norm.div = unit.norm.div;
-            note.norm.tuplets = unit.norm.tuplets;
-            note.pos *= rate;
-            note.len *= rate;
-            note.len += size;
-        } else {
-            const tuplets = note.norm.tuplets ?? 1;
-            const rate = (note.norm.div * tuplets) / unit.norm.div;
-            note.len += size * rate;
-        }
-    };
-
-    /**
-     * unit の単位、長さ（pos）分だけ、ノーツ（note）を移動する
-     * @param note 移動対象のノーツ
-     * @param unit 移動する単位と長さ
-     */
-    const moveNoteByUnit = (
-        note: MelodyState.Note,
-        unit: MelodyState.Note,
-    ) => {
-        const dir = unit.pos;
-        if (note.norm.div >= unit.norm.div) {
-            const tuplets = note.norm.tuplets ?? 1;
-            const rate = (note.norm.div * tuplets) / unit.norm.div;
-            note.pos += dir * rate;
-        } else {
-            const rate = unit.norm.div / note.norm.div;
-            note.norm.div = unit.norm.div;
-            note.pos *= rate;
-            note.len *= rate;
-            note.pos += dir;
-        }
-    };
-
-    const moveNotePos = (note: MelodyState.Note, dir: -1 | 1, baseTail: number) => {
-        const nextNote: MelodyState.Note = JSON.parse(JSON.stringify(note));
-        moveNoteByUnit(nextNote, { ...melody.cursor, pos: dir * melody.cursor.len });
-        const nextSide = MelodyState.calcBeatSide(nextNote);
-        if (nextSide.pos < 0) return false;
-        if (nextSide.pos + nextSide.len > baseTail) return false;
-
-        const otherNotes = track.notes.slice();
-        otherNotes.splice(melody.focus, 1);
-        const isOverlap = otherNotes.find(n => MelodyState.judgeOverlapNotes(n, nextNote)) != undefined;
-
-        if (isOverlap) return false;
-
-        moveNoteByUnit(note, { ...melody.cursor, pos: dir * melody.cursor.len });
-        MelodyState.normalize(note);
-        return true;
-    };
-
-    const moveRangePos = (dir: -1 | 1, baseTail: number) => {
-        const [start, end] = getFocusRange();
-        const criteria = track.notes[melody.focus];
-        const notes = track.notes;
-
-        // 基準が連符の場合移動しない
-        if (criteria == undefined || criteria.norm.tuplets != undefined) return false;
-
-        const moveByCriteria = (note: MelodyState.Note) => {
-            const temp = JSON.parse(JSON.stringify(note)) as MelodyState.Note;
-            moveNoteByUnit(temp, { ...criteria, pos: dir });
-            return temp;
-        };
-        const temp = moveByCriteria(notes[dir === -1 ? start : end]);
-
-        // 移動可否チェック
-        if (dir === -1) {
-            if (temp.pos < 0) return false;
-            if (start > 0) {
-                const leftNoteSide = MelodyState.calcBeatSide(notes[start - 1]);
-                const leftNoteRight = leftNoteSide.pos + leftNoteSide.len;
-                const tempNoteLeft = MelodyState.calcBeatSide(temp).pos;
-                if (tempNoteLeft < leftNoteRight) return false;
-            }
-        } else {
-            const side = MelodyState.calcBeatSide(temp);
-            const tempRight = side.pos + side.len;
-            if (tempRight > baseTail) return false;
-
-            if (end < notes.length - 1) {
-                const rightNoteLeft = MelodyState.calcBeatSide(notes[end + 1]).pos;
-                const tempNoteSide = MelodyState.calcBeatSide(temp);
-                const tempNoteRight = tempNoteSide.pos + tempNoteSide.len;
-                if (tempNoteRight > rightNoteLeft) return false;
-            }
-        }
-
-        // カーソルの単位と違う連符がある場合、移動できない
-        const hasInvalidTuplet = notes.slice(start, end + 1).find(note => {
-            const tuplets = note.norm.tuplets;
-            if (note.norm.div !== criteria.norm.div && tuplets != undefined) {
-                if (note.pos % tuplets !== 0) return true;
-            }
-            return false;
-        }) != undefined;
-
-        if (hasInvalidTuplet) return false;
-
-        // 全てのノートを移動する
-        track.notes.slice(start, end + 1).forEach((note, i) => {
-            moveNoteByUnit(note, { ...criteria, pos: dir });
-            // フォーカスノート以外はノーマライズする
-            if (melody.focus !== start + i) MelodyState.normalize(note);
-        });
-        return true;
-    };
-
-    const moveSpaceFromCursor = (dir: -1 | 1, baseTail: number) => {
-        const cursor = melody.cursor;
-        const notes = track.notes;
-
-        // カーソルが連符である場合、移動できない。
-        if (cursor.norm.tuplets != undefined) return false;
-
-        /** カーソルよりも右にあるノーツのインデックスを取得 */
-        const startIndex = notes.findIndex(note => {
-            const cur = MelodyState.calcBeatSide(cursor).pos;
-            const target = MelodyState.calcBeatSide(note).pos;
-            return cur <= target;
-        });
-
-        if (startIndex === -1) return false;
-
-        const clone = (index: number) => JSON.parse(JSON.stringify(notes[index])) as MelodyState.Note;
-        const temp = clone(dir === -1 ? startIndex : notes.length - 1);
-        moveNoteByUnit(temp, { ...cursor, pos: dir * cursor.len });
-
-        // 空間を縮める場合は、カーソルより左に超えないかチェックする
-        if (dir === -1) {
-            const cur = MelodyState.calcBeatSide(cursor).pos;
-            const target = MelodyState.calcBeatSide(temp).pos;
-            if (cur > target) return false;
-        } else {
-            const tailNoteSide = MelodyState.calcBeatSide(temp);
-            const tailNoteRight = tailNoteSide.pos + tailNoteSide.len;
-            if (tailNoteRight > baseTail) return false;
-        }
-
-        // カーソルの単位と違う連符がある場合、移動できない
-        const hasInvalidTuplet = notes.slice(startIndex).find(note => {
-            const tuplets = note.norm.tuplets;
-            if (note.norm.div !== cursor.norm.div && tuplets != undefined) {
-                if (note.pos % tuplets !== 0) return true;
-            }
-            return false;
-        }) != undefined;
-
-        if (hasInvalidTuplet) return false;
-
-        // 全てのノートを移動する
-        track.notes.slice(startIndex).forEach(note => {
-            moveNoteByUnit(note, { ...cursor, pos: dir * cursor.len });
-            MelodyState.normalize(note);
-        });
-        return true;
-    };
-
     return {
         addNote,
         addNoteFromCursor,
@@ -701,7 +356,6 @@ const createMelodyUpdater = (ctx: Context) => {
         changeFocusNoteDiv,
         clearFocusLock,
         lockFocusIfNeeded,
-        copyNotes,
         createNextNoteFromFocus,
         focusOutNoteSide,
         focusNext,
@@ -711,23 +365,17 @@ const createMelodyUpdater = (ctx: Context) => {
         changeCursorDiv,
         changeCursorRate,
         setCursorRate,
-        splitFocusNote,
-        mergeFocusNotes,
+        ...noteComposeUpdater,
+        ...notePositionUpdater,
+        ...noteClipboardUpdater,
         changeCursorTuplets,
         moveFocus,
-        moveNoteByUnit,
-        moveNotePos,
-        moveRangePos,
         moveRangePitch,
         moveRangePitchInScale,
         movePitch,
         movePitchInScale,
         moveCursor,
         movePitchFocusRange,
-        moveNoteLen,
-        scaleNoteByUnit,
-        moveSpaceFromCursor,
-        pasteClipboardNotes,
         removeNotes,
         setNotePron,
         setNoOverlap,
