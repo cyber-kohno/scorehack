@@ -20,6 +20,54 @@ const createMelodyUpdater = (ctx: Context) => {
         return Math.abs(value - Math.round(value)) < 0.000001;
     };
 
+    const findRepresentableSide = (
+        baseNorm: MelodyState.Norm,
+        posBeat: number,
+        lenBeat: number,
+        extraNorms: MelodyState.Norm[],
+    ) => {
+        const candidates: MelodyState.Norm[] = [];
+        const seen = new Set<string>();
+
+        const addCandidate = (norm: MelodyState.Norm) => {
+            const tuplets = norm.tuplets === 1 ? undefined : norm.tuplets;
+            const key = `${norm.div}:${tuplets ?? ""}`;
+            if (seen.has(key)) return;
+
+            candidates.push(tuplets == undefined ? { div: norm.div } : { div: norm.div, tuplets });
+            seen.add(key);
+        };
+
+        const addCandidateSeq = (norm: MelodyState.Norm) => {
+            for (let i = 0; i < 12; i++) {
+                addCandidate({ ...norm, div: norm.div * (2 ** i) });
+            }
+        };
+
+        addCandidateSeq(baseNorm);
+        extraNorms.forEach(addCandidateSeq);
+        [undefined, 3].forEach(tuplets => {
+            for (let div = 1; div <= 2048; div *= 2) {
+                addCandidate(tuplets == undefined ? { div } : { div, tuplets });
+            }
+        });
+
+        for (const norm of candidates) {
+            const unitBeat = MelodyState.calcBeat(norm, 1);
+            const rawPos = posBeat / unitBeat;
+            const rawLen = lenBeat / unitBeat;
+            if (!isNearInteger(rawPos) || !isNearInteger(rawLen)) continue;
+
+            return {
+                norm,
+                pos: Math.round(rawPos),
+                len: Math.round(rawLen),
+            };
+        }
+
+        return undefined;
+    };
+
     const getChordHeadBeatNote = (
         chordCache: DerivedState.ChordCache,
         baseCache: DerivedState.BaseCache,
@@ -435,17 +483,18 @@ const createMelodyUpdater = (ctx: Context) => {
             tail = side.pos + side.len;
         }
 
-        const unitBeat = MelodyState.calcBeat(targets[0].norm, 1);
-        const rawLen = (tail - firstSide.pos) / unitBeat;
-        const len = Math.round(rawLen);
-        if (Math.abs(rawLen - len) > 1e-9) {
-            throw new Error("Merged note length cannot be represented by the first note unit.");
-        }
+        const mergedSide = findRepresentableSide(
+            targets[0].norm,
+            firstSide.pos,
+            tail - firstSide.pos,
+            targets.slice(1).map(note => note.norm),
+        );
+        if (mergedSide == undefined) return false;
 
         const merged: MelodyState.VocalNote = {
-            norm: { ...targets[0].norm },
-            pos: targets[0].pos,
-            len,
+            norm: { ...mergedSide.norm },
+            pos: mergedSide.pos,
+            len: mergedSide.len,
             pitch,
         };
         if (targets[0].pron != undefined) merged.pron = targets[0].pron;

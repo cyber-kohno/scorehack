@@ -131,6 +131,10 @@ const useInputRoot = () => {
         } else {
             if (isTerminalActive()) {
                 const inputTerminal = useInputTerminal();
+                if (eventKey.length === 1) {
+                    inputTerminal.control(eventKey);
+                    return;
+                }
                 setHoldControl(inputTerminal.getHoldCallbacks(eventKey));
                 return;
             }

@@ -1,5 +1,6 @@
 <script lang="ts">    import BaseBlock from "./BaseBlock.svelte";
     import ChordBlock from "./ChordBlock.svelte";
+    import ChordStructAssist from "./ChordStructAssist.svelte";
     import GridFocus from "./GridFocus.svelte";
     import ArrangeShadeTracks from "./arrange/ArrangeShadeTracks.svelte";
     import Cursor from "../../melody/Cursor.svelte";
@@ -32,6 +33,7 @@
         {#each cache.chordCaches as chordCache, index}
             <ChordBlock {chordCache} {index} />
         {/each}
+        <ChordStructAssist />
         <!-- タイムライン終端の余白 -->
         <TimelineTailMargin />
     {/if}

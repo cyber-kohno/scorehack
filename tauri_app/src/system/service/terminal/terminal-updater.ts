@@ -1,19 +1,22 @@
 import TerminalState from "../../store/state/terminal-state";
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
+import type SettingsState from "../../store/state/settings-state";
 import type TerminalStateType from "../../store/state/terminal-state";
 import useMelodySelector from "../melody/melody-selector";
 import useTerminalSelector from "./terminal-selector";
+import TerminalShortcutResolver from "./terminal-shortcut-resolver";
 import useTerminalLogger from "./terminalLogger";
 
 type Context = {
     control: ControlState.Value;
     data: DataState.Value;
+    settings: SettingsState.Value;
     terminal: TerminalStateType.Value;
 };
 
 const createTerminalUpdater = (ctx: Context) => {
-    const { control, data, terminal } = ctx;
+    const { control, data, settings, terminal } = ctx;
     const terminalSelector = useTerminalSelector({ terminal });
 
     const updateTarget = () => {
@@ -77,8 +80,13 @@ const createTerminalUpdater = (ctx: Context) => {
         terminal.helper = null;
 
         const orderItems = terminal.command.split(" ");
-        const funcKey = orderItems[0];
-        const args = orderItems.slice(1);
+        const resolvedCommand = TerminalShortcutResolver.resolve(
+            terminal.command,
+            settings.terminalShortcuts,
+        );
+        const resolvedItems = resolvedCommand.split(" ");
+        const funcKey = resolvedItems[0];
+        const args = resolvedItems.slice(1);
         let list: string[] = [];
 
         const isInputFunc = orderItems.length === 1;
@@ -87,7 +95,9 @@ const createTerminalUpdater = (ctx: Context) => {
         // カーソルが終端のアイテムをフォーカスしていない場合表示しない
         if (terminal.focus <= terminal.command.lastIndexOf(" ")) return;
         if (isInputFunc) {
-            list = terminal.availableFuncs.map(f => f.funcKey);
+            list = orderItems[0].startsWith("@")
+                ? settings.terminalShortcuts.map((shortcut) => shortcut.key)
+                : terminal.availableFuncs.map(f => f.funcKey);
         } else {
             const func = terminal.availableFuncs.find(f => f.funcKey === funcKey);
             if (func == undefined) return;
@@ -149,7 +159,11 @@ const createTerminalUpdater = (ctx: Context) => {
         backupCommand();
 
         if (terminal.command !== "") {
-            const orderItems = terminal.command.split(" ");
+            const resolvedCommand = TerminalShortcutResolver.resolve(
+                terminal.command,
+                settings.terminalShortcuts,
+            );
+            const orderItems = resolvedCommand.split(" ");
             const funcKey = orderItems[0];
             const args = orderItems.slice(1);
 

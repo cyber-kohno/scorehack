@@ -18,6 +18,11 @@ namespace SettingsState {
         format: SoundFontFileFormat;
     };
 
+    export type TerminalShortcut = {
+        key: string;
+        command: string;
+    };
+
     export type TimelineView = {
         beatWidth: number;
         chordNameMode: TimelineChordNameMode;
@@ -43,6 +48,7 @@ namespace SettingsState {
         notation: Notation;
         playback: Playback;
         userSoundFonts: UserSoundFontDefinition[];
+        terminalShortcuts: TerminalShortcut[];
         envs: Envs;
     }
 
@@ -63,6 +69,7 @@ namespace SettingsState {
             },
         },
         userSoundFonts: [],
+        terminalShortcuts: [],
         envs: {
             HOME_DIR: "",
             SF_FILE_DIR: "",

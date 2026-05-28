@@ -117,6 +117,8 @@ const createMelodyActions = () => {
         const [targetBeatPos, targetBeatLen] = [targetPos, cursor.len].map(size =>
             MelodyState.calcBeat(cursor.norm, size)
         );
+        const nextPos = cursor.pos + dir * cursor.len;
+        const nextBeatPos = MelodyState.calcBeat(cursor.norm, nextPos);
         const tailBeatNote = ctx.derivedSelector.getBeatNoteTail();
 
         if (targetBeatPos < 0 || targetBeatPos + targetBeatLen > tailBeatNote) return;
@@ -128,6 +130,8 @@ const createMelodyActions = () => {
         );
 
         if (noteIndex === -1) {
+            if (nextBeatPos < 0 || nextBeatPos + targetBeatLen > tailBeatNote) return;
+
             ctx.melodyUpdater.moveCursor(dir);
             ctx.refUpdater.adjustGridScrollXFromNote(cursor);
             ctx.outlineUpdater.syncChordSeqFromNote(cursor);
@@ -282,11 +286,16 @@ const createMelodyActions = () => {
             throw new Error("focusOutNoteSide requires a focused note.");
         }
 
+        const cursor = ctx.melody.cursor;
+        const cursorLenBeat = MelodyState.calcBeat(cursor.norm, cursor.len);
+        const sideBeat = MelodyState.calcBeat(note.norm, note.pos + (dir === 1 ? note.len : 0));
+        const tailBeatNote = ctx.derivedSelector.getBeatNoteTail();
+        if (sideBeat < -1e-9 || sideBeat + cursorLenBeat > tailBeatNote + 1e-9) return;
+
         ctx.melodyUpdater.focusOutNoteSide(note, dir);
         ctx.melodyUpdater.clearFocusLock();
         ctx.melodyUpdater.judgeOverlap();
 
-        const cursor = ctx.melody.cursor;
         ctx.outlineUpdater.syncChordSeqFromNote(cursor);
         ctx.refUpdater.adjustGridScrollXFromNote(cursor);
         ctx.commitControl();

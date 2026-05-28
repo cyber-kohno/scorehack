@@ -124,7 +124,6 @@
   .wrap {
     display: inline-block;
     position: absolute;
-    z-index: 1;
 
     background-color: #3ec9ce70;
     top: 0;
@@ -137,7 +136,7 @@
   .line {
     display: inline-block;
     position: absolute;
-    z-index: 2;
+    z-index: 3;
     top: var(--pitch-top-margin);
     height: calc(100% - var(--pitch-top-margin) - var(--pitch-bottom-margin));
     background-color: rgba(0, 0, 0, 0.303);
@@ -146,7 +145,7 @@
   .pitch {
     display: inline-block;
     position: absolute;
-    z-index: 2;
+    z-index: 1;
     left: 0;
     width: 100%;
     height: var(--pitch-item-height);

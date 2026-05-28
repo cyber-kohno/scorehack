@@ -57,6 +57,7 @@ namespace SettingsFile {
                 },
             },
             userSoundFonts: settings.userSoundFonts ?? initial.userSoundFonts,
+            terminalShortcuts: settings.terminalShortcuts ?? initial.terminalShortcuts,
             envs: {
                 ...initial.envs,
                 ...settings.envs,

@@ -1,0 +1,110 @@
+<script lang="ts">
+    import Layout from "../../../layout/layout-constant";
+    import useMelodySelector from "../../../service/melody/melody-selector";
+    import MelodyState from "../../../store/state/data/melody-state";
+    import { controlStore, dataStore, derivedStore, playbackStore } from "../../../store/global-store";
+
+    type PitchRecord = {
+        top: number;
+        isStruct: boolean;
+        isRoot: boolean;
+    };
+
+    $: melodySelector = useMelodySelector({ control: $controlStore, data: $dataStore });
+
+    $: activeNote = (() => {
+        const melody = $controlStore.melody;
+        if (melody.focus === -1) return melody.cursor;
+
+        return melodySelector.getCurrScoreTrack().notes[melody.focus];
+    })();
+
+    $: activeBeat = activeNote == undefined
+        ? undefined
+        : MelodyState.calcBeat(activeNote.norm, activeNote.pos);
+
+    $: chordCache = activeBeat == undefined
+        ? undefined
+        : $derivedStore.chordCaches.find((chord) =>
+            chord.startBeatNote <= activeBeat && activeBeat < chord.startBeatNote + chord.lengthBeatNote
+        );
+
+    $: isOutlineChordFocused =
+        $derivedStore.elementCaches[$controlStore.outline.focus]?.chordSeq !== -1;
+
+    $: structPitchClasses = (() => {
+        const compiledChord = chordCache?.compiledChord;
+        if (compiledChord == undefined) return [];
+
+        return compiledChord.structs.map((struct) => ((struct.key12 % 12) + 12) % 12);
+    })();
+
+    $: rootPitchClass = (() => {
+        const key12 = chordCache?.compiledChord?.chord.key12;
+        if (key12 == undefined) return undefined;
+
+        return ((key12 % 12) + 12) % 12;
+    })();
+
+    $: pitchRecords = (() => {
+        const records: PitchRecord[] = [];
+        if (structPitchClasses.length === 0) return records;
+
+        for (let i = 0; i < Layout.pitch.NUM; i++) {
+            const pitchIndex = Layout.pitch.NUM - 1 - i;
+            const pitchClass = pitchIndex % 12;
+            records.push({
+                top: Layout.pitch.TOP_MARGIN + i * Layout.pitch.ITEM_HEIGHT,
+                isStruct: structPitchClasses.includes(pitchClass),
+                isRoot: pitchClass === rootPitchClass,
+            });
+        }
+
+        return records;
+    })();
+</script>
+
+{#if $controlStore.mode === "melody" && $playbackStore.timerKeys == null && isOutlineChordFocused && chordCache != undefined && pitchRecords.length > 0}
+    <div
+        class="wrap"
+        style:left="{chordCache.viewPosLeft}px"
+        style:width="{chordCache.viewPosWidth}px"
+    >
+        {#each pitchRecords as record}
+            <div
+                class="record"
+                data-is-struct={record.isStruct}
+                data-is-root={record.isRoot}
+                style:top="{record.top}px"
+            ></div>
+        {/each}
+    </div>
+{/if}
+
+<style>
+    .wrap {
+        display: inline-block;
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        height: calc(var(--pitch-top-margin) + var(--pitch-frame-height) + var(--pitch-bottom-margin));
+        pointer-events: none;
+        background-color: rgba(116, 188, 188, 0.094);
+    }
+
+    .record {
+        display: inline-block;
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: var(--pitch-item-height);
+    }
+
+    .record[data-is-struct="true"] {
+        background-color: rgba(0, 255, 174, 0.651);
+    }
+
+    .record[data-is-root="true"] {
+        background-color: rgba(64, 112, 255, 0.72);
+    }
+</style>

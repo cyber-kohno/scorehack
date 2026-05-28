@@ -64,7 +64,7 @@ const createContext = () => {
             commitRef: () => refStore.set({ ...ref }),
         }),
         terminalSelector: useTerminalSelector({ terminal }),
-        terminalUpdater: createTerminalUpdater({ control, data, terminal }),
+        terminalUpdater: createTerminalUpdater({ control, data, settings, terminal }),
         commitTerminal,
     };
 };

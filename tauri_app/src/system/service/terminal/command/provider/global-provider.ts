@@ -8,6 +8,7 @@ import createExportCatalog from "../catalog/export-catalog";
 import createLoadCatalog from "../catalog/load-catalog";
 import createRfsCatalog from "../catalog/rfs-catalog";
 import createSaveCatalog from "../catalog/save-catalog";
+import createShortcutCatalog from "../catalog/shortcut-catalog";
 import createSoundfontCatalog from "../catalog/soundfont-catalog";
 
 const createGlobalProvider = (ctx: TerminalCommand.Context) => {
@@ -67,6 +68,7 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
       createLoadCatalog(ctx),
       createAudioCatalog(ctx),
       createSoundfontCatalog(ctx),
+      createShortcutCatalog(ctx),
       {
         ...defaultProps,
         funcKey: "env",

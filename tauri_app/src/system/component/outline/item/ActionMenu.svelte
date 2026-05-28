@@ -4,8 +4,11 @@
   import type ActionMenuState from "../../../store/state/action-menu-state";
 
   $: actionMenu = $actionMenuStore;
-  const MENU_WIDTH = 232;
+  const MENU_WIDTH = 220;
   const MENU_GAP = 0;
+  const ITEM_HEIGHT = 28;
+  const FRAME_PADDING = 6;
+  let frameRefs: HTMLElement[] = [];
 
   $: [left, top] = (() => {
     const outlineRef = $refStore.outline;
@@ -17,6 +20,44 @@
     }
     return [0, 0];
   })();
+
+  const getMaxHeight = (levelTop: number) => {
+    const outlineRef = $refStore.outline;
+    const frameHeight = outlineRef?.clientHeight ?? 480;
+    return Math.max(160, frameHeight - levelTop - 8);
+  };
+
+  const getTargetScrollTop = (
+    level: {
+      focus: number;
+    },
+    frame: HTMLElement | undefined,
+    levelTop: number,
+  ) => {
+    if (level.focus < 0) return 0;
+
+    const height = frame?.getBoundingClientRect().height ?? getMaxHeight(levelTop);
+    const itemMiddle = level.focus * ITEM_HEIGHT + ITEM_HEIGHT / 2;
+    const target = Math.max(0, itemMiddle - height / 2);
+    if (frame == undefined) return target;
+
+    return Math.min(target, Math.max(0, frame.scrollHeight - frame.clientHeight));
+  };
+
+  const getLevelTop = (depth: number) => {
+    let levelTop = top;
+    for (let i = 1; i <= depth; i++) {
+      const parentLevel = levels[i - 1];
+      const parentFrame = frameRefs[i - 1];
+      if (parentLevel == undefined) break;
+
+      levelTop +=
+        FRAME_PADDING +
+        parentLevel.focus * ITEM_HEIGHT -
+        getTargetScrollTop(parentLevel, parentFrame, levelTop);
+    }
+    return levelTop;
+  };
 
   const getLevelItems = (
     items: ActionMenuState.Item[],
@@ -55,6 +96,18 @@
     }
     return result;
   })();
+
+  $: {
+    levels;
+    setTimeout(() => {
+      levels.forEach((level) => {
+        const frame = frameRefs[level.depth];
+        if (frame == undefined || level.focus < 0) return;
+
+        frame.scrollTop = getTargetScrollTop(level, frame, getLevelTop(level.depth));
+      });
+    }, 0);
+  }
 </script>
 
 {#if actionMenu != null}
@@ -62,7 +115,9 @@
     <div
       class="frame"
       style:left="{left + level.depth * (MENU_WIDTH + MENU_GAP)}px"
-      style:top="{top}px"
+      style:top="{getLevelTop(level.depth)}px"
+      style:max-height="{getMaxHeight(getLevelTop(level.depth))}px"
+      bind:this={frameRefs[level.depth]}
     >
       {#each level.items as item, index}
         <button
@@ -102,6 +157,8 @@
     border-radius: 5px;
     background-color: #0d263a;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .item {
@@ -109,6 +166,7 @@
     width: 100%;
     min-height: 28px;
     height: 28px;
+    flex: 0 0 28px;
     padding: 4px 8px;
     border: solid 1px transparent;
     border-radius: 4px;
