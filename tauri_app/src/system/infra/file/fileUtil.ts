@@ -3,7 +3,7 @@ import pako from 'pako';
 import { get } from 'svelte/store';
 import FilePathRef from './file-path-ref';
 import { openAudioFilePath, openScoreFilePath, saveScoreFilePath, saveTextFilePath } from '../tauri/dialog';
-import { readBinaryFile, readUtf8TextFile, writeUtf8TextFile } from '../tauri/fs';
+import { readUtf8TextFile, writeUtf8TextFile } from '../tauri/fs';
 import { dataStore, fileStore, refStore, settingsStore } from '../../store/global-store';
 import MelodyState from '../../store/state/data/melody-state';
 import type FileState from '../../store/state/file-state';

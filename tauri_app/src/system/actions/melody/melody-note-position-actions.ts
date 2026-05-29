@@ -63,6 +63,8 @@ const createMelodyNotePositionActions = (
         const moved = ctx.melodyUpdater.moveSpaceFromCursor(dir, baseTail);
         if (!moved) return;
 
+        ctx.melodyUpdater.judgeOverlap();
+        ctx.commitControl();
         ctx.commitData();
     };
 

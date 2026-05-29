@@ -5,7 +5,6 @@ import stopPlaybackTimeline from "../service/playback/timeline/stop-playback-tim
 import startPlaybackTimeline from "../service/playback/timeline/start-playback-timeline";
 import createMelodyActions from "../actions/melody/melody-actions";
 import type PlaybackCacheState from "../service/playback/timeline/playback-cache-state";
-import ScoreHistory from "../infra/tauri/history/score-history";
 
 const useInputMelody = () => {
 
@@ -128,7 +127,7 @@ const useInputMelody = () => {
         }
         callbacks.holdF = () => {
 
-            if (!isCursor()) {
+            if (!isCursor() && !isFocusLock()) {
                 switch (eventKey) {
                     case 'ArrowLeft': melodyActions.moveNoteLen(-1); break;
                     case 'ArrowRight': melodyActions.moveNoteLen(1); break;
