@@ -7,7 +7,7 @@ import createTerminalActions from "../../actions/terminal/terminal-actions";
 import LayoutInitializer from "../../layout/layout-initializer";
 import { settingsStore, terminalStore } from "../../store/global-store";
 import recalculate from "../derived/recalculate-derived";
-import useTerminalLogger from "../terminal/terminalLogger";
+import useTerminalLogger from "../terminal/terminal-logger";
 
 const waitForInitialPaint = async () => {
     await new Promise<void>((resolve) => {

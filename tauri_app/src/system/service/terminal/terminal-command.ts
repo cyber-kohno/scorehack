@@ -5,7 +5,7 @@ import type SettingsState from "../../store/state/settings-state";
 import type TerminalState from "../../store/state/terminal-state";
 import type useMelodySelector from "../melody/melody-selector";
 import type useOutlineSelector from "../outline/outline-selector";
-import type useTerminalLogger from "./terminalLogger";
+import type useTerminalLogger from "./terminal-logger";
 
 namespace TerminalCommand {
     export type Arg = {

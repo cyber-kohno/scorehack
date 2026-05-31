@@ -11,6 +11,8 @@ import useMelodySelector from "../../service/melody/melody-selector";
 import { getNoteDisplayRate } from "../../component/melody/score/note-display-util";
 import ScoreHistory from "../../infra/tauri/history/score-history";
 import FloatingTextInput from "../../service/common/floating-text-input-controller";
+import Toast from "../../service/common/toast-controller";
+import ToastState from "../../store/state/toast-state";
 import createMelodyNoteComposeActions from "./melody-note-compose-actions";
 import createMelodyNotePositionActions from "./melody-note-position-actions";
 
@@ -26,6 +28,19 @@ const createContext = () => {
     const melodySelector = useMelodySelector({ control, data });
     const playbackPitch = (pitch: number) => {
         PlaybackCacheState.playbackSF(melodySelector.getCurrScoreTrack(), pitch);
+    };
+
+    const showFocusNoteToast = (text: string, option?: { width?: number }) => {
+        const [start] = melodySelector.getFocusRange();
+        const noteRef = ref.noteRefs[melody.trackIndex]?.find((item) => item.seq === start)?.ref;
+        const rect = noteRef?.getBoundingClientRect();
+        Toast.create({
+            ...ToastState.createInitial(),
+            x: rect?.left ?? 12,
+            y: rect?.bottom ?? 48,
+            width: option?.width ?? 360,
+            text,
+        });
     };
 
     return {
@@ -49,6 +64,7 @@ const createContext = () => {
             commitRef: () => refStore.set({ ...ref }),
         }),
         playbackPitch,
+        showFocusNoteToast,
         commitControl: () => controlStore.set({ ...control }),
         commitData: () => {
             dataStore.set({ ...data });
@@ -526,25 +542,36 @@ const createMelodyActions = () => {
         // フォーカスしてぁE��ぁE��のみ利用可能
         if (ctx.melody.clipboard.notes == null || ctx.melody.focus !== -1) return;
 
-        ctx.melodyUpdater.pasteClipboardNotes();
+        const pasted = ctx.melodyUpdater.pasteClipboardNotes(ctx.derivedSelector.getBeatNoteTail());
+        if (!pasted) {
+            const rect = ctx.ref.grid?.getBoundingClientRect();
+            Toast.create({
+                ...ToastState.createInitial(),
+                x: rect?.left ?? 12,
+                y: rect?.top ?? 48,
+                width: 320,
+                text: "Cannot paste: notes exceed the score length.",
+            });
+            return;
+        }
+
         ctx.commitData();
         ctx.commitControl();
     };
 
-    const openPronInput = () => {
+    const openPronInputAt = (noteIndex: number) => {
         const ctx = createContext();
-        if (ctx.melody.focusLock !== -1) return;
+        const track = ctx.melodySelector.getCurrScoreTrack();
+        const note = track.notes[noteIndex] as MelodyState.VocalNote | undefined;
 
-        const note = ctx.melodySelector.getFocusNote() as MelodyState.VocalNote | undefined;
-        const noteIndex = ctx.melody.focus;
-
-        if (note == undefined || noteIndex === -1) return;
+        if (note == undefined) return;
 
         const noteRef = ctx.ref.noteRefs[ctx.melody.trackIndex]?.find((item) => item.seq === noteIndex)?.ref;
         if (noteRef == undefined) return;
 
         const rect = noteRef.getBoundingClientRect();
         const value = note.pron ?? "";
+        const trackIndex = ctx.melody.trackIndex;
 
         FloatingTextInput.open({
             value,
@@ -552,8 +579,38 @@ const createMelodyActions = () => {
             left: rect.left,
             top: rect.bottom + 10,
             width: Math.max(120, rect.width),
-            apply: (value) => setNotePron(ctx.melody.trackIndex, noteIndex, value),
+            apply: (value) => setNotePron(trackIndex, noteIndex, value),
+            navigate: ({ dir }) => movePronInputToNeighbor(noteIndex, dir),
         });
+    };
+
+    const movePronInputToNeighbor = (noteIndex: number, dir: -1 | 1) => {
+        const ctx = createContext();
+        const track = ctx.melodySelector.getCurrScoreTrack();
+        const nextIndex = noteIndex + dir;
+        const nextNote = track.notes[nextIndex];
+        if (nextNote == undefined) return;
+
+        ctx.melody.focus = nextIndex;
+        ctx.melody.focusLock = -1;
+        ctx.melodyUpdater.setCursorRate(getFocusNoteDisplayRate(ctx, nextNote));
+        ctx.outlineUpdater.syncChordSeqFromNote(nextNote);
+        ctx.refUpdater.adjustOutlineScroll();
+        ctx.refUpdater.adjustGridScrollXFromNoteInstant(nextNote);
+        ctx.refUpdater.adjustGridScrollYFromCursorInstant(nextNote);
+        ctx.commitControl();
+
+        setTimeout(() => openPronInputAt(nextIndex), 0);
+    };
+
+    const openPronInput = () => {
+        const ctx = createContext();
+        if (ctx.melody.focusLock !== -1) return;
+
+        const noteIndex = ctx.melody.focus;
+        if (noteIndex === -1) return;
+
+        openPronInputAt(noteIndex);
     };
 
     const setNotePron = (trackIndex: number, noteIndex: number, value: string) => {

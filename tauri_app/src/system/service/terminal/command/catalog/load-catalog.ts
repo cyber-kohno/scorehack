@@ -1,9 +1,9 @@
 import { get } from "svelte/store";
-import FileUtil from "../../../../infra/file/fileUtil";
 import { dataStore } from "../../../../store/global-store";
 import type DataState from "../../../../store/state/data/data-state";
 import type { TrackInstRef } from "../../../../store/state/data/track-inst-ref";
 import PlaybackState from "../../../../store/state/playback-state";
+import ScoreFile from "../../../common/score-file-controller";
 import {
   formatUserSoundFontRef,
   prepareUserSoundFont,
@@ -16,7 +16,6 @@ import TerminalCommand from "../../terminal-command";
 const createLoadCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
   const { logger, settings, terminal } = ctx;
   const defaultProps = TerminalCommand.createDefaultProps("system");
-  const fileUtil = FileUtil.getUtil();
   const { isLoadSoundFont, loadSoundFont } = useSoundfontLoader();
   const loadTargets = ["project"];
 
@@ -86,7 +85,7 @@ const createLoadCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props 
 
   const loadProject = () => {
     terminal.wait = true;
-    fileUtil.loadScoreFile(
+    ScoreFile.load(
       (handle) => {
         logger.outputInfo(`File load successfully. [${handle.name}]`);
         const loadedData = get(dataStore);

@@ -72,7 +72,7 @@ const useInputRoot = () => {
             e.preventDefault();
             e.stopPropagation();
             inputStore.set(InputState.createInitial());
-            useInputFloatingTextInput().control(e.key);
+            useInputFloatingTextInput().control(e.key, { shiftKey: e.shiftKey });
             return;
         }
         if (isActionMenuActive()) {

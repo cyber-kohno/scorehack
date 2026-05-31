@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import FileUtil from "../../../../infra/file/fileUtil";
+import FileUtil from "../../../../infra/file/file-util";
 import { derivedStore } from "../../../../store/global-store";
 import MusicXmlExporter from "../../../export/musicxml-exporter";
 import TerminalCommand from "../../terminal-command";
@@ -7,7 +7,6 @@ import TerminalCommand from "../../terminal-command";
 const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
   const { logger, settings, terminal } = ctx;
   const defaultProps = TerminalCommand.createDefaultProps("system");
-  const fileUtil = FileUtil.getUtil();
   const exportFormats = ["musicxml"];
 
   const finishWaiting = () => {
@@ -35,7 +34,7 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
 
     logger.outputInfo("Select the file to export.");
     terminal.wait = true;
-    fileUtil.saveTextFile({
+    FileUtil.saveTextFile({
       defaultDirectory: settings.envs.SCH_FILE_DIR,
       extension: "musicxml",
       filterName: "MusicXML File",

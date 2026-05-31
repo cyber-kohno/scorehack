@@ -1,0 +1,74 @@
+---
+title: Pronunciation
+description: ノートに発音情報を入力する
+---
+
+Pronunciation は、Note に対して発音情報を入力する機能です。
+
+歌メロを MusicXML や歌声合成に渡すために、各 Note に発音を持たせます。
+
+## pron
+
+scorehack では、Note の発音情報を `pron` として扱います。
+
+`pron` は、歌詞そのものというより、歌声合成へ渡すための発音情報です。
+
+## 入力方式
+
+フォーカスした Note に対して、フローティングテキスト入力を開いて発音を入力します。
+
+入力中は、通常のテキスト編集と同じようにカーソルを左右に動かせます。
+
+## 隣の Note へ移動
+
+発音入力中は、<span class="kbd">Shift</span> + <span class="kbd">←</span> / <span class="kbd">→</span> で隣の Note へ移動できます。
+
+この操作では、次の処理を行います。
+
+1. 現在の入力値を Note の `pron` に反映する
+2. 隣の Note をフォーカスする
+3. スクロール位置を更新する
+4. 隣の Note の発音入力を開く
+
+歌詞入力では連続した Note を次々に編集することが多いため、この操作を基本にすると効率よく入力できます。
+
+## MusicXML エクスポート
+
+MusicXML エクスポート時には、`pron` を歌詞として出力します。
+
+NEUTRINO など、ひらがなやカタカナの入力を要求するツールに合わせるため、変換可能なローマ字はひらがなに変換します。
+
+変換できない発音がある場合は、MusicXML の出力を止めてエラーとして扱います。
+
+## 入力時の注意
+
+`pron` は、1つの Note に対応する発音として扱います。
+
+長い歌詞を1つの Note にまとめるのではなく、Note 単位で発音を分けて入力することを想定しています。
+
+## Keyboard
+
+発音入力は Floating Text Input で行います。入力中は Melody 本体ではなく、テキスト入力専用のキー操作になります。
+
+<table>
+  <thead>
+    <tr><th>キー</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><kbd>W</kbd></td><td>単体フォーカス中の Note の pron 入力を開きます。</td></tr>
+    <tr><td><kbd>Enter</kbd></td><td>入力内容を確定します。</td></tr>
+    <tr><td><kbd>Escape</kbd></td><td>入力を閉じます。</td></tr>
+    <tr><td><kbd>Backspace</kbd></td><td>カーソル左の文字を削除します。</td></tr>
+    <tr><td><kbd>Delete</kbd></td><td>カーソル右の文字を削除します。</td></tr>
+    <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>入力カーソルを移動します。</td></tr>
+    <tr><td><kbd>Shift</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>現在の入力を確定し、前後の Note の pron 入力へ移動します。</td></tr>
+  </tbody>
+</table>
+
+複数 Note 選択中は、<kbd>W</kbd> による pron 入力は開きません。
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: Note 上で pron の Floating Text Input を開いている状態。入力欄が Note の近くに表示され、Shift + 左右で隣の Note へ移動できる文脈が伝わる画が良いです。
+
+**想定ファイル**: `/images/melody/pronunciation-input.png`
+:::

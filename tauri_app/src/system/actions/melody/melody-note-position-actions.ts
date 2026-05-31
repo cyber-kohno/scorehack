@@ -1,8 +1,24 @@
 import type { MelodyActionContext } from "./melody-actions";
+import type { MoveNoteFailureReason } from "../../service/melody/note-position-updater";
 
 const createMelodyNotePositionActions = (
     createContext: () => MelodyActionContext,
 ) => {
+    const getFailureMessage = (reason: MoveNoteFailureReason) => {
+        switch (reason) {
+            case "limit": return "Cannot move: note exceeds the score length.";
+            case "collision": return "Cannot move: notes would overlap.";
+            case "invalid-unit": return "Cannot move: selected notes cannot be represented by this unit.";
+        }
+    };
+
+    const showMoveFailureToast = (
+        ctx: MelodyActionContext,
+        reason: MoveNoteFailureReason,
+    ) => {
+        ctx.showFocusNoteToast(getFailureMessage(reason));
+    };
+
     const moveNotePos = (dir: -1 | 1) => {
         const ctx = createContext();
         const note = ctx.melodySelector.getFocusNote();
@@ -11,7 +27,10 @@ const createMelodyNotePositionActions = (
         if (note == undefined) return;
 
         const moved = ctx.melodyUpdater.moveNotePos(note, dir, baseTail);
-        if (!moved) return;
+        if (!moved.ok) {
+            showMoveFailureToast(ctx, moved.reason);
+            return;
+        }
 
         ctx.outlineUpdater.syncChordSeqFromNote(note);
         ctx.refUpdater.adjustGridScrollXFromNote(note);
@@ -33,7 +52,10 @@ const createMelodyNotePositionActions = (
         }
 
         const moved = ctx.melodyUpdater.moveNoteLen(note, dir, baseTail);
-        if (!moved) return;
+        if (!moved.ok) {
+            showMoveFailureToast(ctx, moved.reason);
+            return;
+        }
 
         ctx.refUpdater.adjustGridScrollXFromNote(note);
         ctx.commitData();
@@ -47,7 +69,10 @@ const createMelodyNotePositionActions = (
         if (criteria == undefined) return;
 
         const moved = ctx.melodyUpdater.moveRangePos(dir, baseTail);
-        if (!moved) return;
+        if (!moved.ok) {
+            showMoveFailureToast(ctx, moved.reason);
+            return;
+        }
 
         ctx.outlineUpdater.syncChordSeqFromNote(criteria);
         ctx.refUpdater.adjustGridScrollXFromNote(criteria);
@@ -61,7 +86,7 @@ const createMelodyNotePositionActions = (
         const baseTail = ctx.derivedSelector.getBeatNoteTail();
 
         const moved = ctx.melodyUpdater.moveSpaceFromCursor(dir, baseTail);
-        if (!moved) return;
+        if (!moved.ok) return;
 
         ctx.melodyUpdater.judgeOverlap();
         ctx.commitControl();

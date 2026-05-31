@@ -1,0 +1,254 @@
+---
+title: Chord
+description: コード進行を定義するブロック
+---
+
+Chord は、コード進行を定義するためのブロックです。
+
+scorehack の作曲設計では、Chord が時間軸の中心になります。  
+Melody は Chord の範囲に沿って入力され、Arrange は Chord に対して伴奏やボイシングを割り当てます。
+
+## Chord の責務
+
+Chord は主に次の情報を担います。
+
+- コードのルート、度数、シンボル
+- オンコード
+- 拍数
+- 食い込み
+- メロディが存在できる時間範囲
+- アレンジが紐づく単位
+
+Chord は、単にコード名を表示するための要素ではなく、メロディ、アレンジ、再生、エクスポートの基準になります。
+
+## 度数で扱う
+
+scorehack では、コードを絶対名だけでなく度数として扱います。
+
+たとえば Init が `C major` のとき、`I` は C、`IV` は F として解釈されます。  
+Init や Modulate Event によって調性が変わると、同じ度数でも実際のコード名は変わります。
+
+度数で扱うことで、曲全体を移調してもコード進行の意味を保ちやすくなります。
+
+## コードシンボル
+
+Chord には、メジャー、マイナー、セブンス、テンションなどのシンボルを設定します。
+
+シンボルはコード構成音を決める情報です。  
+Melody のコード構成音アシストや Arrange のボイシング候補は、このシンボルをもとに表示されます。
+
+現在登録されているシンボルは次のとおりです。
+
+<table>
+  <thead>
+    <tr>
+      <th>構成音数</th>
+      <th>表記</th>
+      <th>構成音</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>3</td><td>空欄</td><td><code>p1</code>, <code>M3</code>, <code>p5</code></td></tr>
+    <tr><td>3</td><td><code>m</code></td><td><code>p1</code>, <code>m3</code>, <code>p5</code></td></tr>
+    <tr><td>3</td><td><code>sus4</code></td><td><code>p1</code>, <code>p4</code>, <code>p5</code></td></tr>
+    <tr><td>3</td><td><code>sus2</code></td><td><code>p1</code>, <code>M2</code>, <code>p5</code></td></tr>
+    <tr><td>3</td><td><code>dim</code></td><td><code>p1</code>, <code>m3</code>, <code>d5</code></td></tr>
+    <tr><td>3</td><td><code>aug</code></td><td><code>p1</code>, <code>M3</code>, <code>a5</code></td></tr>
+    <tr><td>3</td><td><code>m-5</code></td><td><code>p1</code>, <code>m3</code>, <code>d5</code></td></tr>
+    <tr><td>4</td><td><code>7</code></td><td><code>p1</code>, <code>M3</code>, <code>p5</code>, <code>m7</code></td></tr>
+    <tr><td>4</td><td><code>M7</code></td><td><code>p1</code>, <code>M3</code>, <code>p5</code>, <code>M7</code></td></tr>
+    <tr><td>4</td><td><code>m7</code></td><td><code>p1</code>, <code>m3</code>, <code>p5</code>, <code>m7</code></td></tr>
+    <tr><td>4</td><td><code>mmaj7</code></td><td><code>p1</code>, <code>m3</code>, <code>p5</code>, <code>M7</code></td></tr>
+    <tr><td>4</td><td><code>7sus4</code></td><td><code>p1</code>, <code>p4</code>, <code>p5</code>, <code>m7</code></td></tr>
+    <tr><td>4</td><td><code>dim7</code></td><td><code>p1</code>, <code>m3</code>, <code>d5</code>, <code>d7</code></td></tr>
+    <tr><td>4</td><td><code>aug7</code></td><td><code>p1</code>, <code>M3</code>, <code>a5</code>, <code>m7</code></td></tr>
+    <tr><td>4</td><td><code>6</code></td><td><code>p1</code>, <code>M3</code>, <code>p5</code>, <code>M6</code></td></tr>
+    <tr><td>4</td><td><code>m6</code></td><td><code>p1</code>, <code>m3</code>, <code>p5</code>, <code>M6</code></td></tr>
+    <tr><td>4</td><td><code>add9</code></td><td><code>p1</code>, <code>M3</code>, <code>p5</code>, <code>M2</code></td></tr>
+    <tr><td>4</td><td><code>madd9</code></td><td><code>p1</code>, <code>m3</code>, <code>p5</code>, <code>M2</code></td></tr>
+    <tr><td>5</td><td><code>9</code></td><td><code>p1</code>, <code>M3</code>, <code>p5</code>, <code>m7</code>, <code>M2</code></td></tr>
+    <tr><td>5</td><td><code>m9</code></td><td><code>p1</code>, <code>m3</code>, <code>p5</code>, <code>m7</code>, <code>M2</code></td></tr>
+    <tr><td>5</td><td><code>M9</code></td><td><code>p1</code>, <code>M3</code>, <code>p5</code>, <code>M7</code>, <code>M2</code></td></tr>
+    <tr><td>6</td><td><code>11</code></td><td><code>p1</code>, <code>M3</code>, <code>p5</code>, <code>m7</code>, <code>M2</code>, <code>p4</code></td></tr>
+    <tr><td>6</td><td><code>m11</code></td><td><code>p1</code>, <code>m3</code>, <code>p5</code>, <code>m7</code>, <code>M2</code>, <code>p4</code></td></tr>
+    <tr><td>7</td><td><code>13</code></td><td><code>p1</code>, <code>M3</code>, <code>p5</code>, <code>m7</code>, <code>M2</code>, <code>p4</code>, <code>M6</code></td></tr>
+    <tr><td>7</td><td><code>m13</code></td><td><code>p1</code>, <code>m3</code>, <code>p5</code>, <code>m7</code>, <code>M2</code>, <code>p4</code>, <code>M6</code></td></tr>
+  </tbody>
+</table>
+
+構成音の表記は、ルートから見た関係性です。
+
+<table>
+  <thead>
+    <tr>
+      <th>表記</th>
+      <th>意味</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>p1</code></td><td>完全1度</td></tr>
+    <tr><td><code>M2</code></td><td>長2度</td></tr>
+    <tr><td><code>m3</code></td><td>短3度</td></tr>
+    <tr><td><code>M3</code></td><td>長3度</td></tr>
+    <tr><td><code>p4</code></td><td>完全4度</td></tr>
+    <tr><td><code>d5</code></td><td>減5度</td></tr>
+    <tr><td><code>p5</code></td><td>完全5度</td></tr>
+    <tr><td><code>a5</code></td><td>増5度</td></tr>
+    <tr><td><code>M6</code></td><td>長6度</td></tr>
+    <tr><td><code>d7</code></td><td>減7度</td></tr>
+    <tr><td><code>m7</code></td><td>短7度</td></tr>
+    <tr><td><code>M7</code></td><td>長7度</td></tr>
+  </tbody>
+</table>
+
+## オンコード
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: オンコードを設定した Chord ブロック。通常のコード表示とベース音の指定が分かるように、`C / E` や `V / 7` のようにルートとオンコードが別で見える状態が良いです。可能なら Arrange 側でベースラインへの意識が伝わる画も候補です。
+
+**想定ファイル**: `/images/outline/chord-on-code.png`
+:::
+
+オンコードは、ベース音を指定するための情報です。
+
+通常のコード構成音とは別に、低音として意識したい音を指定できます。  
+アレンジやベースラインを考える時に重要になります。
+
+## 拍数
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: 4/4 拍子で、拍数が `1`、`2`、`4` の Chord がタイムライン上で異なる幅として表示されている状態。Chord の拍数がメロディ配置範囲に直結することが分かる画が欲しいです。
+
+**想定ファイル**: `/images/outline/chord-beat-4-4.png`
+:::
+
+Chord は拍数を持ちます。
+
+拍数は、そのコードが時間上でどれだけ続くかを決めます。  
+1つの Chord には、`1` から `4` までの拍数を設定できます。
+
+たとえば、4/4 拍子では次のように扱えます。
+
+- `1`: 1拍だけ続くコード
+- `2`: 2拍続くコード
+- `3`: 3拍続くコード
+- `4`: 1小節分続くコード
+
+Melody のノートは Chord の時間範囲の上に配置されるため、Chord の拍数を変更すると、メロディノートが範囲外にはみ出す可能性があります。
+
+そのため、拍数変更時には Melody との整合性を確認します。
+
+### 小節跨ぎ
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: 小節終端付近の Chord と、そこから長い拍数を設定しようとすると小節を跨いでしまう例。可能ならエラー表示または設定できない状態が分かる画にします。
+
+**想定ファイル**: `/images/outline/chord-measure-overflow.png`
+:::
+
+Chord は、原則として小節を跨がない単位として扱います。
+
+たとえば 4/4 拍子で、小節の3拍目から始まる Chord に `4` 拍を設定すると、次の小節にはみ出します。  
+このような状態は小節跨ぎとしてエラーになります。
+
+小節跨ぎを避けることで、コードブロック、メロディ、MusicXML エクスポート、アレンジの対応関係を単純に保てます。
+
+長く同じコードを鳴らしたい場合は、1つの Chord を小節を跨いで伸ばすのではなく、必要な位置に同じコードを複数配置します。
+
+### 複合拍子との関係
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: 4/4 と 6/8 のタイムライン比較。どちらも Chord の拍数 `1` が表示上どの幅になるかを並べ、6/8 では付点4分音符を基準に感じることが伝わる画が良いです。
+
+**想定ファイル**: `/images/outline/chord-compound-meter.png`
+:::
+
+scorehack の Chord の拍数は、拍子に応じた「楽曲上の拍」を基準に扱います。
+
+4/4 のような単純拍子では、`1` は四分音符1拍として捉えられます。  
+一方、6/8 のような複合拍子では、音楽的には付点四分音符を1拍として感じることが多く、scorehack でもその拍感を前提に扱います。
+
+つまり、6/8 で Chord の拍数を `1` にした場合、それは八分音符1つではなく、複合拍子上の大きな1拍として扱う想定です。
+
+この考え方により、6/8 の曲でもコード進行やテンポ指定を一般的な記譜感覚に近い形で扱えます。
+
+## 食い込み
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: 食い込みを設定した Chord ブロック。Chord の見た目上の開始位置、実際に次のコードを早く感じる位置、Melody カーソルや Chord Assist の判定が変わる位置が分かる状態が望ましいです。
+
+**想定ファイル**: `/images/outline/chord-eat.png`
+:::
+
+食い込みは、コードの鳴り始めや終わりを拍の境界からずらすための情報です。
+
+たとえば、次のコードを少し早く感じさせたい場合や、コードチェンジのタイミングを前後させたい場合に使います。
+
+scorehack では、メロディのカーソル位置やコードブロックの判定でも、食い込みを考慮します。
+
+## Melody との関係
+
+Melody は、Chord を時間上の基準として扱います。
+
+現在のメロディ位置がどの Chord に属しているかによって、コード構成音アシストや調性外構成音の表示が決まります。
+
+Chord が変わると、同じメロディ音でも意味が変わります。  
+あるコードでは構成音でも、別のコードではテンションや非和声音になることがあります。
+
+## Arrange との関係
+
+Arrange は Chord に紐づきます。
+
+つまり、伴奏パターンやボイシングは「この Chord をどう鳴らすか」という単位で管理されます。
+
+Chord をコピー、削除、移動する場合は、アレンジとの関係もあわせて扱う必要があります。
+
+## Event との関係
+
+Event によって転調、テンポ、リズムが変わると、後続の Chord の解釈や時間計算に影響します。
+
+たとえば Modulate Event の後にある Chord は、転調後の調性を基準に解釈されます。
+
+## Export への影響
+
+MusicXML や MIDI にエクスポートする時、Chord はコード進行と時間情報として出力されます。
+
+歌声合成や作曲AIに渡す場合も、Chord はメロディの文脈として重要です。
+
+## 編集時の注意
+
+Chord は Melody や Arrange の基準になるため、編集の影響範囲が大きいブロックです。
+
+特に次の操作では、他の情報との整合性に注意します。
+
+- 拍数の変更
+- 食い込みの変更
+- ブロック削除
+- コピーとペースト
+- アレンジが紐づいている Chord の移動
+
+Chord は曲の骨格そのものなので、変更した後はメロディと伴奏の両方を確認すると安全です。
+
+## Keyboard
+
+Chord は Outline の中心的な編集対象です。度数、シンボル、拍数、食い込み、オンコードをキーホールドで変更します。
+
+<table>
+  <thead>
+    <tr><th>キー</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><kbd>A</kbd></td><td>Chord ブロックを挿入します。</td></tr>
+    <tr><td><kbd>1</kbd>〜<kbd>7</kbd></td><td>コードの度数を設定します。</td></tr>
+    <tr><td><kbd>F</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>拍数を短く、または長くします。</td></tr>
+    <tr><td><kbd>F</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>ルートを上下に変更します。</td></tr>
+    <tr><td><kbd>C</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>コードシンボルを前後に変更します。</td></tr>
+    <tr><td><kbd>C</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>コードシンボルを構成音数の方向で変更します。</td></tr>
+    <tr><td><kbd>G</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>食い込みを短く、または長くします。</td></tr>
+    <tr><td><kbd>G</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>オンコードを変更します。</td></tr>
+    <tr><td><kbd>W</kbd></td><td>Arrange Finder を開きます。</td></tr>
+    <tr><td><kbd>B</kbd></td><td>Arrange Editor を開きます。</td></tr>
+    <tr><td><kbd>Shift</kbd> + <kbd>W</kbd></td><td>デフォルトの voicing を適用します。</td></tr>
+    <tr><td><kbd>E</kbd> + <kbd>Delete</kbd></td><td>Chord に紐づく backing を削除します。</td></tr>
+  </tbody>
+</table>

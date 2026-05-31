@@ -1,5 +1,6 @@
 <script lang="ts">
     import Layout from "../../../layout/layout-constant";
+    import TonalityTheory from "../../../domain/theory/tonality-theory";
     import useMelodySelector from "../../../service/melody/melody-selector";
     import MelodyState from "../../../store/state/data/melody-state";
     import { controlStore, dataStore, derivedStore, playbackStore } from "../../../store/global-store";
@@ -8,6 +9,7 @@
         top: number;
         isStruct: boolean;
         isRoot: boolean;
+        isScale: boolean;
     };
 
     $: melodySelector = useMelodySelector({ control: $controlStore, data: $dataStore });
@@ -46,9 +48,15 @@
         return ((key12 % 12) + 12) % 12;
     })();
 
+    $: tonality = (() => {
+        if (chordCache == undefined) return undefined;
+
+        return $derivedStore.baseCaches[chordCache.baseSeq]?.scoreBase.tonality;
+    })();
+
     $: pitchRecords = (() => {
         const records: PitchRecord[] = [];
-        if (structPitchClasses.length === 0) return records;
+        if (structPitchClasses.length === 0 || tonality == undefined) return records;
 
         for (let i = 0; i < Layout.pitch.NUM; i++) {
             const pitchIndex = Layout.pitch.NUM - 1 - i;
@@ -57,6 +65,7 @@
                 top: Layout.pitch.TOP_MARGIN + i * Layout.pitch.ITEM_HEIGHT,
                 isStruct: structPitchClasses.includes(pitchClass),
                 isRoot: pitchClass === rootPitchClass,
+                isScale: TonalityTheory.isScaleStructPitch(pitchClass, tonality),
             });
         }
 
@@ -75,6 +84,7 @@
                 class="record"
                 data-is-struct={record.isStruct}
                 data-is-root={record.isRoot}
+                data-is-borrowed-struct={record.isStruct && !record.isScale}
                 style:top="{record.top}px"
             ></div>
         {/each}
@@ -102,6 +112,10 @@
 
     .record[data-is-struct="true"] {
         background-color: rgba(0, 255, 174, 0.651);
+    }
+
+    .record[data-is-borrowed-struct="true"] {
+        background-color: rgba(255, 190, 58, 0.76);
     }
 
     .record[data-is-root="true"] {

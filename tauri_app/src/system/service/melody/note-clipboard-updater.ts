@@ -32,24 +32,37 @@ const createNoteClipboardUpdater = (ctx: Context) => {
         melody.clipboard.notes = JSON.parse(JSON.stringify(notes));
     };
 
-    const pasteClipboardNotes = () => {
-        const clipNotes = melody.clipboard.notes;
-        if (clipNotes == null || clipNotes.length === 0) return;
-
+    const createPasteNotes = (clipNotes: MelodyState.VocalNote[]) => {
         const criteria: MelodyState.Note = JSON.parse(JSON.stringify(clipNotes[0]));
         const cursor = melody.cursor;
         criteria.pos *= -1;
-        clipNotes.forEach(note => {
-            moveNoteByUnit(note, criteria);
-            moveNoteByUnit(note, cursor);
-            track.notes.push(note);
+        return clipNotes.map(note => {
+            const pastedNote = JSON.parse(JSON.stringify(note)) as MelodyState.VocalNote;
+            moveNoteByUnit(pastedNote, criteria);
+            moveNoteByUnit(pastedNote, cursor);
+            return pastedNote;
         });
+    };
+
+    const pasteClipboardNotes = (baseTail: number) => {
+        const clipNotes = melody.clipboard.notes;
+        if (clipNotes == null || clipNotes.length === 0) return false;
+
+        const pasteNotes = createPasteNotes(clipNotes);
+        const isOutOfRange = pasteNotes.some(note => {
+            const side = MelodyState.calcBeatSide(note);
+            return side.pos < 0 || side.pos + side.len > baseTail;
+        });
+        if (isOutOfRange) return false;
+
+        track.notes.push(...pasteNotes);
         sortTrackNotes(track);
 
-        const focusIndex = track.notes.findIndex(note => note == clipNotes[0]);
+        const focusIndex = track.notes.findIndex(note => note == pasteNotes[0]);
         melody.focus = focusIndex;
-        melody.focusLock = focusIndex + clipNotes.length - 1;
+        melody.focusLock = focusIndex + pasteNotes.length - 1;
         melody.clipboard.notes = null;
+        return true;
     };
 
     return {

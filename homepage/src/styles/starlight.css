@@ -1,0 +1,41 @@
+:root {
+  --sl-color-accent-low: #12312e;
+  --sl-color-accent: #16a085;
+  --sl-color-accent-high: #b7fff0;
+  --sl-color-text-accent: #11c5a3;
+}
+
+.hero-card {
+  border: 1px solid color-mix(in srgb, var(--sl-color-text-accent), transparent 70%);
+  border-radius: 8px;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--sl-color-bg-nav), transparent 18%);
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.feature-grid > section {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 8px;
+  padding: 0.9rem;
+  background: var(--sl-color-black);
+}
+
+.kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0.08rem 0.38rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--sl-color-gray-6);
+  color: var(--sl-color-white);
+  font-family: var(--__sl-font-mono);
+  font-size: 0.9em;
+  text-align: center;
+}

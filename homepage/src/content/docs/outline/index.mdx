@@ -1,0 +1,77 @@
+---
+title: 概要
+description: Outline が担う責務と全体像
+---
+
+Outline は、曲の構成を上から順に設計するためのモードです。
+
+scorehack では、メロディやアレンジを直接並べる前に、まず曲全体をブロックとして整理します。  
+Outline はそのための骨格であり、セクション、コード、拍数、転調、テンポ、リズム変更などを時系列に配置します。
+
+## Outline の責務
+
+Outline は主に次の責務を担います。
+
+- 曲全体の長さと流れを決める
+- セクション構成を管理する
+- コード進行を管理する
+- コードごとの拍数や食い込みを管理する
+- 転調、テンポ、リズム変更などのイベントを配置する
+- メロディやアレンジが参照する時間軸を提供する
+
+## Melody との関係
+
+Melody は Outline 上のコードブロックを時間の基準として扱います。
+
+コードブロックの拍数を変更したり、ブロックを削除したりすると、メロディノートが範囲外にはみ出す可能性があります。  
+そのため Outline の編集では、メロディとの整合性も確認します。
+
+## Arrange との関係
+
+Arrange は、Outline の Chord に対して伴奏やボイシングを割り当てます。
+
+Outline は「どのコードがいつ鳴るか」を定義し、Arrange は「そのコードをどう鳴らすか」を定義します。
+
+## ブロックの種類
+
+Outline では、主に次の要素を扱います。
+
+- `Init`: 曲の初期設定
+- `Section`: 曲構成の区切り
+- `Chord`: コード進行の中心
+- `Event`: 転調、テンポ、リズム変更など
+
+## Keyboard
+
+Outline では、ブロックを選びながら構成を組み立てます。共通操作は次の通りです。
+
+<table>
+  <thead>
+    <tr><th>キー</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>フォーカスするブロックを移動します。</td></tr>
+    <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>前後の Section へ移動します。</td></tr>
+    <tr><td><kbd>Shift</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>複数ブロックを範囲選択します。</td></tr>
+    <tr><td><kbd>A</kbd></td><td>Chord ブロックを挿入します。</td></tr>
+    <tr><td><kbd>S</kbd></td><td>Section ブロックを挿入します。</td></tr>
+    <tr><td><kbd>Delete</kbd></td><td>フォーカス中のブロックを削除します。</td></tr>
+    <tr><td><kbd>M</kbd></td><td>アクションメニューを開きます。</td></tr>
+    <tr><td><kbd>B</kbd></td><td>Arrange Editor を開きます。</td></tr>
+    <tr><td><kbd>W</kbd></td><td>Section では名前入力、それ以外では Arrange Finder を開きます。</td></tr>
+    <tr><td><kbd>Space</kbd></td><td>再生を開始、または停止します。</td></tr>
+    <tr><td><kbd>Shift</kbd> + <kbd>Space</kbd></td><td>フォーカス中のレイヤーを対象に再生します。</td></tr>
+    <tr><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td>選択中のブロックをコピーします。</td></tr>
+    <tr><td><kbd>Ctrl</kbd> + <kbd>V</kbd></td><td>コピーしたブロックを貼り付けます。</td></tr>
+    <tr><td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>元に戻します。</td></tr>
+    <tr><td><kbd>Ctrl</kbd> + <kbd>Y</kbd></td><td>やり直します。</td></tr>
+  </tbody>
+</table>
+
+アプリ全体では、<kbd>R</kbd> で Outline と Melody を切り替え、<kbd>T</kbd> で Terminal を開きます。<kbd>Ctrl</kbd> + <kbd>S</kbd> は譜面の保存、<kbd>Shift</kbd> + <kbd>R</kbd> はトラックマネージャーの表示切り替えです。
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: Outline 全体が見える画面。Init、Section、Chord、Event が縦に並び、ブロック構造として曲を組み立てていることが分かる状態が理想です。
+
+**想定ファイル**: `/images/outline/outline-overview.png`
+:::

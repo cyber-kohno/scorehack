@@ -1,4 +1,9 @@
 namespace FloatingTextInputState {
+    export type NavigateContext = {
+        value: string;
+        dir: -1 | 1;
+    };
+
     export type Value = {
         value: string;
         cursor: number;
@@ -6,6 +11,7 @@ namespace FloatingTextInputState {
         top: number;
         width: number;
         apply: (value: string) => void;
+        navigate?: (ctx: NavigateContext) => void;
         permit?: (str: string) => boolean;
     };
 

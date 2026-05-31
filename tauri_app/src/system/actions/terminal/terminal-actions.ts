@@ -4,7 +4,7 @@ import createCommandRegistry from "../../service/terminal/command-registry";
 import { createCommitDataAndRecalculate } from "../../service/derived/recalculate-derived";
 import useMelodySelector from "../../service/melody/melody-selector";
 import useOutlineSelector from "../../service/outline/outline-selector";
-import useTerminalLogger from "../../service/terminal/terminalLogger";
+import useTerminalLogger from "../../service/terminal/terminal-logger";
 import useTerminalSelector from "../../service/terminal/terminal-selector";
 import createTerminalUpdater from "../../service/terminal/terminal-updater";
 import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../store/global-store";

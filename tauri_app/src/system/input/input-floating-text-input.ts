@@ -3,7 +3,7 @@ import FloatingTextInput from "../service/common/floating-text-input-controller"
 const VALID_TEXT = /^[a-zA-Z0-9 _'.,-]$/;
 
 const useInputFloatingTextInput = () => {
-    const control = (eventKey: string) => {
+    const control = (eventKey: string, option?: { shiftKey?: boolean }) => {
         switch (eventKey) {
             case "Enter":
                 FloatingTextInput.apply();
@@ -18,9 +18,17 @@ const useInputFloatingTextInput = () => {
                 FloatingTextInput.deleteForward();
                 return;
             case "ArrowLeft":
+                if (option?.shiftKey) {
+                    FloatingTextInput.navigate(-1);
+                    return;
+                }
                 FloatingTextInput.moveCursor(-1);
                 return;
             case "ArrowRight":
+                if (option?.shiftKey) {
+                    FloatingTextInput.navigate(1);
+                    return;
+                }
                 FloatingTextInput.moveCursor(1);
                 return;
         }

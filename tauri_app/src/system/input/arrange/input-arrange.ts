@@ -3,8 +3,8 @@ import type InputState from "../../store/state/input-state";
 import createArrangeActions from "../../actions/arrange/arrange-actions";
 import { controlStore, playbackStore } from "../../store/global-store";
 import stopPlaybackTimeline from "../../service/playback/timeline/stop-playback-timeline";
-import useInputGuitarEditor from "./inputGuitarEditor";
-import useInputPianoEditor from "./inputPianoEditor";
+import useInputGuitarEditor from "./input-guitar-editor";
+import useInputPianoEditor from "./input-piano-editor";
 
 const useInputArrange = () => {
     const arrangeActions = createArrangeActions();

@@ -1,0 +1,95 @@
+---
+title: 概要
+description: Arrange が担う責務と全体像
+---
+
+Arrange は、Outline の Chord に対して、仮の伴奏やボイシングを設計するための領域です。
+
+本格的な打ち込みを置き換えるのではなく、歌メロとハーモニーの確認に必要な伴奏情報を素早く作ることを目的にします。
+
+## Arrange の責務
+
+Arrange は主に次の責務を担います。
+
+- コードに対する伴奏パターンを割り当てる
+- ピアノやギターのボイシングを設計する
+- 歌メロとハーモニーの確認に必要な仮伴奏を作る
+- 同じ伴奏パターンをライブラリとして共有する
+- 必要に応じてパターンを新規登録する
+
+## Outline との関係
+
+Arrange は、Outline の Chord に紐づきます。
+
+Outline が「どのコードがいつ鳴るか」を定義し、Arrange は「そのコードをどう鳴らすか」を定義します。
+
+## Melody との関係
+
+Arrange は Melody の歌メロを確認するための伴奏として使います。
+
+最終的な音源制作ではなく、作曲設計の段階でハーモニー感やリズム感を確認するための補助です。
+
+## Keyboard
+
+Arrange Editor は Outline の Chord から開きます。Piano と Guitar で操作対象が異なります。
+
+<table>
+  <thead>
+    <tr><th>キー</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><kbd>B</kbd></td><td>Outline から Arrange Editor を開きます。Arrange Editor が開いている時は閉じます。</td></tr>
+    <tr><td><kbd>Escape</kbd></td><td>Arrange Editor を閉じます。</td></tr>
+    <tr><td><kbd>Space</kbd></td><td>Arrange Editor 内のプレビューを再生します。</td></tr>
+    <tr><td><kbd>Shift</kbd> + <kbd>Enter</kbd></td><td>編集内容を適用します。</td></tr>
+    <tr><td><kbd>W</kbd></td><td>Piano Editor では Finder を開きます。</td></tr>
+    <tr><td><kbd>R</kbd></td><td>Piano Editor では layer を切り替えます。</td></tr>
+  </tbody>
+</table>
+
+### Piano Editor
+
+<table>
+  <thead>
+    <tr><th>対象</th><th>キー</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>voicing</td><td><kbd>↑</kbd> / <kbd>↓</kbd> / <kbd>←</kbd> / <kbd>→</kbd></td><td>voicing のカーソルを移動します。</td></tr>
+    <tr><td>voicing</td><td><kbd>A</kbd></td><td>voicing の選択を切り替えます。</td></tr>
+    <tr><td>control</td><td><kbd>Shift</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd> / <kbd>←</kbd> / <kbd>→</kbd></td><td>voicing、col、record、notes の操作領域を移動します。</td></tr>
+    <tr><td>col</td><td><kbd>←</kbd> / <kbd>→</kbd></td><td>列カーソルを移動します。</td></tr>
+    <tr><td>col</td><td><kbd>A</kbd></td><td>列を追加します。</td></tr>
+    <tr><td>col</td><td><kbd>Delete</kbd></td><td>列を削除します。</td></tr>
+    <tr><td>col</td><td><kbd>1</kbd>〜<kbd>5</kbd></td><td>列の長さを変更します。</td></tr>
+    <tr><td>col</td><td><kbd>.</kbd></td><td>付点を切り替えます。</td></tr>
+    <tr><td>col</td><td><kbd>↓</kbd></td><td>pedal を切り替えます。</td></tr>
+    <tr><td>record</td><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>record カーソルを移動します。</td></tr>
+    <tr><td>record</td><td><kbd>A</kbd></td><td>record を追加します。</td></tr>
+    <tr><td>record</td><td><kbd>Delete</kbd></td><td>record を削除します。</td></tr>
+    <tr><td>notes</td><td><kbd>↑</kbd> / <kbd>↓</kbd> / <kbd>←</kbd> / <kbd>→</kbd></td><td>notes カーソルを移動します。</td></tr>
+    <tr><td>notes</td><td><kbd>A</kbd></td><td>note の有無を切り替えます。</td></tr>
+    <tr><td>notes</td><td><kbd>C</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>note の velocity を変更します。</td></tr>
+    <tr><td>notes</td><td><kbd>C</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>note の delay を変更します。</td></tr>
+  </tbody>
+</table>
+
+### Guitar Editor
+
+<table>
+  <thead>
+    <tr><th>キー</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>弦方向にカーソルを移動します。</td></tr>
+    <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>フレット方向にカーソルを移動します。</td></tr>
+    <tr><td><kbd>A</kbd> / <kbd>Enter</kbd></td><td>フレットの選択を切り替えます。</td></tr>
+    <tr><td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>弦をミュートします。</td></tr>
+    <tr><td><kbd>Shift</kbd> + <kbd>Enter</kbd></td><td>編集内容を適用します。</td></tr>
+  </tbody>
+</table>
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: Arrange Editor を開いている状態。Piano Editor の voicing、col、record、notes の領域が分かる画、または Guitar Editor のフレット選択が分かる画があると良いです。
+
+**想定ファイル**: `/images/arrange/arrange-editor.png`
+:::

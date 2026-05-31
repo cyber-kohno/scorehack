@@ -1,8 +1,8 @@
 import { get } from "svelte/store";
 import { controlStore, dataStore, derivedStore, inputStore, refStore, settingsStore } from "../../store/global-store";
 import type InputState from "../../store/state/input-state";
-import FileUtil from "../../infra/file/fileUtil";
 import createMelodyUpdater from "../melody/melody-updater";
+import ScoreFile from "./score-file-controller";
 import Toast from "./toast-controller";
 import ToastState from "../../store/state/toast-state";
 
@@ -35,8 +35,7 @@ namespace InputRootController {
     }
 
     export const saveScore = () => {
-        const fileUtil = FileUtil.getUtil();
-        fileUtil.saveScoreFile({
+        ScoreFile.save({
             defaultDirectory: get(settingsStore).envs.SCH_FILE_DIR,
             success: (handle) => {
                 Toast.create({

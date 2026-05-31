@@ -356,12 +356,6 @@ namespace ChordTheory {
     export const DEGREE7_LIST = [
         'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'
     ];
-    // export const DEGREE12_FLAT_LIST = [
-    //     'Ⅰ', 'bⅡ', 'Ⅱ', 'bⅢ', 'Ⅲ', 'Ⅳ', 'bⅤ', 'Ⅴ', 'bⅥ', 'Ⅵ', 'bⅦ', 'Ⅶ'
-    // ];
-    // export const DEGREE12_SHARP_LIST = [
-    //     'Ⅰ', '#Ⅰ', 'Ⅱ', '#Ⅱ', 'Ⅲ', 'Ⅳ', '#Ⅳ', 'Ⅴ', '#Ⅴ', 'Ⅵ', '#Ⅵ', 'Ⅶ'
-    // ];
 
     export const DEGREE12_SHARP_LIST: DegreeKey[] = [
         { index: 0 },

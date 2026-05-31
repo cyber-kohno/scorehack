@@ -1,0 +1,116 @@
+---
+title: 概要
+description: Melody が担う責務と全体像
+---
+
+Melody は、Outline で定義したコード進行と時間軸に沿って、歌メロを設計するためのモードです。
+
+scorehack では、Melody を単なるピアノロールではなく、Chord と結びついた作曲設計の領域として扱います。  
+ノートの位置、長さ、音程、発音を入力しながら、現在のコードや調性との関係を確認できます。
+
+## Melody の責務
+
+Melody は主に次の責務を担います。
+
+- 歌メロのノートを入力する
+- ノートの位置、長さ、音程を編集する
+- ノートを分割、結合、削除する
+- 複数ノートを選択してまとめて操作する
+- 発音情報を入力する
+- Chord に対する構成音や調性外の音を確認する
+- MusicXML や MIDI に渡すメロディ情報を整える
+
+## Melody を構成する概念
+
+Melody は、次の概念に分けて考えると理解しやすくなります。
+
+<table>
+  <thead>
+    <tr>
+      <th>概念</th>
+      <th>役割</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Cursor</td>
+      <td>次に入力するノートの位置、長さ、音程を持つ基準点</td>
+    </tr>
+    <tr>
+      <td>Note</td>
+      <td>実際に配置された音。位置、長さ、音程、発音を持つ</td>
+    </tr>
+    <tr>
+      <td>Selection</td>
+      <td>現在操作対象になっているノートや範囲</td>
+    </tr>
+    <tr>
+      <td>Edit</td>
+      <td>移動、伸縮、分割、結合、コピー、ペーストなどの編集操作</td>
+    </tr>
+    <tr>
+      <td>Pronunciation</td>
+      <td>歌詞や歌声合成に渡す発音情報</td>
+    </tr>
+    <tr>
+      <td>Chord Assist</td>
+      <td>現在の Chord に対する構成音や調性外の音の表示</td>
+    </tr>
+    <tr>
+      <td>Playback</td>
+      <td>入力したメロディを音として確認する機能</td>
+    </tr>
+  </tbody>
+</table>
+
+## Outline との関係
+
+Melody は、Outline の Chord を時間上の基準として扱います。
+
+Chord の拍数や食い込みが変わると、Melody のカーソル位置、ノートの所属、コード構成音アシストにも影響します。  
+そのため、Melody は Outline から独立した譜面ではなく、Outline の上に乗っている歌メロ編集レイヤーです。
+
+## Arrange との関係
+
+Arrange は、Melody を確認するための仮伴奏として機能します。
+
+Melody で歌メロを作り、Arrange で伴奏やボイシングを付けることで、コードとメロディの関係を聴きながら確認できます。
+
+## 基本的な作業の流れ
+
+Melody では、概ね次の流れで作業します。
+
+1. Outline で Chord を作る
+2. Cursor の位置、長さ、音程を調整する
+3. Note を入力する
+4. Note を移動、伸縮、分割、結合して整える
+5. Pronunciation を入力する
+6. Chord Assist と Playback で確認する
+
+最終的には、MusicXML や MIDI として外部ツールに渡せるメロディ情報を作ることを目指します。
+
+## Keyboard
+
+Melody では、カーソル状態と Note フォーカス状態でキーの意味が変わります。
+
+<table>
+  <thead>
+    <tr><th>キー</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><kbd>R</kbd></td><td>Outline と Melody を切り替えます。</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Terminal を開きます。</td></tr>
+    <tr><td><kbd>Space</kbd></td><td>再生を開始、または停止します。</td></tr>
+    <tr><td><kbd>Shift</kbd> + <kbd>Space</kbd></td><td>現在のレイヤーを対象に再生します。</td></tr>
+    <tr><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>譜面を保存します。</td></tr>
+    <tr><td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td><td>元に戻します。</td></tr>
+    <tr><td><kbd>Ctrl</kbd> + <kbd>Y</kbd></td><td>やり直します。</td></tr>
+    <tr><td><kbd>Shift</kbd> + <kbd>R</kbd></td><td>トラックマネージャーを表示、または閉じます。</td></tr>
+  </tbody>
+</table>
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: Melody 編集画面の全体。ピアノロール、コードヘッダー、ノート、現在カーソルが見え、Outline のコード構造に沿ってメロディを設計していることが伝わる画が良いです。
+
+**想定ファイル**: `/images/melody/melody-overview.png`
+:::

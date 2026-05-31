@@ -42,24 +42,26 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
 
     const arrangeSelector = createArrangeSelector({ control, data });
 
+    const getScrollTimerKey = (ref: HTMLElement, target: 'scrollLeft' | 'scrollTop') => ref.className + target;
+
+    const clearScrollTimers = (refs: HTMLElement[], target: 'scrollLeft' | 'scrollTop') => {
+        const targets = refs.map(r => getScrollTimerKey(r, target));
+        timerKeys.forEach(key => {
+            if (targets.includes(key.target)) clearTimeout(key.id);
+        });
+
+        const next = timerKeys.filter(key => !targets.includes(key.target));
+        timerKeys.length = 0;
+        timerKeys.push(...next);
+    };
+
     const smoothScroll = (
         refs: HTMLElement[],
         target: 'scrollLeft' | 'scrollTop',
         divCnt: number,
         nextValue: number
     ) => {
-        const getTargetKey = (ref: HTMLElement) => ref.className + target;
-
-        const include = (key: RefState.RefTimerKey) => refs
-            .map(r => getTargetKey(r)).includes(key.target);
-
-        timerKeys.forEach(key => {
-            if (include(key)) clearTimeout(key.id);
-        });
-        const next = timerKeys.filter(key => !include(key));
-        // console.log(`next${next.length}, timerKeys${timerKeys.length}`);
-        timerKeys.length = 0;
-        timerKeys.push(...next);
+        clearScrollTimers(refs, target);
 
         refs.forEach((ref, i) => {
             const isCriteria = i === 0;
@@ -71,8 +73,20 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
                     else ref[target] += divVal;
 
                 }, 10 * j);
-                timerKeys.push({ target: getTargetKey(ref), id });
+                timerKeys.push({ target: getScrollTimerKey(ref, target), id });
             }
+        });
+        update();
+    }
+    const instantScroll = (
+        refs: HTMLElement[],
+        target: 'scrollLeft' | 'scrollTop',
+        nextValue: number
+    ) => {
+        clearScrollTimers(refs, target);
+        refs.forEach((ref, i) => {
+            if (i === 0) ref[target] = nextValue;
+            else ref[target] = refs[0][target];
         });
         update();
     }
@@ -108,6 +122,24 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
         }
     }
 
+    const adjustGridScrollXInstant = (getLeft: ((width: number) => number)) => {
+        if (ref.grid && ref.header) {
+            const gridRef = ref.grid;
+            const headerRef = ref.header;
+            const width = gridRef.getBoundingClientRect().width;
+            instantScroll([gridRef, headerRef], 'scrollLeft', getLeft(width));
+        }
+    }
+
+    const adjustGridScrollYInstant = (getTop: ((height: number) => number)) => {
+        if (ref.grid && ref.pitch) {
+            const gridRef = ref.grid;
+            const pitchRef = ref.pitch;
+            const height = gridRef.getBoundingClientRect().height;
+            instantScroll([gridRef, pitchRef], 'scrollTop', getTop(height));
+        }
+    }
+
     const adjustGridScrollXFromNote = (note: MelodyState.Note) => {
         const [pos, len] = [note.pos, note.len]
             .map(size => MelodyState.calcBeat(note.norm, size) * settings.view.timeline.beatWidth);
@@ -117,6 +149,16 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
     const adjustGridScrollYFromCursor = (note: MelodyState.Note) => {
         const pos = (Layout.pitch.NUM - note.pitch) * Layout.pitch.ITEM_HEIGHT;
         adjustGridScrollY((height) => pos - height / 2);
+    }
+    const adjustGridScrollXFromNoteInstant = (note: MelodyState.Note) => {
+        const [pos, len] = [note.pos, note.len]
+            .map(size => MelodyState.calcBeat(note.norm, size) * settings.view.timeline.beatWidth);
+        adjustGridScrollXInstant((width) => pos + len / 2 - width / 2);
+    }
+
+    const adjustGridScrollYFromCursorInstant = (note: MelodyState.Note) => {
+        const pos = (Layout.pitch.NUM - note.pitch) * Layout.pitch.ITEM_HEIGHT;
+        adjustGridScrollYInstant((height) => pos - height / 2);
     }
     const adjustGridScrollYFromOutlineArrange = () => {
         if (control.mode !== "harmonize") return;
@@ -244,6 +286,8 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
         adjustOutlineScroll,
         adjustGridScrollXFromNote,
         adjustGridScrollYFromCursor,
+        adjustGridScrollXFromNoteInstant,
+        adjustGridScrollYFromCursorInstant,
         adjustTerminalScroll,
         adjustHelperScroll,
         resetScoreTrackRef,

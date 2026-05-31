@@ -6,7 +6,7 @@ import type TerminalStateType from "../../store/state/terminal-state";
 import useMelodySelector from "../melody/melody-selector";
 import useTerminalSelector from "./terminal-selector";
 import TerminalShortcutResolver from "./terminal-shortcut-resolver";
-import useTerminalLogger from "./terminalLogger";
+import useTerminalLogger from "./terminal-logger";
 
 type Context = {
     control: ControlState.Value;

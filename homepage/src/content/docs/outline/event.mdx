@@ -1,0 +1,425 @@
+---
+title: Event
+description: 転調、テンポ、リズム変更などを定義するブロック
+---
+
+Event は、曲の途中で発生する状態変更を扱うブロックです。
+
+Init が曲の開始時点の状態を定義するのに対して、Event は曲の途中でキー、テンポ、拍子などを変更するために使います。
+
+## Event の責務
+
+Event は主に次の情報を担います。
+
+- 転調
+- テンポ変更
+- リズム、拍子の変更
+- 後続の Chord や Melody が参照する状態の更新
+- MusicXML などへの変更情報の出力
+
+Event は音を直接鳴らすためのブロックではありません。  
+以降のブロックの解釈や時間計算を変えるための制御情報です。
+
+## Event の種類
+
+現在、Outline では次の Event を扱います。
+
+<table>
+  <thead>
+    <tr>
+      <th>種類</th>
+      <th>役割</th>
+      <th>影響範囲</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>Modulate</code></td>
+      <td>キー、スケールを変更する</td>
+      <td>後続の Chord、Melody、Arrange</td>
+    </tr>
+    <tr>
+      <td><code>Tempo</code></td>
+      <td>テンポを変更する</td>
+      <td>再生、エクスポート、時間計算</td>
+    </tr>
+    <tr>
+      <td><code>Rhythm</code></td>
+      <td>拍子、リズムを変更する</td>
+      <td>Chord の小節判定、Melody、エクスポート</td>
+    </tr>
+  </tbody>
+</table>
+
+## Modulate
+
+Modulate は、曲の途中で調性を変更する Event です。
+
+Modulate 以降の Chord は、変更後のキーとスケールを基準に解釈されます。  
+Melody のスケール判定や、コード構成音が調性内かどうかの表示にも影響します。
+
+### 変更できるもの
+
+Modulate では、直接 `C major` や `G minor` のような最終結果を選ぶのではなく、現在の調性からどう移動するかを選びます。
+
+変更方法は次の4種類です。
+
+<table>
+  <thead>
+    <tr>
+      <th>方式</th>
+      <th>値</th>
+      <th>意味</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>domm</code></td>
+      <td><code>-3</code> から <code>+3</code></td>
+      <td>五度圏方向に移動する</td>
+    </tr>
+    <tr>
+      <td><code>parallel</code></td>
+      <td>なし</td>
+      <td>同主調に移動する</td>
+    </tr>
+    <tr>
+      <td><code>relative</code></td>
+      <td>なし</td>
+      <td>平行調に移動する</td>
+    </tr>
+    <tr>
+      <td><code>key</code></td>
+      <td><code>-3</code> から <code>+3</code></td>
+      <td>半音単位でキーを移動する</td>
+    </tr>
+  </tbody>
+</table>
+
+`domm` と `key` は値を持ちます。  
+選べる値は `-3`, `-2`, `-1`, `0`, `+1`, `+2`, `+3` です。
+
+### domm
+
+`domm` は、五度圏方向にキーを移動する方式です。
+
+値が `+1` ならドミナント方向へ1つ、`-1` ならサブドミナント方向へ1つ移動します。
+
+例:
+
+<table>
+  <thead>
+    <tr>
+      <th>現在</th>
+      <th>指定</th>
+      <th>結果</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>C major</code></td><td><code>domm +1</code></td><td><code>G major</code></td></tr>
+    <tr><td><code>C major</code></td><td><code>domm -1</code></td><td><code>F major</code></td></tr>
+    <tr><td><code>C major</code></td><td><code>domm +2</code></td><td><code>D major</code></td></tr>
+  </tbody>
+</table>
+
+スケールの major / minor は変わらず、キーだけが五度圏方向に移動します。
+
+### parallel
+
+`parallel` は、同主調に移動する方式です。
+
+キーはそのままに、major と minor を切り替えます。
+
+例:
+
+<table>
+  <thead>
+    <tr>
+      <th>現在</th>
+      <th>結果</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>C major</code></td><td><code>C minor</code></td></tr>
+    <tr><td><code>C minor</code></td><td><code>C major</code></td></tr>
+  </tbody>
+</table>
+
+同じ主音のまま明暗を切り替える転調として扱います。
+
+### relative
+
+`relative` は、平行調に移動する方式です。
+
+major からは平行短調へ、minor からは平行長調へ移動します。
+
+例:
+
+<table>
+  <thead>
+    <tr>
+      <th>現在</th>
+      <th>結果</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>C major</code></td><td><code>A minor</code></td></tr>
+    <tr><td><code>A minor</code></td><td><code>C major</code></td></tr>
+  </tbody>
+</table>
+
+調号を共有する major / minor の関係に移動するため、曲の場面転換を自然に作りやすい方式です。
+
+### key
+
+`key` は、半音単位でキーを移動する方式です。
+
+値が `+1` なら半音上、`-1` なら半音下へ移動します。  
+スケールの major / minor は変わりません。
+
+例:
+
+<table>
+  <thead>
+    <tr>
+      <th>現在</th>
+      <th>指定</th>
+      <th>結果</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>C major</code></td><td><code>key +1</code></td><td><code>Db major</code></td></tr>
+    <tr><td><code>C major</code></td><td><code>key -1</code></td><td><code>B major</code></td></tr>
+    <tr><td><code>A minor</code></td><td><code>key +3</code></td><td><code>C minor</code></td></tr>
+  </tbody>
+</table>
+
+半音上げ転調や、短い距離の直接的な転調を扱う時に使います。
+
+### Chord への影響
+
+Modulate 以降の Chord は、変更後の調性を基準に解釈されます。
+
+たとえば `C major` で `I` は C ですが、`domm +1` によって `G major` へ転調した後は、同じ `I` が G として解釈されます。
+
+### Melody への影響
+
+Modulate は、Melody のスケール判定に影響します。
+
+転調後は、スケール内の音、調性外の音、コード構成音の見え方が変わります。  
+同じメロディ音でも、転調前後で音楽的な意味が変わることがあります。
+
+### Arrange への影響
+
+Arrange は Chord の解釈結果をもとに伴奏やボイシングを扱います。
+
+そのため、Modulate によって Chord の実音が変わると、アレンジで参照する構成音も変わります。
+## Tempo
+
+Tempo は、曲の途中でテンポを変更する Event です。
+
+再生時の速度や、MusicXML エクスポート時のテンポ指定に影響します。
+
+テンポ変更は、曲の時間表現に関わる情報です。  
+コード進行そのものは変わりませんが、同じ拍数でも実時間上の長さが変わります。
+
+## Rhythm
+
+Rhythm は、曲の途中で拍子やリズムの前提を変更する Event です。
+
+Rhythm Event では、次の2つを変更できます。
+
+- 拍子
+- feel
+
+拍子は、Chord の小節跨ぎ判定、Melody の表示、MusicXML エクスポートに影響します。  
+feel は、再生時のノート位置や長さに対するリズムの揺れ方に影響します。
+
+### 選べる拍子
+
+現在選べる拍子は次のとおりです。
+
+<table>
+  <thead>
+    <tr>
+      <th>拍子</th>
+      <th>扱い</th>
+      <th>小節内の大きな拍数</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>2/4</code></td><td>単純拍子</td><td>2</td></tr>
+    <tr><td><code>3/4</code></td><td>単純拍子</td><td>3</td></tr>
+    <tr><td><code>4/4</code></td><td>単純拍子</td><td>4</td></tr>
+    <tr><td><code>6/8</code></td><td>複合拍子</td><td>2</td></tr>
+    <tr><td><code>9/8</code></td><td>複合拍子</td><td>3</td></tr>
+    <tr><td><code>12/8</code></td><td>複合拍子</td><td>4</td></tr>
+  </tbody>
+</table>
+
+`6/8`, `9/8`, `12/8` は、八分音符を細かい単位として持ちつつ、音楽的には付点四分音符のまとまりで拍を感じる複合拍子として扱います。
+
+たとえば `6/8` は、八分音符6つを単純に6拍として扱うのではなく、2つの大きな拍を持つ拍子として扱います。
+
+### feel
+
+feel は、拍子そのものではなく、リズムの跳ね方や揺れ方を表す情報です。
+
+現在選べる feel は次のとおりです。
+
+<table>
+  <thead>
+    <tr>
+      <th>feel</th>
+      <th>表記</th>
+      <th>意味</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>straight</td>
+      <td>なし</td>
+      <td>等間隔で再生する通常のリズム</td>
+    </tr>
+    <tr>
+      <td>swing 8</td>
+      <td><code>sw8</code></td>
+      <td>8分音符単位でスウィングする</td>
+    </tr>
+    <tr>
+      <td>swing 16</td>
+      <td><code>sw16</code></td>
+      <td>16分音符単位でスウィングする</td>
+    </tr>
+  </tbody>
+</table>
+
+拍子によって選べる feel は異なります。
+
+<table>
+  <thead>
+    <tr>
+      <th>拍子の種類</th>
+      <th>選べる feel</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>2/4</code>, <code>3/4</code>, <code>4/4</code></td>
+      <td><code>straight</code>, <code>sw8</code>, <code>sw16</code></td>
+    </tr>
+    <tr>
+      <td><code>6/8</code>, <code>9/8</code>, <code>12/8</code></td>
+      <td><code>straight</code>, <code>sw16</code></td>
+    </tr>
+  </tbody>
+</table>
+
+拍子を変更した場合、feel は一度 `straight` に戻ります。  
+これは、新しい拍子で使えない feel が残ることを避けるためです。
+
+たとえば 4/4 では `sw8` を選べますが、6/8 では `sw8` は選べません。  
+6/8 で跳ねを付けたい場合は、`sw16` を使います。
+
+### Chord への影響
+
+Rhythm が変わると、Chord の小節内での位置づけが変わります。
+
+特に、小節跨ぎの判定は現在の拍子を基準に行われます。  
+たとえば 4/4 と 6/8 では、同じ Chord の拍数でも、小節内での扱いが異なります。
+
+### Melody への影響
+
+Rhythm は、Melody の入力単位や表示にも影響します。
+
+複合拍子では、メロディ入力時の単位も複合拍子の拍感に合わせて変わります。  
+また、feel が swing の場合、再生時にはノートの位置や長さにスウィングが反映されます。
+## Init との違い
+
+Init は、曲の開始時点の状態を定義します。
+
+Event は、曲の途中で状態を変更します。
+
+<table>
+  <thead>
+    <tr>
+      <th>ブロック</th>
+      <th>役割</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Init</td>
+      <td>曲の初期状態を決める</td>
+    </tr>
+    <tr>
+      <td>Event</td>
+      <td>曲の途中で状態を変える</td>
+    </tr>
+  </tbody>
+</table>
+
+最初から `120 BPM` にしたい場合は Init、途中から `140 BPM` にしたい場合は Tempo Event を使います。
+
+## Section との違い
+
+Section は、曲構成の区切りを表すラベルです。
+
+Event は、曲の状態を変更する制御情報です。
+
+Section を置いても、キー、テンポ、拍子は変わりません。  
+曲の途中で状態を変えたい場合は Event を使います。
+
+## Chord との関係
+
+Event は、後続の Chord の解釈に影響します。
+
+Modulate の後にある Chord は、転調後の調性を基準に解釈されます。  
+Rhythm の後にある Chord は、変更後の拍子を基準に小節内の位置や跨ぎを判定します。
+
+Event 自体は Chord ではないため、コード構成音やアレンジ割り当ての対象にはなりません。
+
+## Melody との関係
+
+Melody は、現在位置に有効な Event の状態を参照します。
+
+転調後は、スケール内外の判定が変わります。  
+拍子変更後は、ノートの見え方やエクスポート時の記譜に影響します。
+
+## Export への影響
+
+MusicXML では、転調、テンポ、拍子の変更は重要な情報です。
+
+Event を正しく配置しておくことで、外部の譜面ソフトや歌声合成ツールに、曲中の状態変化を伝えやすくなります。
+
+## 編集時の注意
+
+Event は、置かれた位置以降の解釈に影響します。
+
+そのため、Event を移動、削除、追加すると、後続の Chord、Melody、Arrange の見え方や意味が変わる可能性があります。
+
+特に Rhythm Event は、Chord の小節跨ぎ判定にも影響するため、配置位置に注意します。
+
+## Keyboard
+
+Event は種類ごとに変更できる値が異なります。共通して <kbd>D</kbd> を押しながら方向キーで編集します。
+
+<table>
+  <thead>
+    <tr><th>対象</th><th>キー</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Modulate</td><td><kbd>D</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>転調方法を変更します。</td></tr>
+    <tr><td>Modulate</td><td><kbd>D</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>選択中の転調方法の値を変更します。</td></tr>
+    <tr><td>Tempo</td><td><kbd>D</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>テンポ変更の種類を切り替えます。</td></tr>
+    <tr><td>Tempo</td><td><kbd>D</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>テンポ値を変更します。</td></tr>
+    <tr><td>Rhythm</td><td><kbd>D</kbd> + <kbd>←</kbd> / <kbd>→</kbd></td><td>拍子を変更します。</td></tr>
+    <tr><td>Rhythm</td><td><kbd>D</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>feel を変更します。</td></tr>
+  </tbody>
+</table>
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: Modulate、Tempo、Rhythm の Event が Outline 上に配置されている状態。Event が曲の途中変化を表すことが分かるよう、前後に Chord も見えていると良いです。
+
+**想定ファイル**: `/images/outline/event-blocks.png`
+:::

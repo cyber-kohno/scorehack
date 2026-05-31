@@ -80,6 +80,18 @@ namespace FloatingTextInput {
             cursor: clampCursor(state.value, state.cursor + dir),
         });
     };
+
+    export const navigate = (dir: -1 | 1) => {
+        const state = get(floatingTextInputStore);
+        if (state == null || state.navigate == undefined) return;
+        if (!isPermitted(state)) return;
+
+        const value = state.value;
+        const navigate = state.navigate;
+        close();
+        state.apply(value);
+        navigate({ value, dir });
+    };
 }
 
 export default FloatingTextInput;

@@ -1,0 +1,64 @@
+---
+title: ターミナル操作
+description: コマンドによる管理操作
+---
+
+scorehack は、画面UIを増やしすぎないためにターミナル操作を重視しています。
+
+コマンドは、対象をルートにして、その後ろに操作名を続ける設計です。
+
+```txt
+track list
+track create verse
+track use verse
+inst builtin violin
+soundfont add piano01
+audio add vocal
+```
+
+## 主な対象
+
+- `track`: メロディやハーモニーのトラック管理
+- `inst`: アクティブトラックへ音源を割り当て
+- `soundfont`: 外部 SoundFont の管理
+- `audio`: オーディオ素材の管理
+- `save`: プロジェクトや設定の保存
+- `load`: プロジェクトや外部素材の読み込み
+- `export`: MusicXML などの書き出し
+
+## 補完とリファレンス
+
+コマンド単体で実行すると、その対象で使える操作のリファレンスを表示する方針です。
+
+```txt
+track
+soundfont
+audio
+```
+
+長いコマンドでも補完を前提にし、短さより意味の分かりやすさを優先します。
+
+## Keyboard
+
+Terminal を開いている間は、文字入力と補完ヘルパーの操作が優先されます。
+
+<table>
+  <thead>
+    <tr><th>キー</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><kbd>T</kbd></td><td>Terminal を開きます。</td></tr>
+    <tr><td><kbd>Enter</kbd></td><td>入力中のコマンドを実行します。補完ヘルパー表示中は候補を適用します。</td></tr>
+    <tr><td><kbd>Escape</kbd></td><td>Terminal を閉じます。補完ヘルパー表示中はヘルパーを閉じます。</td></tr>
+    <tr><td><kbd>Backspace</kbd></td><td>カーソル左の文字を削除します。</td></tr>
+    <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>入力カーソルを移動します。</td></tr>
+    <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>補完ヘルパー表示中に候補を移動します。</td></tr>
+    <tr><td><kbd>Shift</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>出力ログをスクロールします。</td></tr>
+  </tbody>
+</table>
+
+:::note[スクリーンショットメモ]
+**欲しいスクショ**: Terminal を開き、補完候補またはコマンド実行結果が表示されている状態。`track list` や `inst builtin` など、scorehack らしいコマンドが見えると良いです。
+
+**想定ファイル**: `/images/terminal/terminal-command.png`
+:::

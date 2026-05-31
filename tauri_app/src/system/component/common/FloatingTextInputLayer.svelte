@@ -48,7 +48,7 @@
     display: inline-block;
     width: 1px;
     height: 16px;
-    margin: 0 1px;
+    margin-right: -1px;
     background-color: #fff;
     vertical-align: -3px;
   }

@@ -1,11 +1,10 @@
-import FileUtil from "../../../../infra/file/fileUtil";
 import SettingsFile from "../../../../infra/settings/settings-file";
+import ScoreFile from "../../../common/score-file-controller";
 import TerminalCommand from "../../terminal-command";
 
 const createSaveCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
   const { logger, settings, terminal } = ctx;
   const defaultProps = TerminalCommand.createDefaultProps("system");
-  const fileUtil = FileUtil.getUtil();
   const saveTargets = ["project", "settings"];
 
   const finishWaiting = () => {
@@ -27,7 +26,7 @@ const createSaveCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props 
   const saveProject = () => {
     logger.outputInfo("Select the file to save.");
     terminal.wait = true;
-    fileUtil.saveScoreFile({
+    ScoreFile.save({
       defaultDirectory: settings.envs.SCH_FILE_DIR,
       success: (handle) => {
         logger.outputInfo(`File saved successfully. [${handle.name}]`);
