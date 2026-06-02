@@ -9,6 +9,7 @@
         top: number;
         isStruct: boolean;
         isRoot: boolean;
+        isOn: boolean;
         isScale: boolean;
     };
 
@@ -48,6 +49,13 @@
         return ((key12 % 12) + 12) % 12;
     })();
 
+    $: onPitchClass = (() => {
+        const key12 = chordCache?.compiledChord?.chord.on?.key12;
+        if (key12 == undefined) return undefined;
+
+        return ((key12 % 12) + 12) % 12;
+    })();
+
     $: tonality = (() => {
         if (chordCache == undefined) return undefined;
 
@@ -64,7 +72,8 @@
             records.push({
                 top: Layout.pitch.TOP_MARGIN + i * Layout.pitch.ITEM_HEIGHT,
                 isStruct: structPitchClasses.includes(pitchClass),
-                isRoot: pitchClass === rootPitchClass,
+                isRoot: onPitchClass == undefined && pitchClass === rootPitchClass,
+                isOn: pitchClass === onPitchClass,
                 isScale: TonalityTheory.isScaleStructPitch(pitchClass, tonality),
             });
         }
@@ -84,6 +93,7 @@
                 class="record"
                 data-is-struct={record.isStruct}
                 data-is-root={record.isRoot}
+                data-is-on={record.isOn}
                 data-is-borrowed-struct={record.isStruct && !record.isScale}
                 style:top="{record.top}px"
             ></div>
@@ -120,5 +130,9 @@
 
     .record[data-is-root="true"] {
         background-color: rgba(64, 112, 255, 0.72);
+    }
+
+    .record[data-is-on="true"] {
+        background-color: rgba(255, 74, 96, 0.78);
     }
 </style>

@@ -295,6 +295,7 @@ const createMelodyActions = () => {
         ctx.refUpdater.adjustOutlineScroll();
         ctx.refUpdater.adjustGridScrollXFromNote(note);
         ctx.refUpdater.adjustGridScrollYFromCursor(note);
+        ctx.playbackPitch(note.pitch);
         ctx.commitControl();
     };
 
