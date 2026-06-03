@@ -4,8 +4,31 @@ import RhythmTheory from "../../domain/theory/rhythm-theory";
 import TonalityTheory from "../../domain/theory/tonality-theory";
 import type DerivedState from "../../store/state/derived-state";
 import ElementState from "../../store/state/data/element-state";
+import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
+import type PianoBackingState from "../../store/state/data/arrange/piano/piano-backing-state";
 import { get } from "svelte/store";
 import { dataStore, derivedStore, settingsStore } from "../../store/global-store";
+
+const getDotRate = (dot: number | undefined) => {
+    switch (dot) {
+        case undefined: return 1;
+        case 1: return 1.5;
+        case 2: return 1.75;
+    }
+    throw new Error(`Unsupported dot value. [${dot}]`);
+};
+
+const getPianoBackingLayerBeatNoteLength = (cols: PianoBackingState.Col[]) => {
+    return cols.reduce((total, col) => {
+        return total + getDotRate(col.dot) / col.div / (col.tuplets ?? 1);
+    }, 0);
+};
+
+const getPianoBackingBeatNoteLength = (layers: PianoBackingState.Layer[]) => {
+    return layers.reduce((max, layer) => {
+        return Math.max(max, getPianoBackingLayerBeatNoteLength(layer.cols));
+    }, 0);
+};
 
 /**
  * dataStore のコミット済み最新状態から derivedStore を再構築する。
@@ -161,6 +184,16 @@ export const recalculate = () => {
                 }
 
                 // アレンジのキャッシュを作成
+                const overLengthTrackIndexes = arrange.tracks.flatMap((track, trackIndex) => {
+                    if (track.method !== "piano") return [];
+
+                    const unit = PianoEditorState.getArrangePatternFromRelation(lastChordSeq, track);
+                    if (unit == undefined || unit.layers == null) return [];
+
+                    const patternLength = getPianoBackingBeatNoteLength(unit.layers);
+                    return patternLength > beatSizeNote + Number.EPSILON ? [trackIndex] : [];
+                });
+
                 const arrs: string[] = [];
                 arrange.tracks.forEach((track) => {
                     const relation = track.relations.find(
@@ -191,7 +224,12 @@ export const recalculate = () => {
                     tempo: lastTempo,
                     rhythm: lastRhythm,
                     arrs,
-                    error: isStraddled ? { straddle: true } : undefined,
+                    error: {
+                        straddle: isStraddled,
+                        arrange: {
+                            overLengthTrackIndexes,
+                        },
+                    },
                 };
 
                 startBeat += data.beat;

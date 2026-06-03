@@ -1,4 +1,5 @@
 <script lang="ts">
+  import RhythmTheory from "../../../../../domain/theory/rhythm-theory";
   import PianoBackingState from "../../../../../store/state/data/arrange/piano/piano-backing-state";
   import type PianoEditorState from "../../../../../store/state/data/arrange/piano/piano-editor-state";
   import createArrangeSelector from "../../../../../service/arrange/arrange-selector";
@@ -11,9 +12,13 @@
     export let isRecordFocus: boolean;
     export let isRecordApply: boolean;
     export let usageBkg: PianoEditorState.Preset;
+    export let ts: RhythmTheory.TimeSignature;
+
+    const BASE_THUMBNAIL_BEAT_WIDTH = 32;
 
     const getColWidth = (col: PianoBackingState.Col) => {
-        return PianoBackingState.getColWidthCriteriaBeatWidth(col, 128);
+        const beatWidth = BASE_THUMBNAIL_BEAT_WIDTH / (RhythmTheory.getBeatDiv16Count(ts) / 4);
+        return PianoBackingState.getColWidthCriteriaBeatWidth(col, beatWidth);
     };
 
     $: isPresetExist = (() => {

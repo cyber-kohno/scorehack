@@ -73,12 +73,9 @@ namespace PianoBackingState {
     ) => {
         const getDotRate = () => {
             switch (col.dot ?? 0) {
-                case 0:
-                    return 1;
-                case 1:
-                    return 1.5;
-                case 2:
-                    return 1.75;
+                case 0: return 1;
+                case 1: return 1.5;
+                case 2: return 1.75;
             }
             throw new Error(`col.dotが想定していない値である。[${col.dot}]`);
         };

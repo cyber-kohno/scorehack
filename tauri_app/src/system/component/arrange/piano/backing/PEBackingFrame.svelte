@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import RhythmTheory from "../../../../domain/theory/rhythm-theory";
   import PianoBackingState from "../../../../store/state/data/arrange/piano/piano-backing-state";  import FocusableContent from "../../FocusableContent.svelte";
   import LenFrame from "./PEBColFrame.svelte";
   import MeasureFrame from "./PEBMeasureFrame.svelte";
@@ -11,6 +12,7 @@
   import { getPianoEditor, getPianoEditorContext } from "../piano-editor-context";
 
   const pianoContext = getPianoEditorContext();
+  const arrange = pianoContext.arrange;
   const editor = getPianoEditor();
 
   $: backing = (() => {
@@ -20,9 +22,13 @@
   })();
 
   const getColWidth = (col: PianoBackingState.Col) => {
+    const beatWidth =
+      Layout.arrange.piano.DIV1_WIDTH /
+      (RhythmTheory.getBeatDiv16Count($arrange.target.scoreBase.rhythm.ts) / 4);
+
     return PianoBackingState.getColWidthCriteriaBeatWidth(
       col,
-      Layout.arrange.piano.DIV1_WIDTH
+      beatWidth
     );
   };
 

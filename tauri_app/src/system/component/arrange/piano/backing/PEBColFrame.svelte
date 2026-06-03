@@ -15,7 +15,7 @@
     };
     $: getDispName = (col: PianoBackingState.Col) => {
         const dot = col.dot ?? 0;
-        return `${col.div}${".".repeat(dot)}`;
+        return `${col.div * 4}n${".".repeat(dot)}`;
     };
 
     $: pianoRef = $refStore.arrange.piano;
@@ -79,6 +79,6 @@
         color: rgb(51, 67, 136);
         line-height: 28px;
         text-align: center;
-        /* overflow: hidden; */
+        overflow: hidden;
     }
 </style>

@@ -2,6 +2,15 @@ import type FilePathRef from "../../infra/file/file-path-ref";
 
 namespace SettingsState {
 
+    export type Value = {
+        view: View;
+        notation: Notation;
+        playback: Playback;
+        userSoundFonts: UserSoundFontDefinition[];
+        terminalShortcuts: TerminalShortcut[];
+        envs: Envs;
+    }
+
     export type TimelineChordNameMode = "absolute" | "degree";
     export type DegreeBasis = "tonality" | "relative-major";
     export type SoundFontFileFormat = "sf2" | "sf3";
@@ -42,15 +51,6 @@ namespace SettingsState {
     export type Notation = {
         degreeBasis: DegreeBasis;
     };
-
-    export type Value = {
-        view: View;
-        notation: Notation;
-        playback: Playback;
-        userSoundFonts: UserSoundFontDefinition[];
-        terminalShortcuts: TerminalShortcut[];
-        envs: Envs;
-    }
 
     export const createInitial = (): Value => ({
         view: {

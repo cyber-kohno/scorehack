@@ -189,6 +189,8 @@ const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
                     {
                         // コード要素を走査する
                         chordCaches.forEach((chordCache, i) => {
+                            if (chordCache.error.arrange.overLengthTrackIndexes.includes(trackIndex)) return 1;
+
                             const chordSeq = chordCache.chordSeq;
                             /** アレンジパターン */
                             const arrPattern =

@@ -52,6 +52,7 @@
         {isRecordFocus}
         {isRecordApply}
         {usageBkg}
+        ts={finder.request.ts}
       />
     </div>
     <div class="voicing">

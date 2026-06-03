@@ -11,7 +11,7 @@
     style:left="{chordCache.viewPosLeft}px"
     style:width="{chordCache.viewPosWidth}px"
 >
-    <ArrangeTracksManage />
+    <ArrangeTracksManage {chordCache} />
 </div>
 
 <style>

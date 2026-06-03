@@ -3,6 +3,7 @@ import createArrangeUpdater from "../../service/arrange/arrange-updater";
 import { controlStore, dataStore } from "../../store/global-store";
 import ConfirmDialog from "../../service/common/confirm-dialog-controller";
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
+import createPianoArrangeActions from "./piano/piano-arrange-actions";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -22,6 +23,15 @@ const createArrangeActions = () => {
 
         ctx.arrangeUpdater.closeArrange();
         ctx.commitControl();
+    };
+
+    const applyAndCloseArrange = () => {
+        const control = get(controlStore);
+        const arrange = control.outline.arrange;
+
+        if (arrange?.method === "piano") {
+            createPianoArrangeActions().applyArrange();
+        }
     };
 
     const hasUnsavedPianoEditorChanges = () => {
@@ -46,9 +56,14 @@ const createArrangeActions = () => {
             title: "Close Arrange Editor",
             messageLines: [
                 "There are unapplied changes.",
-                "Discard the changes and close the editor?",
+                "How do you want to close the editor?",
             ],
             choices: [
+                {
+                    label: "Apply and close",
+                    role: "neutral",
+                    callback: applyAndCloseArrange,
+                },
                 {
                     label: "Discard and close",
                     role: "proceed",

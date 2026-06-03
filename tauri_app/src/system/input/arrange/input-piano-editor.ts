@@ -86,14 +86,12 @@ const useInputPianoEditor = () => {
             };
 
             const createInitialCol = (): PianoBackingState.Col => {
-              let div = 1;
-              if (backing.cursorX >= 0) {
-                const len = layer.cols[backing.cursorX];
-                div = len.div;
-              }
+              const source =
+                backing.cursorX >= 0 ? layer.cols[backing.cursorX] : undefined;
               return {
-                div,
-                tuplets: 1,
+                div: source?.div ?? 1,
+                dot: source?.dot,
+                tuplets: source?.tuplets ?? 1,
                 pedal: 0,
               };
             };
@@ -102,6 +100,7 @@ const useInputPianoEditor = () => {
               if (backing.cursorX === -1) return;
               const col = cols[backing.cursorX];
               col.div = div / 4;
+              col.dot = undefined;
               updateControl();
             };
             /**
@@ -186,10 +185,11 @@ const useInputPianoEditor = () => {
               case "a":
                 {
                   if (!isLimit()) {
-                    cols.splice(backing.cursorX, 0, createInitialCol());
+                    const insertIndex = backing.cursorX + 1;
+                    cols.splice(insertIndex, 0, createInitialCol());
                     layer.items.forEach((item, i) => {
                       const note = PianoBackingState.convNotesInfo(item);
-                      if (backing.cursorX < note.colIndex) {
+                      if (insertIndex <= note.colIndex) {
                         layer.items[i] = updateNotePosition(item, (note) => ({
                           ...note,
                           colIndex: note.colIndex + 1,

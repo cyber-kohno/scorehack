@@ -68,6 +68,7 @@
     ...chordCache,
     name: getChordName(chordCache, chordNameMode, $dataStore.elements),
     isScaleSafe: isScaleSafe(chordCache, $dataStore.elements),
+    isError: chordCache.error.straddle,
   }));
 </script>
 
@@ -81,7 +82,7 @@
       <div
         class="inner"
         data-isFocus={focus === chordCache.elementSeq}
-        data-isError={chordCache.error != undefined}
+        data-isError={chordCache.isError}
         data-isBorrowed={!chordCache.isScaleSafe}
       >
         {chordCache.name}

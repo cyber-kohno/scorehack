@@ -52,8 +52,11 @@ namespace DerivedState {
         rhythm?: RhythmCache;
         arrs: string[];
 
-        error?: {
+        error: {
             straddle: boolean;
+            arrange: {
+                overLengthTrackIndexes: number[];
+            };
         }
     }
 

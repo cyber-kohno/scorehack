@@ -26,6 +26,7 @@ namespace ArrangeTimelineNoteResolver {
         const notes: TimelineNote[] = [];
         const baseCache = baseCaches[chordCache.baseSeq];
         if (baseCache == undefined) return notes;
+        if (chordCache.error.arrange.overLengthTrackIndexes.includes(trackIndex)) return notes;
 
         const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(baseCache.scoreBase.rhythm.ts);
         const beatRate = beatDiv16Cnt / 4;
