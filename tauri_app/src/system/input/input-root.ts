@@ -1,9 +1,10 @@
 import { get } from "svelte/store";
 import InputState from "../store/state/input-state";
-import { actionMenuStore, confirmDialogStore, controlStore, floatingTextInputStore, inputStore, playbackStore, terminalStore, trackManagerStore } from "../store/global-store";
+import { actionMenuStore, confirmDialogStore, controlStore, floatingTextInputStore, inputStore, libraryStore, playbackStore, terminalStore, trackManagerStore } from "../store/global-store";
 import createTrackManagerActions from "../actions/track/track-manager-actions";
 import useInputActionMenu from "./input-action-menu";
 import useInputFloatingTextInput from "./input-floating-text-input";
+import useInputLibrary from "./input-library";
 import useInputMelody from "./input-melody";
 import useInputOutline from "./input-outline";
 import useInputTerminal from "./input-terminal";
@@ -22,6 +23,7 @@ const useInputRoot = () => {
     const isConfirmDialogActive = () => get(confirmDialogStore) != null;
     const isFloatingTextInputActive = () => get(floatingTextInputStore) != null;
     const isActionMenuActive = () => get(actionMenuStore) != null;
+    const isLibraryActive = () => get(libraryStore) != null;
     const isTrackManagerActive = () => get(trackManagerStore) != null;
 
     const controlKeyHold = (eventKey: string, isDown: boolean) => {
@@ -56,6 +58,8 @@ const useInputRoot = () => {
     }
 
     const controlKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "F5") return;
+
         if (isConfirmDialogActive()) {
             e.preventDefault();
             e.stopPropagation();
@@ -80,6 +84,13 @@ const useInputRoot = () => {
             e.stopPropagation();
             inputStore.set(InputState.createInitial());
             useInputActionMenu().control(e.key);
+            return;
+        }
+        if (isLibraryActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            useInputLibrary().control(e.key, { shiftKey: e.shiftKey });
             return;
         }
         if (isTrackManagerActive()) {
@@ -166,6 +177,12 @@ const useInputRoot = () => {
             return;
         }
         if (isActionMenuActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            return;
+        }
+        if (isLibraryActive()) {
             e.preventDefault();
             e.stopPropagation();
             inputStore.set(InputState.createInitial());

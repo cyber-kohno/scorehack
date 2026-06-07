@@ -67,19 +67,32 @@ namespace PianoBackingState {
         return `${base}.${note.velocity}.${note.delay}`;
     };
 
+    export const getDotRate = (dot?: number) => {
+        switch (dot ?? 0) {
+            case 0: return 1;
+            case 1: return 1.5;
+            case 2: return 1.75;
+        }
+        throw new Error(`Unsupported backing column dot. [${dot}]`);
+    };
+
     export const getColWidthCriteriaBeatWidth = (
         col: PianoBackingState.Col,
         beatWidth: number
     ) => {
-        const getDotRate = () => {
-            switch (col.dot ?? 0) {
-                case 0: return 1;
-                case 1: return 1.5;
-                case 2: return 1.75;
-            }
-            throw new Error(`col.dotが想定していない値である。[${col.dot}]`);
-        };
-        return Math.floor((beatWidth / col.div) * getDotRate());
+        return Math.floor((beatWidth / col.div) * getDotRate(col.dot));
+    };
+
+    export const getLayerBeatNoteLength = (cols: Col[]) => {
+        return cols.reduce((total, col) => {
+            return total + getDotRate(col.dot) / col.div / (col.tuplets ?? 1);
+        }, 0);
+    };
+
+    export const getBeatNoteLength = (layers: Layer[]) => {
+        return layers.reduce((max, layer) => {
+            return Math.max(max, getLayerBeatNoteLength(layer.cols));
+        }, 0);
     };
 
 };

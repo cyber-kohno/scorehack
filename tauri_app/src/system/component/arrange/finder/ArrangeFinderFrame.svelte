@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import ScrollRateFrame from "../../common/ScrollRateFrame.svelte";
-  import FinderConditionFrame from "./condition/FinderConditionFrame.svelte";
+  import FinderConditionHeader from "./condition/FinderConditionHeader.svelte";
   import { controlStore, refStore } from "../../../store/global-store";
   import type ArrangeLibrary from "../../../store/state/data/arrange/arrange-library";
   import APFinderPresetItem from "./list/piano/APFinderPresetItem.svelte";
@@ -35,7 +35,7 @@
 </script>
 
 <div class="wrap">
-  <FinderConditionFrame request={finder.request} />
+  <FinderConditionHeader request={finder.request} method={"piano"} />
   <div class="list-base">
     <ScrollRateFrame
       {ref}

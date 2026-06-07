@@ -126,15 +126,110 @@ const createPianoArrangeActions = () => {
         ctx.refUpdater.adjustPEBScrollCol();
     };
 
+    const moveBackingColCursor = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const moved = ctx.pianoUpdater.moveBackingColCursor(dir);
+        if (!moved) return;
+
+        ctx.commitControl();
+        ctx.refUpdater.adjustPEBScrollCol();
+    };
+
+    const insertBackingCol = updateControl(updater => {
+        return updater.insertBackingCol();
+    });
+
+    const deleteBackingCol = updateControl(updater => {
+        return updater.deleteBackingCol();
+    });
+
+    const setBackingColDiv = updateControlWithArg<number>((updater, div) => {
+        return updater.setBackingColDiv(div);
+    });
+
+    const toggleBackingColDot = updateControl(updater => {
+        return updater.toggleBackingColDot();
+    });
+
+    const toggleBackingPedal = updateControl(updater => {
+        return updater.toggleBackingPedal();
+    });
+
+    const moveBackingRecordCursor = updateControlWithArg<-1 | 1>((updater, dir) => {
+        return updater.moveBackingRecordCursor(dir);
+    });
+
+    const insertBackingRecord = updateControl(updater => {
+        return updater.insertBackingRecord();
+    });
+
+    const deleteBackingRecord = updateControl(updater => {
+        return updater.deleteBackingRecord();
+    });
+
+    const moveBackingNoteCursor = (dir: { x?: -1 | 1; y?: -1 | 1 }) => {
+        const ctx = createContext();
+        ctx.pianoUpdater.moveBackingNoteCursor(dir);
+        ctx.commitControl();
+        if (dir.x != undefined) ctx.refUpdater.adjustPEBScrollCol();
+    };
+
+    const toggleBackingNote = updateControl(updater => {
+        return updater.toggleBackingNote();
+    });
+
+    const increaseBackingNoteVelocity = updateControl(updater => {
+        return updater.modifyBackingNote((note) => ({
+            ...note,
+            velocity: Math.min(20, note.velocity + 1),
+        }));
+    });
+
+    const decreaseBackingNoteVelocity = updateControl(updater => {
+        return updater.modifyBackingNote((note) => ({
+            ...note,
+            velocity: Math.max(1, note.velocity - 1),
+        }));
+    });
+
+    const decreaseBackingNoteDelay = updateControl(updater => {
+        return updater.modifyBackingNote((note) => ({
+            ...note,
+            delay: Math.max(-3, note.delay - 1),
+        }));
+    });
+
+    const increaseBackingNoteDelay = updateControl(updater => {
+        return updater.modifyBackingNote((note) => ({
+            ...note,
+            delay: Math.min(3, note.delay + 1),
+        }));
+    });
+
     return {
         applyArrange,
         applyFinderPattern,
+        decreaseBackingNoteDelay,
+        decreaseBackingNoteVelocity,
+        deleteBackingCol,
+        deleteBackingRecord,
+        increaseBackingNoteDelay,
+        increaseBackingNoteVelocity,
+        insertBackingCol,
+        insertBackingRecord,
         moveFinderBacking,
         moveFinderVoicing,
+        moveBackingColCursor,
+        moveBackingNoteCursor,
+        moveBackingRecordCursor,
         moveVoicingCursor,
         openFinderFromEditor,
+        setBackingColDiv,
         shiftControl,
         shiftLayer,
+        toggleBackingColDot,
+        toggleBackingNote,
+        toggleBackingPedal,
         toggleVoicing,
     };
 };

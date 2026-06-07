@@ -1,4 +1,5 @@
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
+import PianoBackingState from "../../../store/state/data/arrange/piano/piano-backing-state";
 import MelodyState from "../../../store/state/data/melody-state";
 import ChordTheory from "../../../domain/theory/chord-theory";
 import type PlaybackCacheState from "../timeline/playback-cache-state";
@@ -57,13 +58,13 @@ namespace PianoArrangePlaybackUtil {
         const pos = l.cols.reduce((prev, cur, i) => {
           let ret = prev;
           const curRate = 1 / cur.div / (cur.tuplets ?? 1);
-          const len = getDotRate(cur.dot);
+          const len = PianoBackingState.getDotRate(cur.dot);
           if (note.colIndex > i) {
             ret += len * (curRate / criteriaRate);
           }
           return ret;
         }, 0);
-        let len = getDotRate(col.dot);
+        let len = PianoBackingState.getDotRate(col.dot);
 
         /**
          * 基準になるペダルの位置情報を返す
@@ -74,7 +75,7 @@ namespace PianoArrangePlaybackUtil {
           for (let i = 0; i < baseCols.length; i++) {
             const curCol = baseCols[i];
             const curRate = 1 / curCol.div / (curCol.tuplets ?? 1);
-            const len = getDotRate(curCol.dot);
+            const len = PianoBackingState.getDotRate(curCol.dot);
             const colLen = len * (curRate / criteriaRate);
             if (pos >= curPos && pos < curPos + colLen) {
               return [i, curPos];
@@ -92,7 +93,7 @@ namespace PianoArrangePlaybackUtil {
           for (let i = baseColIndex; i < baseCols.length; i++) {
             const curCol = baseCols[i];
             const curRate = 1 / curCol.div / (curCol.tuplets ?? 1);
-            const len = getDotRate(curCol.dot);
+            const len = PianoBackingState.getDotRate(curCol.dot);
             const colLen = len * (curRate / criteriaRate);
             // ペダル開始要素のみPOSの差分を考慮する
             if (i === baseColIndex) {
@@ -115,18 +116,6 @@ namespace PianoArrangePlaybackUtil {
       });
     });
     return notes;
-  };
-
-  const getDotRate = (dot: number | undefined) => {
-    switch (dot) {
-      case undefined:
-        return 1;
-      case 1:
-        return 1.5;
-      case 2:
-        return 1.75;
-    }
-    throw new Error(`dotが想定していないパターンの値。[${dot}]`);
   };
 
   /**

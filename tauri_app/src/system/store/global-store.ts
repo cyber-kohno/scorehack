@@ -14,6 +14,7 @@ import ActionMenuState from "./state/action-menu-state";
 import FloatingTextInputState from "./state/floating-text-input-state";
 import TrackManagerState from "./state/track-manager-state";
 import AppErrorState from "./state/app-error-state";
+import LibraryState from "./state/library-state";
 
 export const controlStore = writable<ControlState.Value>(ControlState.createInitial());
 export const dataStore = writable<DataState.Value>(DataState.createInitial());
@@ -30,3 +31,4 @@ export const actionMenuStore = writable<ActionMenuState.Value | null>(null);
 export const floatingTextInputStore = writable<FloatingTextInputState.Value | null>(null);
 export const trackManagerStore = writable<TrackManagerState.Value | null>(null);
 export const appErrorStore = writable<AppErrorState.Value | null>(null);
+export const libraryStore = writable<LibraryState.Value | null>(null);

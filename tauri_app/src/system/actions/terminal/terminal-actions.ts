@@ -168,6 +168,7 @@ const createTerminalActions = () => {
 
         rebuildAvailableFunctions(ctx);
         ctx.terminalUpdater.registCommand();
+        if (get(terminalStore) == null) return;
         ctx.commitTerminal();
     };
 
