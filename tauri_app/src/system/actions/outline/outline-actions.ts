@@ -5,7 +5,7 @@ import useScrollService from "../../service/common/scroll-service";
 import useDerivedSelector from "../../service/derived/derived-selector";
 import { createCommitDataAndRecalculate } from "../../service/derived/recalculate-derived";
 import createOutlineUpdater from "../../service/outline/outline-updater";
-import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../store/global-store";
+import { actionMenuStore, confirmDialogStore, controlStore, dataStore, derivedStore, floatingTextInputStore, libraryStore, refStore, settingsStore, terminalStore } from "../../store/global-store";
 import ElementState from "../../store/state/data/element-state";
 import useOutlineSelector from "../../service/outline/outline-selector";
 import Toast from "../../service/common/toast-controller";
@@ -16,6 +16,7 @@ import createOutlineChordActions from "./outline-chord-actions";
 import ScoreHistory from "../../infra/tauri/history/score-history";
 import useMelodySelector from "../../service/melody/melody-selector";
 import FloatingTextInput from "../../service/common/floating-text-input-controller";
+import LibraryState from "../../store/state/library-state";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -103,6 +104,13 @@ const createOutlineActions = () => {
             data,
         });
         ctx.commitDataAndRecalculate();
+    };
+
+    const openLibrary = () => {
+        actionMenuStore.set(null);
+        confirmDialogStore.set(null);
+        floatingTextInputStore.set(null);
+        libraryStore.set(LibraryState.createInitial());
     };
 
     const removeFocusElement = () => {
@@ -384,6 +392,7 @@ const createOutlineActions = () => {
         moveSection,
         openSectionNameInput,
         openInitTempoInput,
+        openLibrary,
         pasteClipboardElements,
         renameSection,
         removeFocusElement,

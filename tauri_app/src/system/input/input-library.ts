@@ -20,7 +20,6 @@ const useInputLibrary = () => {
                 actions.moveFinderVoicing(-1);
                 actions.moveBeat(-1);
                 actions.moveEat(-1);
-                actions.moveMethod(-1);
                 actions.movePitch(-1);
                 actions.moveSymbol(-1);
                 actions.moveSymbolTones(-1);
@@ -30,7 +29,6 @@ const useInputLibrary = () => {
                 actions.moveFinderVoicing(1);
                 actions.moveBeat(1);
                 actions.moveEat(1);
-                actions.moveMethod(1);
                 actions.movePitch(1);
                 actions.moveSymbol(1);
                 actions.moveSymbolTones(1);

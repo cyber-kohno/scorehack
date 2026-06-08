@@ -26,7 +26,7 @@
   $: track = $dataStore.arrange.tracks[$controlStore.outline.trackIndex];
   $: finder = (() => {
     const library = $libraryStore;
-    if (library == null || library.condition.method !== "piano" || track == undefined || track.method !== "piano") return null;
+    if (library == null || track == undefined || track.method !== "piano") return null;
     const condition = library.condition;
 
     const request: ArrangeLibrary.SearchRequest = {
@@ -51,16 +51,14 @@
 </script>
 
 <div class="panel">
-  {#if finder != null && $libraryStore != null}
-    <FinderConditionHeader request={finder.request} method={$libraryStore.condition.method} />
+  {#if finder != null && track != undefined}
+    <FinderConditionHeader request={finder.request} method={track.method} />
   {:else}
     <div class="condition-placeholder"></div>
   {/if}
   <div class="list-base">
     {#if track == undefined}
       <div class="msg">No arrange track found.</div>
-    {:else if $libraryStore?.condition.method !== "piano"}
-      <div class="msg">Piano patterns are available for piano method only.</div>
     {:else if track.method !== "piano"}
       <div class="msg">Piano patterns are available for piano tracks only.</div>
     {:else if finder == null || finder.list.length === 0}

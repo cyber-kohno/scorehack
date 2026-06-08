@@ -10,7 +10,7 @@
   <div class="backdrop">
     <div class="dialog">
       <div class="search">
-        <LibrarySearchPanel />
+        <LibrarySearchPanel {library} />
       </div>
       <div class="result">
         <LibraryResultPanel />

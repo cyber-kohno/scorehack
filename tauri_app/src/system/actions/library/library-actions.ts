@@ -38,20 +38,6 @@ const createLibraryActions = () => {
         libraryStore.set({ ...library });
     };
 
-    const moveMethod = (dir: -1 | 1) => {
-        const ctx = createContext();
-        const library = ctx.library;
-        if (library == null || library.focus.finder != null || library.focus.condition !== "medhod") return;
-
-        const methods = ["piano", "guitar"] as const;
-        const index = methods.indexOf(library.condition.method);
-        const next = index + dir;
-        if (next < 0 || next > methods.length - 1) return;
-
-        library.condition.method = methods[next];
-        libraryStore.set({ ...library });
-    };
-
     const moveTimeSignature = (dir: -1 | 1) => {
         const ctx = createContext();
         const library = ctx.library;
@@ -195,8 +181,6 @@ const createLibraryActions = () => {
     });
 
     const searchPianoPatterns = (ctx: ReturnType<typeof createContext>, library: LibraryState.Value) => {
-        if (library.condition.method !== "piano") return [];
-
         const track = ctx.arrange.tracks[ctx.control.outline.trackIndex];
         if (track == undefined || track.method !== "piano") return [];
 
@@ -266,7 +250,6 @@ const createLibraryActions = () => {
         moveBeat,
         moveCondition,
         moveEat,
-        moveMethod,
         movePitch,
         moveSymbol,
         moveSymbolTones,

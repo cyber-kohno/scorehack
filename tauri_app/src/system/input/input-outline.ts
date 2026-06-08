@@ -58,6 +58,7 @@ const useInputOutline = () => {
     switch (eventKey) {
       case "a": outlineActions.insertChord(); break;
       case "s": outlineActions.insertSection(); break;
+      case "l": outlineActions.openLibrary(); break;
       case "m": ActionMenu.open(); break;
       case "Delete": outlineActions.removeFocusElement(); break;
 

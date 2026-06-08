@@ -1,10 +1,8 @@
 <script lang="ts">
   import { tick } from "svelte";
-  import { libraryStore } from "../../../store/global-store";
   import LSIBeat from "./item/LSIBeat.svelte";
   import LSIEatHead from "./item/LSIEatHead.svelte";
   import LSIEatTail from "./item/LSIEatTail.svelte";
-  import LSIMethod from "./item/LSIMethod.svelte";
   import LSIOnChord from "./item/LSIOnChord.svelte";
   import LSIRoot from "./item/LSIRoot.svelte";
   import LSISymbol from "./item/LSISymbol.svelte";
@@ -12,18 +10,10 @@
   import LSITimeSignature from "./item/LSITimeSignature.svelte";
   import type LibraryState from "../../../store/state/library-state";
 
+  export let library!: LibraryState.Value;
+
   let panelRef: HTMLElement | null = null;
-
-  const getLibrary = () => {
-    const library = $libraryStore;
-    if (library == null) throw new Error("library must not be null.");
-    return library;
-  };
-
-  const getFocus = (condition: LibraryState.Condition) => {
-    const library = getLibrary();
-    return library.focus.finder == null && library.focus.condition === condition;
-  };
+  let getFocus = (_: LibraryState.Condition) => false;
 
   const adjustActiveScroll = async () => {
     const panel = panelRef;
@@ -42,16 +32,18 @@
   };
 
   $: {
-    getLibrary().focus.condition;
+    library.focus.condition;
+    library.focus.finder;
     void adjustActiveScroll();
   }
 
-  $: library = getLibrary();
   $: condition = library.condition;
+  $: getFocus = (condition: LibraryState.Condition) => {
+    return library.focus.finder == null && library.focus.condition === condition;
+  };
 </script>
 
 <div class="panel" bind:this={panelRef}>
-  <LSIMethod isFocus={getFocus("medhod")} method={condition.method} />
   <LSITimeSignature isFocus={getFocus("ts")} ts={condition.ts} />
   <LSIBeat isFocus={getFocus("beat")} beat={condition.beat} />
   <LSIEatHead isFocus={getFocus("eat-head")} eatHead={condition.eatHead} />
