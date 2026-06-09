@@ -231,7 +231,7 @@ const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
                                     baseCaches,
                                     timelineStart,
                                     targetNote,
-                                    track.volume,
+                                    track.volume * (note.velocity / 10),
                                     settings.playback.swing,
                                 );
                                 if (playInfo == null) return 1;

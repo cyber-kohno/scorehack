@@ -79,7 +79,7 @@ const startPlaybackPianoEditor = () => {
         );
         const sustainMs = sustainBeatNote * msPerBeatNote;
         const pitchName = TonalityTheory.getKey12FullName(note.pitch);
-        const gain = 5 * (track.volume / 10);
+        const gain = 5 * (track.volume / 10) * (note.velocity / 10);
 
         const key = setTimeout(() => {
             player.play(pitchName, 0, {

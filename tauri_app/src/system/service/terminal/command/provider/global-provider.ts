@@ -4,7 +4,6 @@ import TerminalCommand from "../../terminal-command";
 import createAudioCatalog from "../catalog/audio-catalog";
 import createExportCatalog from "../catalog/export-catalog";
 import createLoadCatalog from "../catalog/load-catalog";
-import createLibraryCatalog from "../catalog/library-catalog";
 import createSaveCatalog from "../catalog/save-catalog";
 import createShortcutCatalog from "../catalog/shortcut-catalog";
 import createSoundfontCatalog from "../catalog/soundfont-catalog";
@@ -54,7 +53,6 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
       createSaveCatalog(ctx),
       createExportCatalog(ctx),
       createLoadCatalog(ctx),
-      createLibraryCatalog(ctx),
       createAudioCatalog(ctx),
       createSoundfontCatalog(ctx),
       createShortcutCatalog(ctx),

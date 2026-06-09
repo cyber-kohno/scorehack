@@ -2,8 +2,10 @@ import { get } from "svelte/store";
 import ScoreHistory from "../../infra/tauri/history/score-history";
 import Layout from "../../layout/layout-constant";
 import FloatingTextInput from "../../service/common/floating-text-input-controller";
+import Toast from "../../service/common/toast-controller";
 import { controlStore, dataStore, inputStore, refStore, trackManagerStore } from "../../store/global-store";
 import InputState from "../../store/state/input-state";
+import ToastState from "../../store/state/toast-state";
 import TrackManagerState from "../../store/state/track-manager-state";
 
 const createContext = () => {
@@ -117,6 +119,16 @@ const createTrackManagerActions = () => {
 
         const name = value.trim();
         if (name.length === 0) return;
+        if (tracks.some((track, index) => index !== trackIndex && track.name === name)) {
+            Toast.create({
+                ...ToastState.createInitial(),
+                x: Layout.root.OUTLINE_WIDTH + 16,
+                y: Layout.root.HEADER_HEIGHT + 16,
+                width: 260,
+                text: `Track already exists. [${name}]`,
+            });
+            return;
+        }
 
         track.name = name;
         ctx.commitData();

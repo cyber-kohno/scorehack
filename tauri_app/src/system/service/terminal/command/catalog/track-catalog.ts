@@ -24,6 +24,18 @@ const createTrackCatalog = (
     }
   };
 
+  const isTrackNameUsed = (name: string) => {
+    return getTrackNames().includes(name);
+  };
+
+  const getDefaultTrackName = () => {
+    let index = 0;
+    while (isTrackNameUsed(`track${index}`)) {
+      index++;
+    }
+    return `track${index}`;
+  };
+
   const formatMelodyTrackSoundFont = (track: MelodyState.ScoreTrack) => {
     const instRef = track.instRef;
     if (instRef == undefined) return "";
@@ -157,8 +169,14 @@ const createTrackCatalog = (
   };
 
   const createTrack = (name: string | undefined) => {
-    const tracks = kind === "melody" ? data.scoreTracks : data.arrange.tracks;
-    const trackName = name ?? `track${tracks.length}`;
+    const trackName = name == undefined || name.trim() === ""
+      ? getDefaultTrackName()
+      : name.trim();
+
+    if (isTrackNameUsed(trackName)) {
+      logger.outputError(`Track already exists. [${trackName}]`);
+      return;
+    }
 
     switch (kind) {
       case "melody":

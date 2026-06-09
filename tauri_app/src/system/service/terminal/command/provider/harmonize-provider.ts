@@ -2,6 +2,7 @@ import ArrangeState from "../../../../store/state/data/arrange/arrange-state";
 import type SettingsState from "../../../../store/state/settings-state";
 import TerminalCommand from "../../terminal-command";
 import createInstCatalog from "../catalog/inst-catalog";
+import createLibraryCatalog from "../catalog/library-catalog";
 import createTrackCatalog from "../catalog/track-catalog";
 
 const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
@@ -42,6 +43,7 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
   const commands = (): TerminalCommand.Props[] => {
     const defaultProps = TerminalCommand.createDefaultProps("harmonize");
     return [
+      createLibraryCatalog(ctx),
       createInstCatalog(ctx, "harmonize"),
       createTrackCatalog(ctx, "harmonize"),
       {
