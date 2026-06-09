@@ -72,7 +72,7 @@
   .frame {
     display: inline-block;
     position: absolute;
-    z-index: 6;
+    z-index: 1000;
     top: 10px;
     left: 10px;
     width: 700px;

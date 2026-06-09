@@ -42,6 +42,14 @@ const useInputLibrary = () => {
                 actions.moveFinderBacking(1);
                 actions.moveCondition(1);
                 break;
+            case "B":
+            case "b":
+                actions.openPianoEditor();
+                break;
+            case "M":
+            case "m":
+                actions.openMenu();
+                break;
             case "Escape":
                 actions.close();
                 break;

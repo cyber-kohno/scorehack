@@ -16,6 +16,11 @@ namespace RefState {
                 records: { seq: number, ref: HTMLElement }[];
             };
         }
+        library: {
+            finder: {
+                records: { seq: number, ref: HTMLElement }[];
+            };
+        };
 
         elementRefs: RefIndex[];
         trackArr: RefIndex[][];
@@ -40,7 +45,8 @@ namespace RefState {
         trackArr: [[]],
         noteRefs: [[]],
         timerKeys: [],
-        arrange: { piano: {}, finder: { records: [] } }
+        arrange: { piano: {}, finder: { records: [] } },
+        library: { finder: { records: [] } }
     });
 
     export type ScrollLimitProps = {

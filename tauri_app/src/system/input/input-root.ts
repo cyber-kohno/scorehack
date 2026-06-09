@@ -23,7 +23,11 @@ const useInputRoot = () => {
     const isConfirmDialogActive = () => get(confirmDialogStore) != null;
     const isFloatingTextInputActive = () => get(floatingTextInputStore) != null;
     const isActionMenuActive = () => get(actionMenuStore) != null;
-    const isLibraryActive = () => get(libraryStore) != null;
+    const isArrangeEditorActive = () => {
+        const arrange = get(controlStore).outline.arrange;
+        return arrange != null && arrange.editor != undefined;
+    };
+    const isLibraryActive = () => get(libraryStore) != null && !isArrangeEditorActive();
     const isTrackManagerActive = () => get(trackManagerStore) != null;
 
     const controlKeyHold = (eventKey: string, isDown: boolean) => {

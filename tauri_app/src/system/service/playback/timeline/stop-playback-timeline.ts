@@ -40,6 +40,7 @@ const stopPlaybackTimeline = () => {
     // メロディモード時はカーソルを同期
     if (control.mode === "melody") {
         melodyUpdater.syncCursorFromElementSeq(derived);
+        melodyUpdater.judgeOverlap();
         controlStore.set({ ...control });
     }
     playbackStore.set({ ...playback });

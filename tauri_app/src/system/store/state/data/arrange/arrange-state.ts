@@ -33,10 +33,13 @@ namespace ArrangeState {
 
   export type EditorProps = {
     method: ArrangeState.ArrangeMedhod;
+    origin: EditorOrigin;
     target: Target;
     editor?: any;
     finder?: any;
   };
+
+  export type EditorOrigin = "outline" | "library";
 
   export type Target = {
     scoreBase: ElementState.DataInit;

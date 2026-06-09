@@ -353,6 +353,7 @@ const createOutlineUpdater = (ctx: Context) => {
 
         const arrange: ArrangeState.EditorProps = {
             method: track.method,
+            origin: "outline",
             target,
         };
         buildDetail({ arrange, arrTrack: track, chordCache });

@@ -23,14 +23,20 @@ namespace ActionMenuState {
 
     export type Item = ActionItem | ParentItem;
 
+    export type Placement =
+        | { type: "outline-focus" }
+        | { type: "fixed"; left: number; top: number };
+
     export type Value = {
         path: number[];
         items: Item[];
+        placement: Placement;
     };
 
     export const createInitial = (): Value => ({
         path: [0],
         items: [],
+        placement: { type: "outline-focus" },
     });
 
     export const createFactory = () => ({

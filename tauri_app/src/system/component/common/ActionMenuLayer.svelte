@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { actionMenuStore, controlStore, derivedStore, refStore } from "../../../store/global-store";
-  import ActionMenu from "../../../service/common/action-menu-controller";
-  import type ActionMenuState from "../../../store/state/action-menu-state";
+  import { actionMenuStore, controlStore, derivedStore, refStore } from "../../store/global-store";
+  import ActionMenu from "../../service/common/action-menu-controller";
+  import type ActionMenuState from "../../store/state/action-menu-state";
 
   $: actionMenu = $actionMenuStore;
   const MENU_WIDTH = 220;
@@ -10,21 +10,30 @@
   const FRAME_PADDING = 6;
   let frameRefs: HTMLElement[] = [];
 
-  $: [left, top] = (() => {
+  const getOutlineFocusPosition = () => {
     const outlineRef = $refStore.outline;
     if (outlineRef != undefined) {
       const element = $derivedStore.elementCaches[$controlStore.outline.focus];
-      const top = element.outlineTop - outlineRef.scrollTop;
-      const left = 210;
+      const rect = outlineRef.getBoundingClientRect();
+      const top = rect.top + element.outlineTop - outlineRef.scrollTop;
+      const left = rect.left + 210;
       return [left, top];
     }
     return [0, 0];
+  };
+
+  $: [left, top] = (() => {
+    if (actionMenu?.placement.type === "fixed") {
+      return [actionMenu.placement.left, actionMenu.placement.top];
+    }
+    return getOutlineFocusPosition();
   })();
 
   const getMaxHeight = (levelTop: number) => {
     const outlineRef = $refStore.outline;
     const frameHeight = outlineRef?.clientHeight ?? 480;
-    return Math.max(160, frameHeight - levelTop - 8);
+    const baseTop = actionMenu?.placement.type === "fixed" ? 0 : top;
+    return Math.max(160, frameHeight - (levelTop - baseTop) - 8);
   };
 
   const getTargetScrollTop = (
@@ -137,12 +146,12 @@
         >
           <span>{item.label}</span>
           {#if item.type === "parent"}
-            <span class="arrow">›</span>
+            <span class="arrow">></span>
           {/if}
         </button>
       {/each}
     </div>
-    {/each}
+  {/each}
 {/if}
 
 <style>

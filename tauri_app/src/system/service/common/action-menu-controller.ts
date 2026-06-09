@@ -77,8 +77,14 @@ namespace ActionMenu {
         return [];
     };
 
-    const refreshKeepingPath = (path: number[]) => {
-        const items = createRootItems();
+    const refreshKeepingPath = (
+        path: number[],
+        currentItems: ActionMenuState.Item[],
+        placement: ActionMenuState.Placement,
+    ) => {
+        const items = placement.type === "outline-focus"
+            ? createRootItems()
+            : currentItems;
         if (items.length === 0) {
             actionMenuStore.set(null);
             return;
@@ -88,13 +94,15 @@ namespace ActionMenu {
             ...ActionMenuState.createInitial(),
             path: normalizePath(items, path),
             items,
+            placement,
         });
     };
 
-    export const open = () => {
+    const openItems = (
+        items: ActionMenuState.Item[],
+        placement: ActionMenuState.Placement,
+    ) => {
         inputStore.set(InputState.createInitial());
-
-        const items = createRootItems();
 
         if (items.length === 0) {
             actionMenuStore.set(null);
@@ -105,7 +113,20 @@ namespace ActionMenu {
             ...ActionMenuState.createInitial(),
             path: [0],
             items,
+            placement,
         });
+    };
+
+    export const open = () => {
+        openItems(createRootItems(), { type: "outline-focus" });
+    };
+
+    export const openAt = (
+        items: ActionMenuState.Item[],
+        left: number,
+        top: number,
+    ) => {
+        openItems(items, { type: "fixed", left, top });
     };
 
     export const close = () => {
@@ -147,7 +168,7 @@ namespace ActionMenu {
         if (result instanceof Promise) {
             result
                 .then(() => {
-                    if (keepOpen) refreshKeepingPath(prevPath);
+                    if (keepOpen) refreshKeepingPath(prevPath, actionMenu.items, actionMenu.placement);
                 })
                 .catch(error => {
                     console.error("Action menu callback failed:", error);
@@ -155,7 +176,7 @@ namespace ActionMenu {
             return;
         }
 
-        if (keepOpen) refreshKeepingPath(prevPath);
+        if (keepOpen) refreshKeepingPath(prevPath, actionMenu.items, actionMenu.placement);
     };
 
     export const apply = enter;

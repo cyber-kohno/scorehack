@@ -27,7 +27,7 @@
   .frame {
     display: inline-block;
     position: absolute;
-    z-index: 5;
+    z-index: 7;
     top: var(--arrange-frame-y);
     left: var(--arrange-frame-x);
     /* width: 700px;

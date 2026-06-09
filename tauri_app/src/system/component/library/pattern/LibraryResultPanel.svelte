@@ -1,10 +1,31 @@
 <script lang="ts">
+  import { get } from "svelte/store";
+  import { onDestroy, tick } from "svelte";
   import ChordTheory from "../../../domain/theory/chord-theory";
   import ArrangeLibrary from "../../../store/state/data/arrange/arrange-library";
   import type ArrangeState from "../../../store/state/data/arrange/arrange-state";
-  import { controlStore, dataStore, libraryStore } from "../../../store/global-store";
+  import { controlStore, dataStore, libraryStore, refStore } from "../../../store/global-store";
   import FinderConditionHeader from "../../arrange/finder/condition/FinderConditionHeader.svelte";
   import APFinderPresetItem from "../../arrange/finder/list/piano/APFinderPresetItem.svelte";
+
+  let recordRefs: HTMLElement[] = [];
+
+  const syncRecordRefs = (length: number) => {
+    const refState = get(refStore);
+    refState.library.finder.records = recordRefs
+      .slice(0, length)
+      .map((ref, seq) => ({ seq, ref }))
+      .filter(item => item.ref != undefined);
+    refStore.set({ ...refState });
+  };
+
+  const clearRecordRefs = () => {
+    const refState = get(refStore);
+    refState.library.finder.records = [];
+    refStore.set({ ...refState });
+  };
+
+  onDestroy(clearRecordRefs);
 
   const createStructCount = (library: NonNullable<typeof $libraryStore>) => {
     const condition = library.condition;
@@ -48,6 +69,11 @@
       }),
     };
   })();
+
+  $: {
+    const length = finder?.list.length ?? 0;
+    tick().then(() => syncRecordRefs(length));
+  }
 </script>
 
 <div class="panel">
@@ -66,7 +92,9 @@
     {:else}
       <div class="list-inner">
         {#each finder.list as preset, backingIndex}
-          <APFinderPresetItem {finder} usageBkg={preset} {backingIndex} />
+          <div class="record-ref" bind:this={recordRefs[backingIndex]}>
+            <APFinderPresetItem {finder} usageBkg={preset} {backingIndex} />
+          </div>
         {/each}
       </div>
     {/if}
@@ -105,6 +133,13 @@
     height: 100%;
     background-color: rgb(44, 44, 44);
     overflow: hidden;
+  }
+
+  .record-ref {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    height: 71px;
   }
 
   .msg {

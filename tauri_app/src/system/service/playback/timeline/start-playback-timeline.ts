@@ -378,6 +378,13 @@ const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
         // console.log(`posBeat: ${posBeat}`);
         playback.linePos = posBeat;
 
+        const tailChordCache = chordCaches[chordCaches.length - 1];
+        const tailBeatNote = tailChordCache.startBeatNote + tailChordCache.lengthBeatNote;
+        if (posBeat >= tailBeatNote) {
+            stopPlaybackTimeline();
+            return;
+        }
+
         const chord = getChordFromBeat(posBeat);
 
         if (outline.focus !== chord.elementSeq) {

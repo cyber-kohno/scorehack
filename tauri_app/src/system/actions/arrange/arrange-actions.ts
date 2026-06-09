@@ -46,6 +46,12 @@ const createArrangeActions = () => {
     };
 
     const closeArrange = () => {
+        const arrange = get(controlStore).outline.arrange;
+        if (arrange?.origin === "library") {
+            closeArrangeImmediately();
+            return;
+        }
+
         if (!hasUnsavedPianoEditorChanges()) {
             closeArrangeImmediately();
             return;

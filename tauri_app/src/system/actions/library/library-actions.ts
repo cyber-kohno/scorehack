@@ -1,20 +1,26 @@
 import { get } from "svelte/store";
-import { controlStore, dataStore, inputStore, libraryStore } from "../../store/global-store";
+import { controlStore, dataStore, inputStore, libraryStore, refStore } from "../../store/global-store";
 import ChordTheory from "../../domain/theory/chord-theory";
 import RhythmTheory from "../../domain/theory/rhythm-theory";
 import InputState from "../../store/state/input-state";
 import LibraryState from "../../store/state/library-state";
 import ArrangeLibrary from "../../store/state/data/arrange/arrange-library";
+import PianoBackingState from "../../store/state/data/arrange/piano/piano-backing-state";
+import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
+import ActionMenu from "../../service/common/action-menu-controller";
+import ActionMenuState from "../../store/state/action-menu-state";
 
 const createContext = () => {
     const data = get(dataStore);
     const control = get(controlStore);
     const library = get(libraryStore);
+    const ref = get(refStore);
 
     return {
         arrange: data.arrange,
         control,
         library,
+        ref,
     };
 };
 
@@ -245,6 +251,107 @@ const createLibraryActions = () => {
         libraryStore.set({ ...library });
     };
 
+    const openPianoEditor = () => {
+        const ctx = createContext();
+        const library = ctx.library;
+        if (library == null || library.focus.finder == null) return;
+
+        const track = ctx.arrange.tracks[ctx.control.outline.trackIndex];
+        if (track == undefined || track.method !== "piano" || track.pianoLib == undefined) return;
+
+        const list = searchPianoPatterns(ctx, library);
+        const cursor = library.focus.finder.cursor;
+        const selected = list[cursor.backing];
+        if (selected == undefined) return;
+
+        const backingPattern = track.pianoLib.backingPatterns.find(pattern => {
+            return pattern.no === selected.bkgPatt;
+        });
+        if (backingPattern == undefined) return;
+
+        const soundsPattern = cursor.sounds === -1
+            ? undefined
+            : track.pianoLib.soundsPatterns.find(pattern => {
+                return pattern.no === selected.voics[cursor.sounds];
+            });
+
+        const condition = library.condition;
+        const chord = {
+            key12: condition.root,
+            isFlat: false,
+            symbol: condition.symbol,
+            on: condition.on === -1
+                ? undefined
+                : {
+                    key12: condition.on,
+                    isFlat: false,
+                },
+        };
+        const editor = PianoEditorState.createInitialProps();
+        const backing = PianoBackingState.createInitialBackingProps();
+        backing.recordNum = backingPattern.backing.recordNum;
+        backing.layers = JSON.parse(JSON.stringify(backingPattern.backing.layers));
+        editor.backing = backing;
+        editor.voicing.items = soundsPattern == undefined
+            ? []
+            : JSON.parse(JSON.stringify(soundsPattern.sounds));
+        editor.lastSource = PianoEditorState.createSnapshot(editor);
+
+        ctx.control.outline.arrange = {
+            method: "piano",
+            origin: "library",
+            target: {
+                scoreBase: {
+                    rhythm: {
+                        ts: condition.ts,
+                        feel: { type: "straight" },
+                    },
+                    tempo: 100,
+                    tonality: {
+                        key12: 0,
+                        scale: "major",
+                    },
+                },
+                beat: {
+                    num: condition.beat,
+                    eatHead: condition.eatHead,
+                    eatTail: condition.eatTail,
+                },
+                compiledChord: {
+                    chord,
+                    structs: ChordTheory.getStructsFromKeyChord(chord),
+                },
+                chordSeq: -1,
+            },
+            editor,
+        };
+        controlStore.set({ ...ctx.control });
+    };
+
+    const openMenu = () => {
+        const ctx = createContext();
+        const library = ctx.library;
+        if (library == null || library.focus.finder == null) return;
+
+        const cursor = library.focus.finder.cursor;
+        if (cursor.backing < 0) return;
+
+        const recordRef = ctx.ref.library.finder.records.find(record => {
+            return record.seq === cursor.backing;
+        })?.ref;
+        if (recordRef == undefined) return;
+
+        const rect = recordRef.getBoundingClientRect();
+        const { action } = ActionMenuState.createFactory();
+        ActionMenu.openAt(
+            [
+                action("Edit", openPianoEditor),
+            ],
+            rect.left + 8,
+            rect.top + 8,
+        );
+    };
+
     return {
         close,
         moveBeat,
@@ -256,6 +363,8 @@ const createLibraryActions = () => {
         moveTimeSignature,
         moveFinderBacking,
         moveFinderVoicing,
+        openMenu,
+        openPianoEditor,
         switchToCondition,
         switchToFinder,
     };
