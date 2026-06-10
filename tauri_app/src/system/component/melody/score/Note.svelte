@@ -21,6 +21,7 @@
   export let operation: OperationStatus;
   export let cursor: MelodyState.Note;
   export let scoreBase: ElementState.DataInit;
+  export let baseStartBeatNote: number;
   export let registerEffectRef: (index: number, ref: HTMLElement | null) => void;
   export let registerNoteRef: (index: number, ref: HTMLElement | null) => void;
 
@@ -48,7 +49,7 @@
   });
 
   $: tonality = scoreBase.tonality;
-  $: protrusionHeight = getProtrusionHeight(getNoteDisplayUnit(note, scoreBase.rhythm.ts));
+  $: protrusionHeight = getProtrusionHeight(getNoteDisplayUnit(note, scoreBase.rhythm.ts, baseStartBeatNote));
 
   $: [isDisp, left, scaleDegreeLabel, width] = (() => {
     const beatSide = MelodyState.calcBeatSide(note);
@@ -103,7 +104,7 @@
         {#if note.pron}
           <div class="pron">{note.pron}</div>
         {/if}
-        <Factors {note} ts={scoreBase.rhythm.ts} />
+        <Factors {note} ts={scoreBase.rhythm.ts} {baseStartBeatNote} />
       {/if}
     </div>
   </div>

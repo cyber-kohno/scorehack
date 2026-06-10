@@ -6,8 +6,9 @@
 
   export let note: MelodyState.Note;
   export let ts: RhythmTheory.TimeSignature;
+  export let baseStartBeatNote: number;
 
-  $: factors = splitNoteDisplayFactors(note, ts);
+  $: factors = splitNoteDisplayFactors(note, ts, baseStartBeatNote);
 
   const buildType = (unit: NoteDisplayUnit) => unit;
 </script>

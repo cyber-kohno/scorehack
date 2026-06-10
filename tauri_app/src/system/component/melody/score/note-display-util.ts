@@ -23,15 +23,17 @@ const isAligned = (pos: number, unit: number) => isMultiple(pos, unit);
 export const getNoteDisplayUnit = (
     note: MelodyState.Note,
     ts: RhythmTheory.TimeSignature,
+    baseStartBeatNote = 0,
 ): NoteDisplayUnit => {
     if (note.norm.tuplets != undefined) return "triplet";
 
     const length = MelodyState.calcBeat(note.norm, note.len);
     const pos = MelodyState.calcBeat(note.norm, note.pos);
+    const localPos = pos - baseStartBeatNote;
     const beatLength = RhythmTheory.getBeatDiv16Count(ts) / 4;
 
-    if (isAligned(pos, beatLength) && isMultiple(length, beatLength)) return "beat";
-    if (isAligned(pos, 1 / 2) && isMultiple(length, 1 / 2)) return "eighth";
+    if (isAligned(localPos, beatLength) && isMultiple(length, beatLength)) return "beat";
+    if (isAligned(localPos, 1 / 2) && isMultiple(length, 1 / 2)) return "eighth";
     return "sixteenth";
 };
 
@@ -47,8 +49,9 @@ export const getProtrusionHeight = (unit: NoteDisplayUnit) => {
 export const getNoteDisplayRate = (
     note: MelodyState.Note,
     ts: RhythmTheory.TimeSignature,
+    baseStartBeatNote = 0,
 ): NoteDisplayRate => {
-    switch (getNoteDisplayUnit(note, ts)) {
+    switch (getNoteDisplayUnit(note, ts, baseStartBeatNote)) {
         case "beat":
             return RhythmTheory.getMelodyInputRates(ts)[2];
         case "eighth":
@@ -66,6 +69,7 @@ export const getNoteDisplayRate = (
 export const splitNoteDisplayFactors = (
     note: MelodyState.Note,
     ts: RhythmTheory.TimeSignature,
+    baseStartBeatNote = 0,
 ): NoteDisplayFactor[] => {
     const factors: NoteDisplayFactor[] = [];
     let pos = MelodyState.calcBeat(note.norm, note.pos);
@@ -82,10 +86,10 @@ export const splitNoteDisplayFactors = (
         if (note.norm.tuplets != undefined) {
             factors.push({ unit: "triplet", length: unitLength });
             pos += unitLength;
-        } else if (isAligned(pos, beatLength) && pos + beatLength <= tail + 1e-9) {
+        } else if (isAligned(pos - baseStartBeatNote, beatLength) && pos + beatLength <= tail + 1e-9) {
             factors.push({ unit: "beat", length: beatLength });
             pos += beatLength;
-        } else if (isAligned(pos, eighthLength) && pos + eighthLength <= tail + 1e-9) {
+        } else if (isAligned(pos - baseStartBeatNote, eighthLength) && pos + eighthLength <= tail + 1e-9) {
             factors.push({ unit: "eighth", length: eighthLength });
             pos += eighthLength;
         } else {

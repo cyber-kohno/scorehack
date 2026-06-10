@@ -118,6 +118,41 @@ const createMelodyUpdater = (ctx: Context) => {
     const moveCursor = (dir: -1 | 1) => {
         melody.cursor.pos += dir * melody.cursor.len;
     };
+    const adjustCursorRateForTimeSignature = (ts: RhythmTheory.TimeSignature) => {
+        const cursor = melody.cursor;
+        if (cursor.norm.tuplets != undefined) return;
+
+        const rates = RhythmTheory.getMelodyInputRates(ts);
+        const currentRate = rates.find(rate =>
+            rate.div === cursor.norm.div && rate.len === cursor.len
+        );
+        if (currentRate != undefined) return;
+
+        const cursorBeat = MelodyState.calcBeat(cursor.norm, cursor.pos);
+        const cursorLenBeat = MelodyState.calcBeat(cursor.norm, cursor.len);
+        const nextRate = rates
+            .map(rate => ({
+                rate,
+                beat: MelodyState.calcBeat({ div: rate.div }, rate.len),
+            }))
+            .sort((left, right) => {
+                const leftDiff = Math.abs(left.beat - cursorLenBeat);
+                const rightDiff = Math.abs(right.beat - cursorLenBeat);
+                if (Math.abs(leftDiff - rightDiff) > 1e-9) return leftDiff - rightDiff;
+                return right.beat - left.beat;
+            })[0]?.rate;
+
+        if (nextRate == undefined) return;
+
+        const nextUnitBeat = MelodyState.calcBeat({ div: nextRate.div }, 1);
+        const nextPos = cursorBeat / nextUnitBeat;
+        if (!isNearInteger(nextPos)) return;
+
+        cursor.norm.div = nextRate.div;
+        cursor.norm.tuplets = undefined;
+        cursor.pos = Math.round(nextPos);
+        cursor.len = nextRate.len;
+    };
 
     const changeCursorDiv = (div: number) => {
         const cursor = melody.cursor;
@@ -128,9 +163,18 @@ const createMelodyUpdater = (ctx: Context) => {
         cursor.pos = Math.floor(cursor.pos * rate);
     };
 
-    const changeCursorRate = (rate: { div: number; len: number }) => {
-        changeCursorDiv(rate.div);
-        melody.cursor.len = rate.len;
+    const changeCursorRate = (rate: { div: number; len: number }, baseStartBeatNote: number) => {
+        const cursor = melody.cursor;
+        const currentBeat = MelodyState.calcBeat(cursor.norm, cursor.pos);
+        const unitBeat = MelodyState.calcBeat({ div: rate.div }, 1);
+        const rawLocalPos = (currentBeat - baseStartBeatNote) / unitBeat;
+        const localPos = Math.floor((rawLocalPos + 1e-9) / rate.len) * rate.len;
+        const pos = Math.round(baseStartBeatNote / unitBeat) + localPos;
+
+        cursor.norm.div = rate.div;
+        cursor.norm.tuplets = undefined;
+        cursor.pos = pos;
+        cursor.len = rate.len;
     };
 
     const setCursorRate = (rate: { div: number; len: number }) => {
@@ -364,6 +408,7 @@ const createMelodyUpdater = (ctx: Context) => {
         judgeOverlap,
         changeCursorDiv,
         changeCursorRate,
+        adjustCursorRateForTimeSignature,
         setCursorRate,
         ...noteComposeUpdater,
         ...notePositionUpdater,

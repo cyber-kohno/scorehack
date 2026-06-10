@@ -99,7 +99,108 @@ const createMelodyActions = () => {
     ) => {
         const pos = MelodyState.calcBeat(note.norm, note.pos);
         const base = ctx.derivedSelector.getBaseFromBeat(pos);
-        return getNoteDisplayRate(note, base.scoreBase.rhythm.ts);
+        return getNoteDisplayRate(note, base.scoreBase.rhythm.ts, base.startBeatNote);
+    };
+    const isRhythmBoundary = (
+        ctx: ReturnType<typeof createContext>,
+        pos: number,
+    ) => {
+        return ctx.derived.baseCaches.some(base =>
+            Math.abs(base.startBeatNote - pos) < 1e-9
+        );
+    };
+
+    const getLeftBaseAtBoundary = (
+        ctx: ReturnType<typeof createContext>,
+        pos: number,
+    ) => {
+        return ctx.derived.baseCaches
+            .slice()
+            .reverse()
+            .find(base =>
+                base.startBeatNote < pos - 1e-9 &&
+                pos <= base.startBeatNote + base.lengthBeatNote + 1e-9
+            );
+    };
+
+    const getCursorRateBaseAfterMove = (
+        ctx: ReturnType<typeof createContext>,
+        prevPos: number,
+        pos: number,
+        dir: -1 | 1,
+    ) => {
+        if (dir === -1 && isRhythmBoundary(ctx, pos)) {
+            return ctx.derivedSelector.getBaseFromBeat(prevPos);
+        }
+
+        return ctx.derivedSelector.getBaseFromBeat(pos);
+    };
+
+    const adjustCursorRateBeforeMove = (
+        ctx: ReturnType<typeof createContext>,
+        dir: -1 | 1,
+    ) => {
+        if (dir !== -1) return;
+
+        const cursor = ctx.melody.cursor;
+        const pos = MelodyState.calcBeat(cursor.norm, cursor.pos);
+        if (!isRhythmBoundary(ctx, pos)) return;
+
+        const base = getLeftBaseAtBoundary(ctx, pos);
+        if (base == undefined) return;
+
+        ctx.melodyUpdater.adjustCursorRateForTimeSignature(base.scoreBase.rhythm.ts);
+    };
+
+    const adjustCursorRateAfterMove = (
+        ctx: ReturnType<typeof createContext>,
+        prevPos: number,
+        dir: -1 | 1,
+    ) => {
+        const cursor = ctx.melody.cursor;
+        const pos = MelodyState.calcBeat(cursor.norm, cursor.pos);
+        const base = getCursorRateBaseAfterMove(ctx, prevPos, pos, dir);
+        ctx.melodyUpdater.adjustCursorRateForTimeSignature(base.scoreBase.rhythm.ts);
+    };
+    const getSideBase = (
+        ctx: ReturnType<typeof createContext>,
+        sideBeat: number,
+        dir: -1 | 1,
+    ) => {
+        if (dir === -1 && isRhythmBoundary(ctx, sideBeat)) {
+            const base = getLeftBaseAtBoundary(ctx, sideBeat);
+            if (base != undefined) return base;
+        }
+
+        return ctx.derivedSelector.getBaseFromBeat(sideBeat);
+    };
+
+    const adjustCursorRateForFocusOutSide = (
+        ctx: ReturnType<typeof createContext>,
+        sideBeat: number,
+        dir: -1 | 1,
+    ) => {
+        const cursor = ctx.melody.cursor;
+        if (cursor.norm.tuplets != undefined) return;
+
+        const base = getSideBase(ctx, sideBeat, dir);
+        const rates = RhythmTheory.getMelodyInputRates(base.scoreBase.rhythm.ts);
+        const currentBeat = MelodyState.calcBeat(cursor.norm, cursor.len);
+        const currentRate = rates.find(rate =>
+            rate.div === cursor.norm.div && rate.len === cursor.len
+        );
+        if (currentRate != undefined) return;
+
+        const nextRate = rates
+            .map(rate => ({
+                rate,
+                beat: MelodyState.calcBeat({ div: rate.div }, rate.len),
+            }))
+            .filter(item => item.beat <= currentBeat + 1e-9)
+            .sort((left, right) => right.beat - left.beat)[0]?.rate
+            ?? rates[0];
+
+        ctx.melodyUpdater.setCursorRate(nextRate);
     };
     const moveCursorPitch = (dir: number) => {
         const ctx = createContext();
@@ -114,6 +215,7 @@ const createMelodyActions = () => {
     const moveCursor = (dir: -1 | 1) => {
         const ctx = createContext();
         const cursor = ctx.melody.cursor;
+        adjustCursorRateBeforeMove(ctx, dir);
         const nextPos = cursor.pos + dir * cursor.len;
         const [tempPos, tempLen] = [nextPos, cursor.len].map(size =>
             MelodyState.calcBeat(cursor.norm, size)
@@ -122,7 +224,9 @@ const createMelodyActions = () => {
 
         if (tempPos < 0 || tempPos + tempLen > tailBeatNote) return;
 
+        const prevCursorPos = MelodyState.calcBeat(cursor.norm, cursor.pos);
         ctx.melodyUpdater.moveCursor(dir);
+        adjustCursorRateAfterMove(ctx, prevCursorPos, dir);
         ctx.refUpdater.adjustGridScrollXFromNote(cursor);
         ctx.outlineUpdater.syncChordSeqFromNote(cursor);
         ctx.refUpdater.adjustOutlineScroll();
@@ -133,6 +237,7 @@ const createMelodyActions = () => {
     const moveCursorOrFocusNote = (dir: -1 | 1) => {
         const ctx = createContext();
         const cursor = ctx.melody.cursor;
+        adjustCursorRateBeforeMove(ctx, dir);
         const targetPos = cursor.pos - (dir === -1 ? cursor.len : 0);
         const [targetBeatPos, targetBeatLen] = [targetPos, cursor.len].map(size =>
             MelodyState.calcBeat(cursor.norm, size)
@@ -152,7 +257,9 @@ const createMelodyActions = () => {
         if (noteIndex === -1) {
             if (nextBeatPos < 0 || nextBeatPos + targetBeatLen > tailBeatNote) return;
 
+            const prevCursorPos = MelodyState.calcBeat(cursor.norm, cursor.pos);
             ctx.melodyUpdater.moveCursor(dir);
+            adjustCursorRateAfterMove(ctx, prevCursorPos, dir);
             ctx.refUpdater.adjustGridScrollXFromNote(cursor);
             ctx.outlineUpdater.syncChordSeqFromNote(cursor);
             ctx.refUpdater.adjustOutlineScroll();
@@ -261,7 +368,7 @@ const createMelodyActions = () => {
         if (rate == undefined) return;
 
         if (focusNote == undefined) {
-            ctx.melodyUpdater.changeCursorRate(rate);
+            ctx.melodyUpdater.changeCursorRate(rate, base.startBeatNote);
         } else {
             const maxRate = getFocusNoteDisplayRate(ctx, focusNote);
             const rateBeat = MelodyState.calcBeat({ div: rate.div }, rate.len);
@@ -308,10 +415,13 @@ const createMelodyActions = () => {
         }
 
         const cursor = ctx.melody.cursor;
-        const cursorLenBeat = MelodyState.calcBeat(cursor.norm, cursor.len);
         const sideBeat = MelodyState.calcBeat(note.norm, note.pos + (dir === 1 ? note.len : 0));
         const tailBeatNote = ctx.derivedSelector.getBeatNoteTail();
-        if (sideBeat < -1e-9 || sideBeat + cursorLenBeat > tailBeatNote + 1e-9) return;
+        if (sideBeat < -1e-9 || sideBeat >= tailBeatNote - 1e-9) return;
+
+        adjustCursorRateForFocusOutSide(ctx, sideBeat, dir);
+        const cursorLenBeat = MelodyState.calcBeat(cursor.norm, cursor.len);
+        if (sideBeat + cursorLenBeat > tailBeatNote + 1e-9) return;
 
         ctx.melodyUpdater.focusOutNoteSide(note, dir);
         ctx.melodyUpdater.clearFocusLock();

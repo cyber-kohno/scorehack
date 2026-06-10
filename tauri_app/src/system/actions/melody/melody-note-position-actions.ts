@@ -1,5 +1,7 @@
 import type { MelodyActionContext } from "./melody-actions";
 import type { MoveNoteFailureReason } from "../../service/melody/note-position-updater";
+import RhythmTheory from "../../domain/theory/rhythm-theory";
+import MelodyState from "../../store/state/data/melody-state";
 
 const createMelodyNotePositionActions = (
     createContext: () => MelodyActionContext,
@@ -19,6 +21,53 @@ const createMelodyNotePositionActions = (
         ctx.showFocusNoteToast(getFailureMessage(reason));
     };
 
+    const adjustCursorRateForFocusedNote = (
+        ctx: MelodyActionContext,
+        note: MelodyState.Note,
+    ) => {
+        const cursor = ctx.melody.cursor;
+        if (cursor.norm.tuplets != undefined) return;
+
+        const isBeatAligned = (value: number, beat: number) => {
+            const beatCount = value / beat;
+            const nearestBeatCount = Math.round(beatCount);
+            const diff = Math.abs(beatCount - nearestBeatCount);
+            return diff <= 1e-9;
+        };
+
+        const notePos = MelodyState.calcBeat(note.norm, note.pos);
+        const noteLen = MelodyState.calcBeat(note.norm, note.len);
+        const base = ctx.derivedSelector.getBaseFromBeat(notePos);
+        const localNotePos = notePos - base.startBeatNote;
+        const rates = RhythmTheory.getMelodyInputRates(base.scoreBase.rhythm.ts);
+        const currentRate = rates.find(rate =>
+            rate.div === cursor.norm.div && rate.len === cursor.len
+        );
+        if (currentRate != undefined) {
+            const currentRateBeat = MelodyState.calcBeat({ div: currentRate.div }, currentRate.len);
+            const isNotePosAligned = isBeatAligned(localNotePos, currentRateBeat);
+            const isNoteLenAligned = isBeatAligned(noteLen, currentRateBeat);
+            if (isNotePosAligned && isNoteLenAligned) return;
+        }
+
+        const currentBeat = MelodyState.calcBeat(cursor.norm, cursor.len);
+        const nextRate = rates
+            .map(rate => ({
+                rate,
+                beat: MelodyState.calcBeat({ div: rate.div }, rate.len),
+            }))
+            .filter(item => {
+                const isShorterThanCurrent = item.beat <= currentBeat + 1e-9;
+                const isNotePosAligned = isBeatAligned(localNotePos, item.beat);
+                const isNoteLenAligned = isBeatAligned(noteLen, item.beat);
+                return isShorterThanCurrent && isNotePosAligned && isNoteLenAligned;
+            })
+            .sort((left, right) => right.beat - left.beat)[0]?.rate
+            ?? rates[0];
+
+        ctx.melodyUpdater.setCursorRate(nextRate);
+    };
+
     const moveNotePos = (dir: -1 | 1) => {
         const ctx = createContext();
         const note = ctx.melodySelector.getFocusNote();
@@ -32,6 +81,7 @@ const createMelodyNotePositionActions = (
             return;
         }
 
+        adjustCursorRateForFocusedNote(ctx, note);
         ctx.outlineUpdater.syncChordSeqFromNote(note);
         ctx.refUpdater.adjustGridScrollXFromNote(note);
         ctx.refUpdater.adjustOutlineScroll();

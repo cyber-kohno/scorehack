@@ -126,6 +126,7 @@
             focusRange[1] >= index,
           note,
           scoreBase: base.scoreBase,
+          baseStartBeatNote: base.startBeatNote,
         }];
       });
   })();
@@ -144,6 +145,7 @@
       operation={getOperation(item.isFocus, input, isPlayback, melody.focusLock)}
       cursor={melody.cursor}
       scoreBase={item.scoreBase}
+      baseStartBeatNote={item.baseStartBeatNote}
       {registerEffectRef}
       {registerNoteRef}
     />

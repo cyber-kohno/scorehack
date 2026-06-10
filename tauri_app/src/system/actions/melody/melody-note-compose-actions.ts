@@ -11,7 +11,7 @@ const createMelodyNoteComposeActions = (
     ) => {
         const pos = MelodyState.calcBeat(note.norm, note.pos);
         const base = ctx.derivedSelector.getBaseFromBeat(pos);
-        return getNoteDisplayRate(note, base.scoreBase.rhythm.ts);
+        return getNoteDisplayRate(note, base.scoreBase.rhythm.ts, base.startBeatNote);
     };
 
     const changeFocusNoteDiv = (div: number) => {
