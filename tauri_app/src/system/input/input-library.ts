@@ -1,7 +1,9 @@
 import createLibraryActions from "../actions/library/library-actions";
+import createTerminalActions from "../actions/terminal/terminal-actions";
 
 const useInputLibrary = () => {
     const actions = createLibraryActions();
+    const terminalActions = createTerminalActions();
 
     const control = (eventKey: string, option: { shiftKey?: boolean } = {}) => {
         if (option.shiftKey) {
@@ -46,9 +48,17 @@ const useInputLibrary = () => {
             case "b":
                 actions.openPianoEditor();
                 break;
+            case "E":
+            case "e":
+                actions.togglePreset();
+                break;
             case "M":
             case "m":
                 actions.openMenu();
+                break;
+            case "T":
+            case "t":
+                terminalActions.open();
                 break;
             case "Escape":
                 actions.close();

@@ -32,7 +32,7 @@ namespace ArrangeLibrary {
     }
     export type PianoArrangeFinder = {
         request: SearchRequest;
-        list: PianoEditorState.Preset[];
+        list: PianoEditorState.Regular[];
 
         /** 選択カーソル */
         cursor: Cursor;
@@ -58,11 +58,36 @@ namespace ArrangeLibrary {
 
     export const searchPianoPatterns = (args: {
         req: SearchRequest;
-        arrTrack: ArrangeState.Track;
+        arrTrack: ArrangeState.PianoTrack;
         isFilterPatternOnly: boolean;
     }) => {
         const { req, arrTrack: track, isFilterPatternOnly } = args;
-        const lib = track.pianoLib as PianoEditorState.Lib;
+        const lib = track.lib;
+        const createSoundsNos = (backingNo: number) => {
+            const soundsNos: number[] = [];
+
+            const regular = lib.regulars.find(p => p.backingNo === backingNo);
+            if (regular != undefined) {
+                regular.soundsNos.forEach(vNo => {
+                    const sndsPatt = lib.soundsPatterns.find(p => p.no === vNo);
+                    if (sndsPatt == undefined) throw new Error('sndsPattがundefiendであってはならない。');
+                    if (req.structCnt === sndsPatt.category.structCnt) {
+                        soundsNos.push(vNo);
+                    }
+                });
+            }
+
+            track.relations.forEach(r => {
+                if (r.bkgPatt !== backingNo || r.sndsPatt === -1) return;
+                const sndsPatt = lib.soundsPatterns.find(p => p.no === r.sndsPatt);
+                if (sndsPatt == undefined) throw new Error('sndsPattがundefiendであってはならない。');
+                if (req.structCnt === sndsPatt.category.structCnt && !soundsNos.includes(sndsPatt.no)) {
+                    soundsNos.push(r.sndsPatt);
+                }
+            });
+
+            return soundsNos;
+        };
 
         // console.log(req);
         // 条件に一致するパターンを抽出
@@ -82,45 +107,29 @@ namespace ArrangeLibrary {
         });
 
         // console.log(bkgPatts);
-        const list: PianoEditorState.Preset[] = bkgPatts.map(bkgPatt => {
-            const voics: number[] = [];
-
-            // プリセットから探す             
-            const presetBkgPatt = lib.presets.find(p => p.bkgPatt === bkgPatt.no);
-            if (presetBkgPatt != undefined) {
-                presetBkgPatt.voics.forEach(vNo => {
-                    const sndsPatt = lib.soundsPatterns.find(p => p.no === vNo);
-                    if (sndsPatt == undefined) throw new Error('sndsPattがundefiendであってはならない。');
-                    if (req.structCnt === sndsPatt.category.structCnt) {
-                        voics.push(vNo);
-                    }
-                });
-            }
-
-            // リレーションから探す
-            track.relations.forEach(r => {
-                const sndsPatt = lib.soundsPatterns.find(p => p.no === r.sndsPatt);
-                if (sndsPatt == undefined) throw new Error('sndsPattがundefiendであってはならない。');
-                if (req.structCnt === sndsPatt.category.structCnt &&
-                    r.bkgPatt === bkgPatt.no && !voics.includes(sndsPatt.no)) {
-                    voics.push(r.sndsPatt);
-                }
-            });
-
+        const list: PianoEditorState.Regular[] = bkgPatts.map(bkgPatt => {
             // // バッキングパターンのレコード数と一致するボイシングの管理連番を取得
             // const voics = lib.soundsPatterns.filter(sndsPatt => {
             //     return req.structCnt === sndsPatt.category.structCnt &&
             //         bkgPatt.backing.recordNum === sndsPatt.sounds.length;
             // }).map(p => p.no);
             return {
-                bkgPatt: bkgPatt.no,
+                backingNo: bkgPatt.no,
                 sortNo: -1,
-                voics
+                soundsNos: createSoundsNos(bkgPatt.no),
             }
         });
+        const noBackingSoundsNos = createSoundsNos(-1);
+        if (noBackingSoundsNos.length > 0) {
+            list.unshift({
+                backingNo: -1,
+                sortNo: -1,
+                soundsNos: noBackingSoundsNos,
+            });
+        }
         return list
             // パターンのみのオプション時、ボイシング0のパターンを除外
-            .filter(patt => !(isFilterPatternOnly && patt.voics.length === 0));
+            .filter(patt => !(isFilterPatternOnly && patt.soundsNos.length === 0));
     }
 }
 

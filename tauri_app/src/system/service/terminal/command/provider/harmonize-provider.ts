@@ -2,7 +2,6 @@ import ArrangeState from "../../../../store/state/data/arrange/arrange-state";
 import type SettingsState from "../../../../store/state/settings-state";
 import TerminalCommand from "../../terminal-command";
 import createInstCatalog from "../catalog/inst-catalog";
-import createLibraryCatalog from "../catalog/library-catalog";
 import createTrackCatalog from "../catalog/track-catalog";
 
 const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
@@ -43,7 +42,6 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
   const commands = (): TerminalCommand.Props[] => {
     const defaultProps = TerminalCommand.createDefaultProps("harmonize");
     return [
-      createLibraryCatalog(ctx),
       createInstCatalog(ctx, "harmonize"),
       createTrackCatalog(ctx, "harmonize"),
       {
@@ -64,22 +62,22 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
             return;
           }
 
-          const track = getCurrHarmonizeTrack();
+          const trackIndex = control.outline.trackIndex;
+          const track = data.arrange.tracks[trackIndex];
+          if (track == undefined) throw new Error();
           const prev = track.method;
           if (prev === arg0) {
             logger.outputInfo(`Arrange method is already selected. [${arg0}]`);
             return;
           }
 
-          track.method = arg0;
-          track.relations = [];
-          if (arg0 === "piano") {
-            track.pianoLib = ArrangeState.createPianoTrackInitial(track.name).pianoLib;
-            delete track.guitarLib;
-          } else {
-            track.guitarLib = ArrangeState.createGuitarTrackInitial(track.name).guitarLib;
-            delete track.pianoLib;
-          }
+          const nextTrack = arg0 === "piano"
+            ? ArrangeState.createPianoTrackInitial(track.name)
+            : ArrangeState.createGuitarTrackInitial(track.name);
+          nextTrack.instRef = track.instRef;
+          nextTrack.volume = track.volume;
+          nextTrack.isMute = track.isMute;
+          data.arrange.tracks[trackIndex] = nextTrack;
           control.outline.arrange = null;
 
           ctx.commit.control();

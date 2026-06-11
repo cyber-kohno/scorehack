@@ -25,9 +25,10 @@ const createContext = () => {
     const commitData = () => dataStore.set({ ...data });
 
     return {
+        arrange,
         control,
         arrTrack,
-        pianoUpdater: createPianoArrangeUpdater({ arrange, arrTrack }),
+        pianoUpdater: createPianoArrangeUpdater({ arrange, track: arrTrack }),
         refUpdater: useScrollService({
             control,
             data,
@@ -77,9 +78,13 @@ const createPianoArrangeActions = () => {
         return updater.moveFinderVoicing(dir);
     });
 
-    const openFinderFromEditor = updateControl(updater => {
-        updater.openFinderFromEditor();
-    });
+    const openFinderFromEditor = () => {
+        const ctx = createContext();
+        if (ctx.arrange.origin.type === "library") return;
+
+        ctx.pianoUpdater.openFinderFromEditor();
+        ctx.commitControl();
+    };
 
     const moveVoicingCursor = updateControlWithArg<{ x?: -1 | 1; y?: -1 | 1 }>((updater, dir) => {
         updater.moveVoicingCursor(dir);
@@ -112,9 +117,17 @@ const createPianoArrangeActions = () => {
     const applyArrange = () => {
         const ctx = createContext();
 
-        ctx.pianoUpdater.applyArrange();
+        switch (ctx.arrange.origin.type) {
+            case "chord-block":
+                ctx.pianoUpdater.applyChordBlock();
+                ctx.commitDataAndRecalculate();
+                break;
+            case "library":
+                ctx.pianoUpdater.applyLibrary();
+                ctx.commitDataAndRecalculate();
+                break;
+        }
         ctx.control.outline.arrange = null;
-        ctx.commitDataAndRecalculate();
         ctx.commitControl();
     };
 

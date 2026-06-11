@@ -7,17 +7,20 @@
   import { controlStore, dataStore } from "../../../../../store/global-store";
 
   export let finder: ArrangeLibrary.PianoArrangeFinder;
-  export let usageBkg: PianoEditorState.Preset;
+  export let usageBkg: PianoEditorState.Regular;
   export let backingIndex: number;
 
   $: [backing, sndsPatts] = (() => {
     const { getCurTrack } = createArrangeSelector({ control: $controlStore, data: $dataStore });
-    const lib = getCurTrack().pianoLib;
-    if (lib == undefined) throw new Error();
-    const bkgPatt = lib.backingPatterns.find(
-      (bkgPatt) => bkgPatt.no === usageBkg.bkgPatt,
-    );
-    if (bkgPatt == undefined)
+    const track = getCurTrack();
+    if (track.method !== "piano") throw new Error();
+    const lib = track.lib;
+    const bkgPatt = usageBkg.backingNo === -1
+      ? undefined
+      : lib.backingPatterns.find(
+        (bkgPatt) => bkgPatt.no === usageBkg.backingNo,
+      );
+    if (usageBkg.backingNo !== -1 && bkgPatt == undefined)
       throw new Error("bkgPattがundefinedであってはならない。");
 
     // const sndsPatts = lib.soundsPatterns.filter((sndsPatt) => {
@@ -25,15 +28,15 @@
     //     //     sndsPatt.category.structCnt === finder.info.structCnt &&
     //     //     sndsPatt.sounds.length === bkgPatt.backing.recordNum
     //     // );
-    //     return usageBkg.voics.includes(sndsPatt.no);
+    //     return usageBkg.soundsNos.includes(sndsPatt.no);
     // });
-    const sndsPatts = usageBkg.voics.map((vNo) => {
+    const sndsPatts = usageBkg.soundsNos.map((vNo) => {
       const sounds = lib.soundsPatterns.find((s) => s.no === vNo);
       if (sounds == undefined)
         throw new Error("soundsがundefinedであってはならない。");
       return sounds;
     });
-    return [bkgPatt.backing, sndsPatts];
+    return [bkgPatt?.backing ?? null, sndsPatts];
   })();
 
   $: isRecordFocus = backingIndex === finder.cursor.backing;
@@ -46,14 +49,20 @@
   {/if}
   <div class="inner">
     <div class="backing">
-      <APFinderBacking
-        layers={backing.layers}
-        voicingCnt={backing.recordNum}
-        {isRecordFocus}
-        {isRecordApply}
-        {usageBkg}
-        ts={finder.request.ts}
-      />
+      {#if backing == null}
+        <div class="none-backing" data-focus={isRecordFocus} data-apply={isRecordApply}>
+          None
+        </div>
+      {:else}
+        <APFinderBacking
+          layers={backing.layers}
+          voicingCnt={backing.recordNum}
+          {isRecordFocus}
+          {isRecordApply}
+          {usageBkg}
+          ts={finder.request.ts}
+        />
+      {/if}
     </div>
     <div class="voicing">
       <APFinderVoicsFrame
@@ -106,7 +115,27 @@
     background-color: rgb(0, 46, 109);
   }
   .backing {
-    width: 150px;
+    width: 148px;
     background-color: rgb(133, 4, 8);
+  }
+  .none-backing {
+    display: inline-block;
+    position: relative;
+    margin: 2px 0 0 2px;
+    width: calc(100% - 4px);
+    height: calc(100% - 2px);
+    box-sizing: border-box;
+    color: rgba(234, 246, 251, 0.92);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 64px;
+    text-align: center;
+  }
+  .none-backing[data-apply="true"] {
+    background-color: rgba(232, 161, 74, 0.623);
+  }
+  .none-backing[data-focus="true"] {
+    border: 1px solid rgb(241, 229, 0);
+    background-color: rgba(240, 236, 0, 0.137);
   }
 </style>

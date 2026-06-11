@@ -7,7 +7,7 @@ import useOutlineSelector from "../../service/outline/outline-selector";
 import useTerminalLogger from "../../service/terminal/terminal-logger";
 import useTerminalSelector from "../../service/terminal/terminal-selector";
 import createTerminalUpdater from "../../service/terminal/terminal-updater";
-import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../store/global-store";
+import { controlStore, dataStore, derivedStore, libraryStore, refStore, settingsStore, terminalStore } from "../../store/global-store";
 import type TerminalState from "../../store/state/terminal-state";
 
 const createInitialTerminal = (): TerminalState.Value => ({
@@ -24,6 +24,7 @@ const createContext = () => {
     const control = get(controlStore);
     const data = get(dataStore);
     const derived = get(derivedStore);
+    const library = get(libraryStore);
     const ref = get(refStore);
     const settings = get(settingsStore);
     const terminal = get(terminalStore);
@@ -64,7 +65,7 @@ const createContext = () => {
             commitRef: () => refStore.set({ ...ref }),
         }),
         terminalSelector: useTerminalSelector({ terminal }),
-        terminalUpdater: createTerminalUpdater({ control, data, settings, terminal }),
+        terminalUpdater: createTerminalUpdater({ control, data, library, settings, terminal }),
         commitTerminal,
     };
 };

@@ -14,7 +14,7 @@ type PianoFinderSource = {
     beat: DerivedState.BeatCache;
     compiledChord: DerivedState.CompiledChord;
     chordSeq: number;
-    arrTrack: ArrangeState.Track;
+    arrTrack: ArrangeState.PianoTrack;
 };
 
 /**
@@ -32,6 +32,7 @@ export const createArrangeFinder = (props: ArrangeFinderProps) => {
  */
 export const createPianoArrangeFinder = (props: ArrangeFinderProps) => {
     const { ts, chordCache: chord, arrTrack } = props;
+    if (arrTrack.method !== "piano") throw new Error();
     const compiledChord = chord.compiledChord;
     if (compiledChord == undefined) throw new Error();
 
@@ -46,7 +47,7 @@ export const createPianoArrangeFinder = (props: ArrangeFinderProps) => {
 
 export const createPianoArrangeFinderFromTarget = (props: {
     target: ArrangeState.Target;
-    arrTrack: ArrangeState.Track;
+    arrTrack: ArrangeState.PianoTrack;
 }) => {
     const { target, arrTrack } = props;
 
@@ -85,10 +86,11 @@ const createPianoArrangeFinderFromSource = (props: PianoFinderSource) => {
         const relations = arrTrack.relations;
         const relation = relations.find(r => r.chordSeq === chordSeq);
         if (relation != undefined) {
-            const bkgPatt = finder.list.findIndex(f => f.bkgPatt === relation.bkgPatt);
-            const sndPatt = finder.list[bkgPatt].voics.findIndex(v => v === relation.sndsPatt);
+            const bkgPatt = finder.list.findIndex(f => f.backingNo === relation.bkgPatt);
+            if (bkgPatt === -1) throw new Error();
+            const sndPatt = finder.list[bkgPatt].soundsNos.findIndex(v => v === relation.sndsPatt);
 
-            if (bkgPatt === -1 || sndPatt === -1) throw new Error();
+            if (sndPatt === -1) throw new Error();
             finder.cursor.backing = finder.apply.backing = bkgPatt;
             finder.cursor.sounds = finder.apply.sounds = sndPatt;
         }

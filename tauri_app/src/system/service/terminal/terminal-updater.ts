@@ -1,6 +1,7 @@
 import TerminalState from "../../store/state/terminal-state";
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
+import type LibraryState from "../../store/state/library-state";
 import type SettingsState from "../../store/state/settings-state";
 import type TerminalStateType from "../../store/state/terminal-state";
 import useMelodySelector from "../melody/melody-selector";
@@ -11,12 +12,13 @@ import useTerminalLogger from "./terminal-logger";
 type Context = {
     control: ControlState.Value;
     data: DataState.Value;
+    library: LibraryState.Value | null;
     settings: SettingsState.Value;
     terminal: TerminalStateType.Value;
 };
 
 const createTerminalUpdater = (ctx: Context) => {
-    const { control, data, settings, terminal } = ctx;
+    const { control, data, library, settings, terminal } = ctx;
     const terminalSelector = useTerminalSelector({ terminal });
 
     const updateTarget = () => {
@@ -29,7 +31,9 @@ const createTerminalUpdater = (ctx: Context) => {
                 const outline = control.outline;
                 const element = data.elements[control.outline.focus];
                 set("harmonize");
-                if (outline.arrange == null) {
+                if (library != null && outline.arrange == null) {
+                    add("library");
+                } else if (outline.arrange == null) {
                     add(element.type);
                 } else {
                     add("arrange");

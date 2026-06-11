@@ -8,7 +8,7 @@
   export let sndsPatts: PianoEditorState.SoundsPattern[];
   export let isRecordFocus: boolean;
   export let backingIndex: number;
-  export let usageBkg: PianoEditorState.Preset;
+  export let usageBkg: PianoEditorState.Regular;
 
   let ref: HTMLElement | null = null; // 要素の参照を保存
   onMount(() => {

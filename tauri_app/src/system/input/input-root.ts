@@ -90,6 +90,23 @@ const useInputRoot = () => {
             useInputActionMenu().control(e.key);
             return;
         }
+        if (isTerminalActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            const input = get(inputStore);
+            const inputTerminal = useInputTerminal();
+            if (!InputRootController.hasHold(input)) {
+                inputTerminal.control(e.key);
+                if (e.key === "Shift") controlKeyHold(e.key, true);
+                return;
+            }
+            if (e.key.length === 1) {
+                inputTerminal.control(e.key);
+                return;
+            }
+            setHoldControl(inputTerminal.getHoldCallbacks(e.key));
+            return;
+        }
         if (isLibraryActive()) {
             e.preventDefault();
             e.stopPropagation();
@@ -184,6 +201,12 @@ const useInputRoot = () => {
             e.preventDefault();
             e.stopPropagation();
             inputStore.set(InputState.createInitial());
+            return;
+        }
+        if (isTerminalActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.key === "Shift") controlKeyHold(e.key, false);
             return;
         }
         if (isLibraryActive()) {

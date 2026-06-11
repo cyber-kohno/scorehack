@@ -213,7 +213,11 @@ const createOutlineUpdater = (ctx: Context) => {
                 if (delIndex !== -1) {
                     track.relations.splice(delIndex, 1);
                     // 不要なライブラリユニットの削除
-                    PianoEditorState.deleteUnreferUnit(track);
+                    if (track.method === "piano") {
+                        PianoEditorState.deleteUnreferUnit(track);
+                    } else if (track.method === "guitar") {
+                        GuitarEditorState.deleteUnreferUnit(track);
+                    }
                 }
                 // 対象要素以降のコード連番を繰り下げ
                 track.relations.forEach(relation => {
@@ -353,7 +357,7 @@ const createOutlineUpdater = (ctx: Context) => {
 
         const arrange: ArrangeState.EditorProps = {
             method: track.method,
-            origin: "outline",
+            origin: { type: "chord-block" },
             target,
         };
         buildDetail({ arrange, arrTrack: track, chordCache });

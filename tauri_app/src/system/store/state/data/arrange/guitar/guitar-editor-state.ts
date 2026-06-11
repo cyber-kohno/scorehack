@@ -66,14 +66,13 @@ namespace GuitarEditorState {
 
   export const getEditorProps = (
     chordSeq: number,
-    track: ArrangeState.Track,
+    track: ArrangeState.GuitarTrack,
   ): Value => {
     const props = createInitialProps();
     const relation = track.relations.find((r) => r.chordSeq === chordSeq);
     if (relation == undefined) return props;
 
-    const lib = track.guitarLib;
-    if (lib == undefined) throw new Error();
+    const lib = track.lib;
 
     const voicing = lib.voicingPatterns.find((p) => p.no === relation.sndsPatt);
     if (voicing == undefined) throw new Error();
@@ -108,12 +107,12 @@ namespace GuitarEditorState {
 
   export const getArrangePatternFromRelation = (
     chordSeq: number,
-    track: ArrangeState.Track,
+    track: ArrangeState.GuitarTrack,
   ): Unit | undefined => {
     const relation = track.relations.find((r) => r.chordSeq === chordSeq);
     if (relation == undefined) return undefined;
 
-    const lib = track.guitarLib as GuitarEditorState.Lib;
+    const lib = track.lib;
     const voicing = lib.voicingPatterns.find((patt) => patt.no === relation.sndsPatt);
     if (voicing == undefined) throw new Error();
 
@@ -122,8 +121,8 @@ namespace GuitarEditorState {
     };
   };
 
-  export const deleteUnreferUnit = (track: ArrangeState.Track) => {
-    const guitarLib = track.guitarLib as GuitarEditorState.Lib;
+  export const deleteUnreferUnit = (track: ArrangeState.GuitarTrack) => {
+    const guitarLib = track.lib;
     ArrangeState.deleteUnreferPattern(
       "sndsPatt",
       guitarLib.voicingPatterns,

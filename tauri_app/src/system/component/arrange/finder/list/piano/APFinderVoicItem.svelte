@@ -13,17 +13,18 @@
     export let structCnt: number;
     export let voicingSounds: string[];
     export let isRecordFocus: boolean;
-    export let usageBkg: PianoEditorState.Preset;
+    export let usageBkg: PianoEditorState.Regular;
 
     $: isPresetExist = (() => {
         const {getCurTrack} = createArrangeSelector({ control: $controlStore, data: $dataStore });
-        const lib = getCurTrack().pianoLib;
-        if(lib == undefined) throw new Error();
-        const preset = lib.presets.find((p) => p.bkgPatt === usageBkg.bkgPatt);
-        if (preset == undefined) return false;
-        const sndsNo = usageBkg.voics[soundsIndex];
-        const presetSndsNo = preset.voics.find((v) => v === sndsNo);
-        return presetSndsNo != undefined;
+        const track = getCurTrack();
+        if (track.method !== "piano") throw new Error();
+        const lib = track.lib;
+        const regular = lib.regulars.find((p) => p.backingNo === usageBkg.backingNo);
+        if (regular == undefined) return false;
+        const sndsNo = usageBkg.soundsNos[soundsIndex];
+        const regularSndsNo = regular.soundsNos.find((v) => v === sndsNo);
+        return regularSndsNo != undefined;
     })();
 
     $: isVoicApply = (()=>{

@@ -8,8 +8,14 @@ import { createPianoArrangeFinderFromTarget } from "../arrange-finder-factory";
 
 type Context = {
     arrange: ArrangeState.EditorProps;
-    arrTrack: ArrangeState.Track;
+    track: ArrangeState.Track;
 };
+
+type PianoArrange = ArrangeState.EditorProps & {
+    method: "piano";
+};
+
+type PianoTrack = ArrangeState.PianoTrack;
 
 export type PianoVoicingToggleResult = {
     activated: boolean;
@@ -17,21 +23,29 @@ export type PianoVoicingToggleResult = {
 };
 
 const createPianoArrangeUpdater = (ctx: Context) => {
-    const { arrange, arrTrack } = ctx;
+    const arrange = (() => {
+        if (ctx.arrange.method !== "piano") throw new Error("Piano arrange updater requires piano arrange.");
+        return ctx.arrange as PianoArrange;
+    })();
+    const track = (() => {
+        if (ctx.track.method !== "piano") {
+            throw new Error("Piano arrange updater requires piano track.");
+        }
+        return ctx.track;
+    })();
 
     const getPianoFinder = () => {
-        if (arrange.method !== "piano" || arrange.finder == undefined) throw new Error();
+        if (arrange.finder == undefined) throw new Error();
         return arrange.finder as ArrangeLibrary.PianoArrangeFinder;
     };
 
     const getPianoEditor = () => {
-        if (arrange.method !== "piano" || arrange.editor == undefined) throw new Error();
+        if (arrange.editor == undefined) throw new Error();
         return arrange.editor as PianoEditorState.Value;
     };
 
     const getPianoLib = () => {
-        if (arrTrack.method !== "piano" || arrTrack.pianoLib == undefined) throw new Error();
-        return arrTrack.pianoLib;
+        return track.lib;
     };
 
     const moveFinderBacking = (dir: -1 | 1) => {
@@ -53,10 +67,10 @@ const createPianoArrangeUpdater = (ctx: Context) => {
 
         if (finder.cursor.backing === -1) return false;
 
-        const voics = finder.list[finder.cursor.backing].voics;
+        const soundsNos = finder.list[finder.cursor.backing].soundsNos;
         const temp = finder.cursor.sounds + dir;
 
-        if (temp < -1 || temp > voics.length - 1) return false;
+        if (temp < -1 || temp > soundsNos.length - 1) return false;
 
         finder.cursor.sounds = temp;
         // adjustPattColumnScroll(finder);
@@ -66,12 +80,12 @@ const createPianoArrangeUpdater = (ctx: Context) => {
     const openFinderFromEditor = () => {
         arrange.finder = createPianoArrangeFinderFromTarget({
             target: arrange.target,
-            arrTrack,
+            arrTrack: track,
         });
     };
 
     const getVoicingContext = () => {
-        const editor = getPianoEditor();
+        const pianoEditor = getPianoEditor();
         const compiledChord = arrange.target.compiledChord;
         const structs = compiledChord.structs;
         let structCnt = structs.length;
@@ -83,7 +97,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         }
 
         return {
-            voicing: editor.voicing,
+            voicing: pianoEditor.voicing,
             structCnt,
         };
     };
@@ -137,21 +151,21 @@ const createPianoArrangeUpdater = (ctx: Context) => {
     };
 
     const shiftControl = (next: PianoEditorState.Control) => {
-        const editor = getPianoEditor();
+        const pianoEditor = getPianoEditor();
 
-        editor.control = next;
-        // editor.phase = 'target';
+        pianoEditor.control = next;
+        // pianoEditor.phase = 'target';
         // PBEditor.initCursor(editor);
     };
 
     const shiftLayer = () => {
-        const editor = getPianoEditor();
-        const backing = editor.backing;
+        const pianoEditor = getPianoEditor();
+        const backing = pianoEditor.backing;
         if (backing == null) throw new Error();
 
         backing.layerIndex = backing.layerIndex === 0 ? 1 : 0;
         backing.cursorX = -1;
-        editor.control = "record";
+        pianoEditor.control = "record";
     };
 
     const getBacking = () => {
@@ -419,29 +433,38 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         if (finder.cursor.backing === -1) return { control: false, data: false, closeArrange: false };
 
         const usageBkg = finder.list[finder.cursor.backing];
-        const bkgPattNo = usageBkg.bkgPatt;
-        const sndsPattNo = usageBkg.voics[finder.cursor.sounds];
+        const bkgPattNo = usageBkg.backingNo;
+        const sndsPattNo = usageBkg.soundsNos[finder.cursor.sounds];
         const lib = getPianoLib();
-        const bkgPatt = lib.backingPatterns.find(patt => patt.no === bkgPattNo);
-        if (bkgPatt == undefined) throw new Error();
+        const bkgPatt = bkgPattNo === -1
+            ? undefined
+            : lib.backingPatterns.find(patt => patt.no === bkgPattNo);
+        if (bkgPattNo !== -1 && bkgPatt == undefined) throw new Error();
         const sndsPatt = lib.soundsPatterns.find(patt => patt.no === sndsPattNo);
+        if (bkgPattNo === -1 && sndsPatt == undefined) {
+            return { control: false, data: false, closeArrange: false };
+        }
 
         const chordSeq = arrange.target.chordSeq;
 
         // 選択したパターンをエディタに対して適用する
         const applyToEditor = () => {
             if (arrange.editor == undefined) throw new Error();
-            const editor = arrange.editor as PianoEditorState.Value;
+            const pianoEditor = arrange.editor as PianoEditorState.Value;
 
-            const backing = PianoBackingState.createInitialBackingProps();
-            editor.backing = backing;
-            backing.layers = JSON.parse(JSON.stringify(bkgPatt.backing.layers));
-            backing.recordNum = bkgPatt.backing.recordNum;
+            if (bkgPatt == undefined) {
+                pianoEditor.backing = null;
+            } else {
+                const backing = PianoBackingState.createInitialBackingProps();
+                pianoEditor.backing = backing;
+                backing.layers = JSON.parse(JSON.stringify(bkgPatt.backing.layers));
+                backing.recordNum = bkgPatt.backing.recordNum;
+            }
 
             // ボイシングは未設定の可能性があるため初期化しておく
-            editor.voicing.items.length = 0;
+            pianoEditor.voicing.items.length = 0;
             if (sndsPatt != undefined) {
-                editor.voicing.items = JSON.parse(JSON.stringify(sndsPatt.sounds));
+                pianoEditor.voicing.items = JSON.parse(JSON.stringify(sndsPatt.sounds));
             }
             delete arrange.finder;
         };
@@ -450,13 +473,13 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         if (arrange.editor == undefined) {
             // ボイシングが選択されていない場合、エディタを開いて適用する
             if (sndsPatt == undefined) {
-                arrange.editor = PianoEditorState.getEditorProps(chordSeq, arrTrack);
+                arrange.editor = PianoEditorState.getEditorProps(chordSeq, track);
                 applyToEditor();
                 return { control: true, data: false, closeArrange: false };
             }
 
             // コード連番と参照先ライブラリの紐付け
-            const relations = arrTrack.relations;
+            const relations = track.relations;
             let relation = relations.find(r => r.chordSeq === chordSeq);
             if (relation == undefined) {
                 // 未定義の場合は紐づけを新たに作成して追加
@@ -464,9 +487,9 @@ const createPianoArrangeUpdater = (ctx: Context) => {
                 relations.push(relation);
             } else {
                 // 紐付けが変わったことにより不参照のピアノライブラリのパターンを削除
-                PianoEditorState.deleteUnreferUnit(arrTrack);
+                PianoEditorState.deleteUnreferUnit(track);
             }
-            relation.bkgPatt = bkgPatt.no;
+            relation.bkgPatt = bkgPatt?.no ?? -1;
             relation.sndsPatt = sndsPatt.no;
             return { control: true, data: true, closeArrange: true };
         }
@@ -479,8 +502,8 @@ const createPianoArrangeUpdater = (ctx: Context) => {
     /**
      * エディタのアレンジをコード要素に適用する
      */
-    const applyArrange = () => {
-        const editor = getPianoEditor();
+    const applyChordBlock = () => {
+        const pianoEditor = getPianoEditor();
 
         const compiledChord = arrange.target.compiledChord;
         const scoreBase = arrange.target.scoreBase;
@@ -488,11 +511,10 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         const chordSeq = arrange.target.chordSeq;
 
         // パターンの登録
-        const pianoLib = arrTrack.pianoLib;
-        if (pianoLib == undefined) throw new Error();
+        const pianoLib = track.lib;
 
         // 有効チャンネル外のノーツは削除する
-        const patternData = PianoEditorState.createPatternData(editor);
+        const patternData = PianoEditorState.createPatternData(pianoEditor);
         // 検索用カテゴリの作成
         const category: ArrangeLibrary.SearchCategory = {
             beat: beatCache.num,
@@ -510,7 +532,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         );
 
         // コード連番と参照先ライブラリの紐付け
-        const relations = arrTrack.relations;
+        const relations = track.relations;
         const relation = relations.find(r => r.chordSeq === chordSeq);
         if (relation == undefined) {
             // 未定義の場合は新規追加
@@ -525,13 +547,102 @@ const createPianoArrangeUpdater = (ctx: Context) => {
             relation.sndsPatt = soundsPattNo;
 
             // 紐付けが変わったことにより不参照のピアノライブラリのパターンを削除
-            PianoEditorState.deleteUnreferUnit(arrTrack);
+            PianoEditorState.deleteUnreferUnit(track);
         }
     };
 
+    const applyLibrary = () => {
+        const origin = arrange.origin;
+        if (origin.type !== "library") throw new Error("Piano library apply requires library origin.");
+
+        const pianoEditor = getPianoEditor();
+        const patternData = PianoEditorState.createPatternData(pianoEditor);
+        const pianoLib = track.lib;
+        const category: ArrangeLibrary.SearchCategory = {
+            beat: arrange.target.beat.num,
+            structCnt: arrange.target.compiledChord.structs.length,
+            tsGloup: [arrange.target.scoreBase.rhythm.ts],
+            eatHead: arrange.target.beat.eatHead,
+            eatTail: arrange.target.beat.eatTail,
+        };
+        const nextNo = (patterns: ArrangeState.Pattern[]) => {
+            return patterns.reduce((max, pattern) => Math.max(max, pattern.no), -1) + 1;
+        };
+        const ensureRegular = (backingNo: number, soundsNo: number) => {
+            let regular = pianoLib.regulars.find(regular => {
+                return regular.backingNo === backingNo;
+            });
+            if (regular == undefined) {
+                regular = {
+                    backingNo,
+                    sortNo: -1,
+                    soundsNos: [],
+                };
+                pianoLib.regulars.push(regular);
+            }
+            if (!regular.soundsNos.includes(soundsNo)) regular.soundsNos.push(soundsNo);
+        };
+
+        if (patternData.backing == null && origin.backingNo !== -1) {
+            throw new Error("Backing pattern data must not be null.");
+        }
+
+        const backingNo = (() => {
+            if (patternData.backing == null) return -1;
+
+            const backing = JSON.parse(JSON.stringify(patternData.backing));
+            if (origin.backingNo === -1) {
+                const no = nextNo(pianoLib.backingPatterns);
+                pianoLib.backingPatterns.push({
+                    no,
+                    backing,
+                    category: {
+                        beat: category.beat,
+                        tsGloup: category.tsGloup,
+                        eatHead: category.eatHead,
+                        eatTail: category.eatTail,
+                    },
+                });
+                return no;
+            }
+            const backingPattern = pianoLib.backingPatterns.find(pattern => {
+                return pattern.no === origin.backingNo;
+            });
+            if (backingPattern == undefined) throw new Error("Backing pattern must exist.");
+
+            backingPattern.backing = backing;
+            return origin.backingNo;
+        })();
+
+        const soundsNo = (() => {
+            const sounds = JSON.parse(JSON.stringify(patternData.sounds));
+            if (origin.soundsNo === -1) {
+                const no = nextNo(pianoLib.soundsPatterns);
+                pianoLib.soundsPatterns.push({
+                    no,
+                    sounds,
+                    category: {
+                        structCnt: category.structCnt,
+                    },
+                });
+                return no;
+            }
+            const soundsPattern = pianoLib.soundsPatterns.find(pattern => {
+                return pattern.no === origin.soundsNo;
+            });
+            if (soundsPattern == undefined) throw new Error("Sounds pattern must exist.");
+
+            soundsPattern.sounds = sounds;
+            return origin.soundsNo;
+        })();
+
+        ensureRegular(backingNo, soundsNo);
+    };
+
     return {
-        applyArrange,
+        applyChordBlock,
         applyFinderPattern,
+        applyLibrary,
         moveFinderBacking,
         moveFinderVoicing,
         moveVoicingCursor,

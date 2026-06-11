@@ -47,11 +47,11 @@ const createOutlineBackingActions = (
 
     const clearPianoVoicing = (
         ctx: OutlineActionContext,
-        track: ArrangeState.Track,
+        track: ArrangeState.PianoTrack,
         structCount: number,
     ) => {
         const { chordSeq, baseSeq } = ctx.derived.elementCaches[ctx.outline.focus];
-        if (chordSeq === -1 || track.pianoLib == undefined) return false;
+        if (chordSeq === -1) return false;
 
         const relationIndex = track.relations.findIndex(r => r.chordSeq === chordSeq);
         if (relationIndex === -1) return false;
@@ -77,7 +77,7 @@ const createOutlineBackingActions = (
             category,
             null,
             [],
-            track.pianoLib,
+            track.lib,
         );
 
         relation.sndsPatt = soundsPattNo;
@@ -87,10 +87,10 @@ const createOutlineBackingActions = (
 
     const removeGuitarBacking = (
         ctx: OutlineActionContext,
-        track: ArrangeState.Track,
+        track: ArrangeState.GuitarTrack,
     ) => {
         const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
-        if (chordSeq === -1 || track.guitarLib == undefined) return false;
+        if (chordSeq === -1) return false;
 
         const relationIndex = track.relations.findIndex(r => r.chordSeq === chordSeq);
         if (relationIndex === -1) return false;
@@ -145,15 +145,15 @@ const createOutlineBackingActions = (
 
     const applyDefaultPianoVoicing = (
         ctx: OutlineActionContext,
-        track: ArrangeState.Track,
+        track: ArrangeState.PianoTrack,
     ) => {
         const { chordSeq, baseSeq } = ctx.derived.elementCaches[ctx.outline.focus];
         if (chordSeq === -1) return false;
 
         const chordCache = ctx.derived.chordCaches[chordSeq];
         const compiledChord = chordCache.compiledChord;
-        const pianoLib = track.pianoLib;
-        if (compiledChord == undefined || pianoLib == undefined) return false;
+        const pianoLib = track.lib;
+        if (compiledChord == undefined) return false;
 
         let relation = track.relations.find(r => r.chordSeq === chordSeq);
         if (relation != undefined) {
@@ -197,15 +197,15 @@ const createOutlineBackingActions = (
 
     const applyDefaultGuitarVoicing = (
         ctx: OutlineActionContext,
-        track: ArrangeState.Track,
+        track: ArrangeState.GuitarTrack,
     ) => {
         const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
         if (chordSeq === -1) return false;
 
         const chordCache = ctx.derived.chordCaches[chordSeq];
         const compiledChord = chordCache.compiledChord;
-        const guitarLib = track.guitarLib;
-        if (compiledChord == undefined || guitarLib == undefined) return false;
+        const guitarLib = track.lib;
+        if (compiledChord == undefined) return false;
 
         let relation = track.relations.find(r => r.chordSeq === chordSeq);
         if (relation != undefined) {
@@ -258,7 +258,7 @@ const createOutlineBackingActions = (
 
     const removePianoBacking = (
         ctx: OutlineActionContext,
-        track: ArrangeState.Track,
+        track: ArrangeState.PianoTrack,
     ) => {
         const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
         if (chordSeq === -1) return false;
@@ -273,11 +273,11 @@ const createOutlineBackingActions = (
 
     const getPianoRemoveBackingWarnings = (
         ctx: OutlineActionContext,
-        track: ArrangeState.Track,
+        track: ArrangeState.PianoTrack,
     ) => {
         const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
-        const pianoLib = track.pianoLib;
-        if (chordSeq === -1 || pianoLib == undefined) return [];
+        const pianoLib = track.lib;
+        if (chordSeq === -1) return [];
 
         const relation = track.relations.find(r => r.chordSeq === chordSeq);
         if (relation == undefined) return [];
@@ -287,23 +287,23 @@ const createOutlineBackingActions = (
             if (pattNo === -1) return false;
             return track.relations.filter(r => r.chordSeq !== chordSeq).every(r => r[target] !== pattNo);
         };
-        const isPresetBacking = (pattNo: number) => {
-            return pianoLib.presets.some(preset => preset.bkgPatt === pattNo);
+        const isRegularBacking = (pattNo: number) => {
+            return pianoLib.regulars.some(regular => regular.backingNo === pattNo);
         };
-        const isPresetSounds = (pattNo: number) => {
-            return pianoLib.presets.some(preset => preset.voics.includes(pattNo));
+        const isRegularSounds = (pattNo: number) => {
+            return pianoLib.regulars.some(regular => regular.soundsNos.includes(pattNo));
         };
 
         if (
             relation.bkgPatt !== -1 &&
-            !isPresetBacking(relation.bkgPatt) &&
+            !isRegularBacking(relation.bkgPatt) &&
             isLastRelationRef("bkgPatt", relation.bkgPatt)
         ) {
             warnings.push("The piano backing pattern will also be deleted from the library.");
         }
         if (
             relation.sndsPatt !== -1 &&
-            !isPresetSounds(relation.sndsPatt) &&
+            !isRegularSounds(relation.sndsPatt) &&
             isLastRelationRef("sndsPatt", relation.sndsPatt)
         ) {
             warnings.push("The piano voicing pattern will also be deleted from the library.");
@@ -314,11 +314,10 @@ const createOutlineBackingActions = (
 
     const getGuitarRemoveBackingWarnings = (
         ctx: OutlineActionContext,
-        track: ArrangeState.Track,
+        track: ArrangeState.GuitarTrack,
     ) => {
         const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
-        const guitarLib = track.guitarLib;
-        if (chordSeq === -1 || guitarLib == undefined) return [];
+        if (chordSeq === -1) return [];
 
         const relation = track.relations.find(r => r.chordSeq === chordSeq);
         if (relation == undefined || relation.sndsPatt === -1) return [];

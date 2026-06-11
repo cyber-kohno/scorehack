@@ -58,6 +58,11 @@ namespace SettingsFile {
             },
             userSoundFonts: settings.userSoundFonts ?? initial.userSoundFonts,
             terminalShortcuts: settings.terminalShortcuts ?? initial.terminalShortcuts,
+            library: {
+                ...initial.library,
+                ...settings.library,
+                presets: settings.library?.presets ?? initial.library.presets,
+            },
             envs: {
                 ...initial.envs,
                 ...settings.envs,

@@ -5,6 +5,7 @@ import createChordProvider from "./command/provider/chord-provider";
 import createGlobalProvider from "./command/provider/global-provider";
 import createHarmonizeProvider from "./command/provider/harmonize-provider";
 import createInitProvider from "./command/provider/init-provider";
+import createLibraryProvider from "./command/provider/library-provider";
 import createMelodyProvider from "./command/provider/melody-provider";
 import createModulateProvider from "./command/provider/modulate-provider";
 import createPianoEditorProvider from "./command/provider/piano-editor-provider";
@@ -16,6 +17,7 @@ const createCommandRegistry = (ctx: TerminalCommand.Context) => {
     const globalProvider = createGlobalProvider(ctx);
     const harmonizeProvider = createHarmonizeProvider(ctx);
     const initProvider = createInitProvider(ctx);
+    const libraryProvider = createLibraryProvider(ctx);
     const sectionProvider = createSectionProvider(ctx);
     const chordProvider = createChordProvider(ctx);
     const melodyProvider = createMelodyProvider(ctx);
@@ -34,8 +36,11 @@ const createCommandRegistry = (ctx: TerminalCommand.Context) => {
 
         switch (sectors[0]) {
             case "harmonize": {
-                const harmonizeSector = sectors[1] as ElementState.ElementType | "arrange";
-                if (harmonizeSector !== "arrange") {
+                const harmonizeSector = sectors[1] as ElementState.ElementType | "arrange" | "library";
+                if (harmonizeSector === "library") {
+                    add(harmonizeProvider.commands());
+                    add(libraryProvider.commands());
+                } else if (harmonizeSector !== "arrange") {
                     add(harmonizeProvider.commands());
                     switch (harmonizeSector) {
                         case "init": add(initProvider.commands()); break;

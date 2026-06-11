@@ -11,10 +11,10 @@
     export let layers: PianoBackingState.Layer[];
     export let isRecordFocus: boolean;
     export let isRecordApply: boolean;
-    export let usageBkg: PianoEditorState.Preset;
+    export let usageBkg: PianoEditorState.Regular;
     export let ts: RhythmTheory.TimeSignature;
 
-    const BASE_THUMBNAIL_BEAT_WIDTH = 32;
+    const BASE_THUMBNAIL_BEAT_WIDTH = 36;
 
     const getColWidth = (col: PianoBackingState.Col) => {
         const beatWidth = BASE_THUMBNAIL_BEAT_WIDTH / (RhythmTheory.getBeatDiv16Count(ts) / 4);
@@ -23,10 +23,11 @@
 
     $: isPresetExist = (() => {
         const {getCurTrack} = createArrangeSelector({ control: $controlStore, data: $dataStore });
-        const lib = getCurTrack().pianoLib;
-        if(lib == undefined) throw new Error();
-        const preset = lib.presets.find(p => p.bkgPatt === usageBkg.bkgPatt);
-        return preset != undefined;
+        const track = getCurTrack();
+        if (track.method !== "piano") throw new Error();
+        const lib = track.lib;
+        const regular = lib.regulars.find(p => p.backingNo === usageBkg.backingNo);
+        return regular != undefined;
     })();
 </script>
 

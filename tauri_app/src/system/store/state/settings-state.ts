@@ -1,4 +1,5 @@
 import type FilePathRef from "../../infra/file/file-path-ref";
+import type ArrangeState from "./data/arrange/arrange-state";
 
 namespace SettingsState {
 
@@ -8,6 +9,7 @@ namespace SettingsState {
         playback: Playback;
         userSoundFonts: UserSoundFontDefinition[];
         terminalShortcuts: TerminalShortcut[];
+        library: Library;
         envs: Envs;
     }
 
@@ -52,6 +54,24 @@ namespace SettingsState {
         degreeBasis: DegreeBasis;
     };
 
+    export type PianoPreset = {
+        name: string;
+        method: "piano";
+        lib: ArrangeState.PianoTrack["lib"];
+    };
+
+    export type GuitarPreset = {
+        name: string;
+        method: "guitar";
+        lib: ArrangeState.GuitarTrack["lib"];
+    };
+
+    export type Preset = PianoPreset | GuitarPreset;
+
+    export type Library = {
+        presets: Preset[];
+    };
+
     export const createInitial = (): Value => ({
         view: {
             timeline: {
@@ -70,6 +90,9 @@ namespace SettingsState {
         },
         userSoundFonts: [],
         terminalShortcuts: [],
+        library: {
+            presets: [],
+        },
         envs: {
             HOME_DIR: "",
             SF_FILE_DIR: "",

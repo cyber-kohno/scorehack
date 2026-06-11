@@ -15,7 +15,7 @@ namespace ArrangeState {
     volume: 10,
     isMute: false,
     relations: [],
-    pianoLib: PianoEditorState.createInitialLib(),
+    lib: PianoEditorState.createInitialLib(),
   });
 
   export const createGuitarTrackInitial = (name: string): Track => ({
@@ -24,7 +24,7 @@ namespace ArrangeState {
     volume: 10,
     isMute: false,
     relations: [],
-    guitarLib: GuitarEditorState.createInitialLib(),
+    lib: GuitarEditorState.createInitialLib(),
   });
 
   export const createInitial = (): DataProps => ({
@@ -39,7 +39,15 @@ namespace ArrangeState {
     finder?: any;
   };
 
-  export type EditorOrigin = "outline" | "library";
+  export type EditorOrigin =
+    | {
+      type: "chord-block";
+    }
+    | {
+      type: "library";
+      backingNo: number;
+      soundsNo: number;
+    };
 
   export type Target = {
     scoreBase: ElementState.DataInit;
@@ -48,17 +56,26 @@ namespace ArrangeState {
     chordSeq: number;
   };
 
-  export type Track = {
+  export type TrackBase = {
     name: string;
-    method: ArrangeMedhod;
     instRef?: TrackInstRef;
     volume: number;
     isMute: boolean;
 
     relations: Relation[];
-    pianoLib?: PianoEditorState.Lib;
-    guitarLib?: GuitarEditorState.Lib;
   };
+
+  export type PianoTrack = TrackBase & {
+    method: "piano";
+    lib: PianoEditorState.Lib;
+  };
+
+  export type GuitarTrack = TrackBase & {
+    method: "guitar";
+    lib: GuitarEditorState.Lib;
+  };
+
+  export type Track = PianoTrack | GuitarTrack;
 
   /**
    * コード要素とアレンジの紐づけを管理するプロパティ
@@ -79,6 +96,15 @@ namespace ArrangeState {
   export interface Pattern {
     no: number;
   }
+
+  export const isPatternReferenced = (
+    target: "bkgPatt" | "sndsPatt",
+    pattNo: number,
+    track: Track,
+  ) => {
+    if (pattNo === -1) return false;
+    return track.relations.some((relation) => relation[target] === pattNo);
+  };
 
   /**
    * 利用していないパターンの削除

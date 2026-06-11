@@ -44,8 +44,8 @@ const createArrangeSelector = (ctx: Context) => {
 
     const getPianoLib = () => {
         const track = getCurTrack();
-        if (track.method === "piano" && track.pianoLib != undefined) {
-            return track.pianoLib as PianoEditorState.Lib;
+        if (track.method === "piano") {
+            return track.lib;
         }
         throw new Error();
     };

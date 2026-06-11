@@ -35,13 +35,12 @@ namespace PianoEditorState {
 
   export const getEditorProps = (
     chordSeq: number,
-    track: ArrangeState.Track,
+    track: ArrangeState.PianoTrack,
   ): Value => {
     const props = createInitialProps();
     const relation = track.relations.find((r) => r.chordSeq === chordSeq);
     if (relation != undefined) {
-      const lib = track.pianoLib;
-      if (lib == undefined) throw new Error();
+      const lib = track.lib;
       // console.log(relation);
       if (relation.bkgPatt !== -1) {
         const bkgPatt = lib.backingPatterns.find(
@@ -90,22 +89,22 @@ namespace PianoEditorState {
     sounds: string[];
     category: ArrangeLibrary.SoundsCategory;
   }
-  export type Preset = {
-    bkgPatt: number;
+  export type Regular = {
+    backingNo: number;
     sortNo: number;
-    voics: number[];
+    soundsNos: number[];
   };
   export type Lib = {
     backingPatterns: BackingPattern[];
     soundsPatterns: SoundsPattern[];
 
-    presets: Preset[];
+    regulars: Regular[];
   };
 
   export const createInitialLib = (): Lib => ({
     backingPatterns: [],
     soundsPatterns: [],
-    presets: [],
+    regulars: [],
   });
 
   export const createPatternData = (editor: Value) => {
@@ -215,13 +214,13 @@ namespace PianoEditorState {
    */
   export const getArrangePatternFromRelation = (
     chordSeq: number,
-    track: ArrangeState.Track,
+    track: ArrangeState.PianoTrack,
   ): Unit | undefined => {
     const relations = track.relations;
     const relation = relations.find((r) => r.chordSeq === chordSeq);
 
     if (relation != undefined) {
-      const pianoLib = track.pianoLib as PianoEditorState.Lib;
+      const pianoLib = track.lib;
       const soundsPatt = pianoLib.soundsPatterns.find(
         (patt) => patt.no === relation.sndsPatt,
       );
@@ -249,13 +248,31 @@ namespace PianoEditorState {
     return undefined;
   };
 
-  export const deleteUnreferUnit = (track: ArrangeState.Track) => {
-    const pianoLib = track.pianoLib as PianoEditorState.Lib;
+  export const isBackingRegular = (lib: Lib, backingNo: number) => {
+    return lib.regulars.some((regular) => regular.backingNo === backingNo);
+  };
+
+  export const isSoundsRegular = (lib: Lib, soundsNo: number) => {
+    return lib.regulars.some((regular) => regular.soundsNos.includes(soundsNo));
+  };
+
+  export const deleteBackingPattern = (lib: Lib, backingNo: number) => {
+    const index = lib.backingPatterns.findIndex((pattern) => pattern.no === backingNo);
+    if (index !== -1) lib.backingPatterns.splice(index, 1);
+  };
+
+  export const deleteSoundsPattern = (lib: Lib, soundsNo: number) => {
+    const index = lib.soundsPatterns.findIndex((pattern) => pattern.no === soundsNo);
+    if (index !== -1) lib.soundsPatterns.splice(index, 1);
+  };
+
+  export const deleteUnreferUnit = (track: ArrangeState.PianoTrack) => {
+    const pianoLib = track.lib;
     ArrangeState.deleteUnreferPattern(
       "bkgPatt",
       pianoLib.backingPatterns,
       (patt: ArrangeState.Pattern) => {
-        return pianoLib.presets.find((p) => p.bkgPatt === patt.no) != undefined;
+        return isBackingRegular(pianoLib, patt.no);
       },
       track,
     );
@@ -263,13 +280,7 @@ namespace PianoEditorState {
       "sndsPatt",
       pianoLib.soundsPatterns,
       (patt: ArrangeState.Pattern) => {
-        const result =
-          pianoLib.presets.find((p) => {
-            // console.log(`p.voics:${p.voics}, patt.no:${patt.no}`);
-            return p.voics.includes(patt.no);
-          }) != undefined;
-        // console.log(`result: ${result}`);
-        return result;
+        return isSoundsRegular(pianoLib, patt.no);
       },
       track,
     );

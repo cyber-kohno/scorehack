@@ -3,7 +3,6 @@
   import { onDestroy, tick } from "svelte";
   import ChordTheory from "../../../domain/theory/chord-theory";
   import ArrangeLibrary from "../../../store/state/data/arrange/arrange-library";
-  import type ArrangeState from "../../../store/state/data/arrange/arrange-state";
   import { controlStore, dataStore, libraryStore, refStore } from "../../../store/global-store";
   import FinderConditionHeader from "../../arrange/finder/condition/FinderConditionHeader.svelte";
   import APFinderPresetItem from "../../arrange/finder/list/piano/APFinderPresetItem.svelte";
@@ -64,7 +63,7 @@
       apply: { backing: -1, sounds: -1 },
       list: ArrangeLibrary.searchPianoPatterns({
         req: request,
-        arrTrack: track as ArrangeState.Track,
+        arrTrack: track,
         isFilterPatternOnly: false,
       }),
     };

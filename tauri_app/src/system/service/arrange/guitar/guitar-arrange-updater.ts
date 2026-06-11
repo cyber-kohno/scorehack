@@ -13,6 +13,7 @@ export type GuitarFretToggleResult = {
 
 const createGuitarArrangeUpdater = (ctx: Context) => {
     const { arrange, arrTrack } = ctx;
+    if (arrTrack.method !== "guitar") throw new Error();
 
     const getGuitarEditor = () => {
         if (arrange.method !== "guitar" || arrange.editor == undefined) throw new Error();
@@ -20,8 +21,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
     };
 
     const getGuitarLib = () => {
-        if (arrTrack.method !== "guitar" || arrTrack.guitarLib == undefined) throw new Error();
-        return arrTrack.guitarLib;
+        return arrTrack.lib;
     };
 
     const isCurrentChordTone = () => {
