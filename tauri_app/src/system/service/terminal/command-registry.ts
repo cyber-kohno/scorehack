@@ -26,36 +26,38 @@ const createCommandRegistry = (ctx: TerminalCommand.Context) => {
 
     const buildAvailableFunctions = () => {
         const items: TerminalCommand.Props[] = [];
-        const add = (funcs: TerminalCommand.Props[]) => {
-            items.push(...funcs);
+        const sectors = terminal.target.split("\\");
+        const add = (funcs: TerminalCommand.Props[], sector: string) => {
+            items.push(...funcs.map((func) => ({
+                ...func,
+                sector,
+            })));
         };
 
-        const sectors = terminal.target.split("\\");
-
-        add(globalProvider.commands({ items }));
+        add(globalProvider.commands({ items }), "system");
 
         switch (sectors[0]) {
             case "harmonize": {
                 const harmonizeSector = sectors[1] as ElementState.ElementType | "arrange" | "library";
                 if (harmonizeSector === "library") {
-                    add(harmonizeProvider.commands());
-                    add(libraryProvider.commands());
+                    add(harmonizeProvider.commands(), "harmonize");
+                    add(libraryProvider.commands(), "library");
                 } else if (harmonizeSector !== "arrange") {
-                    add(harmonizeProvider.commands());
+                    add(harmonizeProvider.commands(), "harmonize");
                     switch (harmonizeSector) {
-                        case "init": add(initProvider.commands()); break;
-                        case "section": add(sectionProvider.commands()); break;
-                        case "chord": add(chordProvider.commands()); break;
-                        case "modulate": add(modulateProvider.commands()); break;
+                        case "init": add(initProvider.commands(), "init"); break;
+                        case "section": add(sectionProvider.commands(), "section"); break;
+                        case "chord": add(chordProvider.commands(), "chord"); break;
+                        case "modulate": add(modulateProvider.commands(), "modulate"); break;
                     }
                 } else {
                     const arrangeSector = sectors[2] as ArrangeState.ArrangeMedhod;
                     switch (arrangeSector) {
-                        case "piano": add(pianoEditorProvider.commands()); break;
+                        case "piano": add(pianoEditorProvider.commands(), "piano"); break;
                     }
                 }
             } break;
-            case "melody": add(melodyProvider.commands()); break;
+            case "melody": add(melodyProvider.commands(), "melody"); break;
         }
 
         terminal.availableFuncs = items;
