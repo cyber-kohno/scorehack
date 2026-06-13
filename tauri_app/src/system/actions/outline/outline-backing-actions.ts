@@ -2,7 +2,7 @@ import ChordTheory from "../../domain/theory/chord-theory";
 import GuitarVoicingResolver from "../../service/arrange/guitar/guitar-voicing-resolver";
 import ConfirmDialog from "../../service/common/confirm-dialog-controller";
 import Toast from "../../service/common/toast-controller";
-import type ArrangeLibrary from "../../store/state/data/arrange/arrange-library";
+import type FinderState from "../../store/state/data/arrange/finder-state";
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
@@ -65,7 +65,7 @@ const createOutlineBackingActions = (
 
         const chordCache = ctx.derived.chordCaches[chordSeq];
         const scoreBase = ctx.derived.baseCaches[baseSeq].scoreBase;
-        const category: ArrangeLibrary.SearchCategory = {
+        const category: FinderState.SearchCategory = {
             beat: chordCache.beat.num,
             structCnt: structCount,
             tsGloup: [scoreBase.rhythm.ts],
@@ -77,7 +77,7 @@ const createOutlineBackingActions = (
             category,
             null,
             [],
-            track.lib,
+            track.bank,
         );
 
         relation.sndsPatt = soundsPattNo;
@@ -152,7 +152,7 @@ const createOutlineBackingActions = (
 
         const chordCache = ctx.derived.chordCaches[chordSeq];
         const compiledChord = chordCache.compiledChord;
-        const pianoLib = track.lib;
+        const pianoLib = track.bank;
         if (compiledChord == undefined) return false;
 
         let relation = track.relations.find(r => r.chordSeq === chordSeq);
@@ -171,7 +171,7 @@ const createOutlineBackingActions = (
         if (sounds.length === 0) return false;
 
         const scoreBase = ctx.derived.baseCaches[baseSeq].scoreBase;
-        const category: ArrangeLibrary.SearchCategory = {
+        const category: FinderState.SearchCategory = {
             beat: chordCache.beat.num,
             structCnt: compiledChord.structs.length,
             tsGloup: [scoreBase.rhythm.ts],
@@ -204,7 +204,7 @@ const createOutlineBackingActions = (
 
         const chordCache = ctx.derived.chordCaches[chordSeq];
         const compiledChord = chordCache.compiledChord;
-        const guitarLib = track.lib;
+        const guitarLib = track.bank;
         if (compiledChord == undefined) return false;
 
         let relation = track.relations.find(r => r.chordSeq === chordSeq);
@@ -276,7 +276,7 @@ const createOutlineBackingActions = (
         track: ArrangeState.PianoTrack,
     ) => {
         const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
-        const pianoLib = track.lib;
+        const pianoLib = track.bank;
         if (chordSeq === -1) return [];
 
         const relation = track.relations.find(r => r.chordSeq === chordSeq);

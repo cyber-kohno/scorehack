@@ -4,7 +4,7 @@ import ChordTheory from "../../domain/theory/chord-theory";
 import RhythmTheory from "../../domain/theory/rhythm-theory";
 import InputState from "../../store/state/input-state";
 import LibraryState from "../../store/state/library-state";
-import ArrangeLibrary from "../../store/state/data/arrange/arrange-library";
+import FinderState from "../../store/state/data/arrange/finder-state";
 import ArrangeState from "../../store/state/data/arrange/arrange-state";
 import PianoBackingState from "../../store/state/data/arrange/piano/piano-backing-state";
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
@@ -183,7 +183,7 @@ const createLibraryActions = () => {
         return ChordTheory.getStructsFromKeyChord(chord).length;
     };
 
-    const createSearchRequest = (library: LibraryState.Value): ArrangeLibrary.SearchRequest => ({
+    const createSearchRequest = (library: LibraryState.Value): FinderState.SearchRequest => ({
         ts: library.condition.ts,
         beat: library.condition.beat,
         eatHead: library.condition.eatHead,
@@ -195,7 +195,7 @@ const createLibraryActions = () => {
         const track = ctx.arrange.tracks[ctx.control.outline.trackIndex];
         if (track == undefined || track.method !== "piano") return [];
 
-        return ArrangeLibrary.searchPianoPatterns({
+        return FinderState.searchPianoPatterns({
             req: createSearchRequest(library),
             arrTrack: track,
             isFilterPatternOnly: false,
@@ -263,7 +263,7 @@ const createLibraryActions = () => {
 
         const track = ctx.arrange.tracks[ctx.control.outline.trackIndex];
         if (track == undefined || track.method !== "piano") return;
-        const pianoLib = track.lib;
+        const pianoLib = track.bank;
 
         const list = searchPianoPatterns(ctx, library);
         const cursor = library.focus.finder.cursor;
@@ -352,7 +352,7 @@ const createLibraryActions = () => {
 
         const track = ctx.arrange.tracks[ctx.control.outline.trackIndex];
         if (track == undefined || track.method !== "piano") return;
-        const pianoLib = track.lib;
+        const pianoLib = track.bank;
 
         const list = searchPianoPatterns(ctx, library);
         const cursor = library.focus.finder.cursor;

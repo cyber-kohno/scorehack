@@ -54,16 +54,12 @@ namespace SettingsState {
         degreeBasis: DegreeBasis;
     };
 
-    export type PianoPreset = {
+    export type PianoPreset = ArrangeState.PianoTrackBank & {
         name: string;
-        method: "piano";
-        lib: ArrangeState.PianoTrack["lib"];
     };
 
-    export type GuitarPreset = {
+    export type GuitarPreset = ArrangeState.GuitarTrackBank & {
         name: string;
-        method: "guitar";
-        lib: ArrangeState.GuitarTrack["lib"];
     };
 
     export type Preset = PianoPreset | GuitarPreset;

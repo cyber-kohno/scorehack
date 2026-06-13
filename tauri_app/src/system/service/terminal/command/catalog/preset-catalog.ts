@@ -1,6 +1,10 @@
 import TerminalCommand from "../../terminal-command";
+import { openLibraryFilePath, saveLibraryFilePath } from "../../../../infra/tauri/dialog";
+import { readUtf8TextFile, writeUtf8TextFile } from "../../../../infra/tauri/fs";
 import type SettingsState from "../../../../store/state/settings-state";
 import type PianoEditorState from "../../../../store/state/data/arrange/piano/piano-editor-state";
+import TextCompression from "../../../common/text-compression";
+import type ArrangeState from "../../../../store/state/data/arrange/arrange-state";
 
 const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
   const { control, data, logger, settings, terminal } = ctx;
@@ -11,28 +15,39 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     return JSON.parse(JSON.stringify(value)) as T;
   };
 
-  const createRegularPianoLib = (lib: PianoEditorState.Lib): PianoEditorState.Lib => {
+  const getFileName = (path: string) => {
+    const normalized = path.replaceAll("\\", "/");
+    const segments = normalized.split("/");
+    return segments[segments.length - 1] || path;
+  };
+
+  const createRegularPianoBank = (bank: PianoEditorState.Bank): PianoEditorState.Bank => {
     const backingNos = new Set(
-      lib.regulars
+      bank.regulars
         .map(regular => regular.backingNo)
         .filter(no => no !== -1),
     );
     const soundsNos = new Set(
-      lib.regulars.flatMap(regular => regular.soundsNos),
+      bank.regulars.flatMap(regular => regular.soundsNos),
     );
 
-    const backingPatterns = lib.backingPatterns.filter(pattern => backingNos.has(pattern.no));
-    const soundsPatterns = lib.soundsPatterns.filter(pattern => soundsNos.has(pattern.no));
+    const backingPatterns = bank.backingPatterns.filter(pattern => backingNos.has(pattern.no));
+    const soundsPatterns = bank.soundsPatterns.filter(pattern => soundsNos.has(pattern.no));
 
     return {
       backingPatterns: clone(backingPatterns),
       soundsPatterns: clone(soundsPatterns),
-      regulars: clone(lib.regulars),
+      regulars: clone(bank.regulars),
     };
   };
 
   const findPreset = (name: string) => {
     return settings.library.presets.find(preset => preset.name === name);
+  };
+
+  const finishWaiting = () => {
+    terminal.wait = false;
+    ctx.commit.terminal();
   };
 
   const nextNo = (patterns: { no: number }[]) => {
@@ -41,7 +56,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
 
   const addPianoBackingPattern = (
     source: PianoEditorState.BackingPattern,
-    targetLib: PianoEditorState.Lib,
+    targetLib: PianoEditorState.Bank,
   ) => {
     const sourceBacking = JSON.stringify(source.backing);
     const existing = targetLib.backingPatterns.find(pattern => {
@@ -60,7 +75,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
 
   const addPianoSoundsPattern = (
     source: PianoEditorState.SoundsPattern,
-    targetLib: PianoEditorState.Lib,
+    targetLib: PianoEditorState.Bank,
   ) => {
     const sourceSounds = JSON.stringify(source.sounds);
     const existing = targetLib.soundsPatterns.find(pattern => {
@@ -79,7 +94,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
 
   const addPianoRegular = (
     regular: PianoEditorState.Regular,
-    targetLib: PianoEditorState.Lib,
+    targetLib: PianoEditorState.Bank,
   ) => {
     let targetRegular = targetLib.regulars.find(item => item.backingNo === regular.backingNo);
     if (targetRegular == undefined) {
@@ -105,7 +120,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       logger.outputError("Preset registration is currently available for piano tracks only.");
       return null;
     }
-    if (track.lib.regulars.length === 0) {
+    if (track.bank.regulars.length === 0) {
       logger.outputError("No regular patterns are registered in the active track library.");
       return null;
     }
@@ -113,7 +128,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     return {
       name,
       method: "piano",
-      lib: createRegularPianoLib(track.lib),
+      bank: createRegularPianoBank(track.bank),
     };
   };
 
@@ -162,7 +177,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
   const getRegularCount = (preset: SettingsState.Preset) => {
     switch (preset.method) {
       case "piano":
-        return preset.lib.regulars.length;
+        return preset.bank.regulars.length;
       case "guitar":
         return 0;
     }
@@ -171,9 +186,9 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
   const getPatternCount = (preset: SettingsState.Preset) => {
     switch (preset.method) {
       case "piano":
-        return preset.lib.backingPatterns.length + preset.lib.soundsPatterns.length;
+        return preset.bank.backingPatterns.length + preset.bank.soundsPatterns.length;
       case "guitar":
-        return preset.lib.voicingPatterns.length;
+        return preset.bank.voicingPatterns.length;
     }
   };
 
@@ -206,13 +221,13 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
 
   const applyPianoPreset = (
     preset: SettingsState.PianoPreset,
-    targetLib: PianoEditorState.Lib,
+    targetLib: PianoEditorState.Bank,
   ) => {
-    preset.lib.regulars.forEach(regular => {
+    preset.bank.regulars.forEach(regular => {
       const backingNo = (() => {
         if (regular.backingNo === -1) return -1;
 
-        const backingPattern = preset.lib.backingPatterns.find(pattern => {
+        const backingPattern = preset.bank.backingPatterns.find(pattern => {
           return pattern.no === regular.backingNo;
         });
         if (backingPattern == undefined) throw new Error();
@@ -221,7 +236,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       })();
 
       const soundsNos = regular.soundsNos.map(soundsNo => {
-        const soundsPattern = preset.lib.soundsPatterns.find(pattern => {
+        const soundsPattern = preset.bank.soundsPatterns.find(pattern => {
           return pattern.no === soundsNo;
         });
         if (soundsPattern == undefined) throw new Error();
@@ -254,7 +269,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     switch (preset.method) {
       case "piano":
         if (track.method !== "piano") throw new Error();
-        applyPianoPreset(preset, track.lib);
+        applyPianoPreset(preset, track.bank);
         break;
       case "guitar":
         logger.outputError("Guitar library preset apply is not implemented yet.");
@@ -263,6 +278,99 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
 
     ctx.commit.data();
     logger.outputInfo(`Applied library preset to the active track. [${name}]`);
+  };
+
+  const createLibraryFileFromActiveTrack = (): ArrangeState.TrackBank => {
+    const track = data.arrange.tracks[control.outline.trackIndex];
+    if (track == undefined) throw new Error();
+
+    switch (track.method) {
+      case "piano":
+        if (track.bank.regulars.length === 0) {
+          logger.outputError("No regular patterns are registered in the active track library.");
+          throw new Error("No regular patterns are registered in the active track library.");
+        }
+        return {
+          method: "piano",
+          bank: createRegularPianoBank(track.bank),
+        };
+      case "guitar":
+        return {
+          method: "guitar",
+          bank: clone(track.bank),
+        };
+    }
+  };
+
+  const applyLibraryFile = (libraryFile: ArrangeState.TrackBank) => {
+    const track = data.arrange.tracks[control.outline.trackIndex];
+    if (track == undefined) throw new Error();
+    if (track.method !== libraryFile.method) {
+      logger.outputError(`The active track method does not match the library file. [${track.method} -> ${libraryFile.method}]`);
+      return false;
+    }
+
+    switch (libraryFile.method) {
+      case "piano":
+        if (track.method !== "piano") throw new Error();
+        applyPianoPreset({ name: "", method: "piano", bank: libraryFile.bank }, track.bank);
+        break;
+      case "guitar":
+        logger.outputError("Guitar library file import is not implemented yet.");
+        return false;
+    }
+
+    ctx.commit.data();
+    return true;
+  };
+
+  const exportLibrary = () => {
+    let libraryFile: ArrangeState.TrackBank;
+    try {
+      libraryFile = createLibraryFileFromActiveTrack();
+    } catch {
+      return;
+    }
+
+    (async () => {
+      logger.outputInfo("Select the file to export.");
+      terminal.wait = true;
+      const path = await saveLibraryFilePath(settings.envs.SCH_FILE_DIR);
+      if (path == null) {
+        logger.outputInfo("Library export was canceled.");
+        return;
+      }
+
+      const exportPath = path.toLowerCase().endsWith(".shl")
+        ? path
+        : `${path}.shl`;
+      await writeUtf8TextFile(exportPath, TextCompression.zip(JSON.stringify(libraryFile)));
+      logger.outputInfo(`Exported library file. [${getFileName(exportPath)}]`);
+    })().catch((error) => {
+      console.error("Failed to export library file:", error);
+      logger.outputError("Failed to export library file.");
+    }).finally(finishWaiting);
+  };
+
+  const importLibrary = () => {
+    (async () => {
+      logger.outputInfo("Select the library file to import.");
+      terminal.wait = true;
+      const path = await openLibraryFilePath(settings.envs.SCH_FILE_DIR);
+      if (path == null) {
+        logger.outputInfo("Library import was canceled.");
+        return;
+      }
+
+      const text = await readUtf8TextFile(path);
+      const libraryFile = JSON.parse(TextCompression.unzip(text)) as ArrangeState.TrackBank;
+      if (applyLibraryFile(libraryFile)) {
+        logger.outputInfo(`Imported library file to the active track. [${getFileName(path)}]`);
+      }
+    })().catch((error) => {
+      console.error("Failed to import library file:", error);
+      logger.outputError("Failed to import library file.");
+    }).finally(finishWaiting);
   };
 
   const outputReference = () => {
@@ -336,6 +444,12 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
           if (name == null) return;
           deletePreset(name);
         } break;
+        case "export":
+          exportLibrary();
+          break;
+        case "import":
+          importLibrary();
+          break;
       }
     },
   };

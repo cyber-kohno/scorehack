@@ -24,7 +24,7 @@ namespace GuitarEditorState {
     frets: StringSelection[];
   }
 
-  export type Lib = {
+  export type Bank = {
     voicingPatterns: VoicingPattern[];
   };
 
@@ -60,7 +60,7 @@ namespace GuitarEditorState {
     };
   };
 
-  export const createInitialLib = (): Lib => ({
+  export const createInitialBank = (): Bank => ({
     voicingPatterns: [],
   });
 
@@ -72,7 +72,7 @@ namespace GuitarEditorState {
     const relation = track.relations.find((r) => r.chordSeq === chordSeq);
     if (relation == undefined) return props;
 
-    const lib = track.lib;
+    const lib = track.bank;
 
     const voicing = lib.voicingPatterns.find((p) => p.no === relation.sndsPatt);
     if (voicing == undefined) throw new Error();
@@ -83,15 +83,15 @@ namespace GuitarEditorState {
 
   export const registPattern = (
     frets: StringSelection[],
-    lib: Lib,
+    bank: Bank,
   ) => {
     const src = JSON.stringify(frets);
-    let pattern = lib.voicingPatterns.find((pat) => {
+    let pattern = bank.voicingPatterns.find((pat) => {
       return JSON.stringify(pat.frets) === src;
     });
 
     if (pattern == undefined) {
-      const maxNo = lib.voicingPatterns.reduce(
+      const maxNo = bank.voicingPatterns.reduce(
         (p, n) => (n.no > p ? n.no : p),
         -1,
       );
@@ -99,7 +99,7 @@ namespace GuitarEditorState {
         no: maxNo + 1,
         frets: JSON.parse(src),
       };
-      lib.voicingPatterns.push(pattern);
+      bank.voicingPatterns.push(pattern);
     }
 
     return pattern.no;
@@ -112,7 +112,7 @@ namespace GuitarEditorState {
     const relation = track.relations.find((r) => r.chordSeq === chordSeq);
     if (relation == undefined) return undefined;
 
-    const lib = track.lib;
+    const lib = track.bank;
     const voicing = lib.voicingPatterns.find((patt) => patt.no === relation.sndsPatt);
     if (voicing == undefined) throw new Error();
 
@@ -122,7 +122,7 @@ namespace GuitarEditorState {
   };
 
   export const deleteUnreferUnit = (track: ArrangeState.GuitarTrack) => {
-    const guitarLib = track.lib;
+    const guitarLib = track.bank;
     ArrangeState.deleteUnreferPattern(
       "sndsPatt",
       guitarLib.voicingPatterns,

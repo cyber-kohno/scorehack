@@ -56,7 +56,6 @@ const useInputRoot = () => {
             if (input[holdKey] && callback != undefined) {
                 callback();
                 // 1つでも処理したらループを抜ける。
-                return 1;
             }
         });
     }

@@ -1,4 +1,3 @@
-import pako from "pako";
 import { get } from "svelte/store";
 import { openScoreFilePath, saveScoreFilePath } from "../../infra/tauri/dialog";
 import { readUtf8TextFile, writeUtf8TextFile } from "../../infra/tauri/fs";
@@ -6,6 +5,7 @@ import { dataStore, fileStore, refStore } from "../../store/global-store";
 import type DataState from "../../store/state/data/data-state";
 import type FileState from "../../store/state/file-state";
 import recalculate from "../derived/recalculate-derived";
+import TextCompression from "./text-compression";
 
 namespace ScoreFile {
     export interface SaveProps {
@@ -24,28 +24,6 @@ namespace ScoreFile {
         path,
         name: getFileName(path),
     });
-
-    const uint8ArrayToBase64 = (buffer: Uint8Array) => {
-        let binary = "";
-        const bytes = new Uint8Array(buffer);
-        const len = bytes.byteLength;
-        for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        return window.btoa(binary);
-    };
-
-    const zip = (baseStr: string) => {
-        const encoder = new TextEncoder();
-        const textUint8Array = encoder.encode(baseStr);
-        const compressed = pako.gzip(textUint8Array);
-        return uint8ArrayToBase64(compressed);
-    };
-
-    const unzip = (baseStr: string) => {
-        const compressedFromBase64 = Uint8Array.from(atob(baseStr), c => c.charCodeAt(0));
-        return pako.inflate(compressedFromBase64, { to: "string" });
-    };
 
     const createSaveText = () => {
         return JSON.stringify(get(dataStore));
@@ -69,7 +47,7 @@ namespace ScoreFile {
         if (fileHandle.score) {
             const storeFileHandle = fileHandle.score;
             (async () => {
-                await writeUtf8TextFile(storeFileHandle.path, zip(plainData));
+                await writeUtf8TextFile(storeFileHandle.path, TextCompression.zip(plainData));
                 props.success(storeFileHandle);
             })().catch(() => {
                 props.cancel();
@@ -85,7 +63,7 @@ namespace ScoreFile {
             }
 
             const handle = toHandle(path);
-            await writeUtf8TextFile(handle.path, zip(plainData));
+            await writeUtf8TextFile(handle.path, TextCompression.zip(plainData));
             fileStore.set({ ...fileHandle, score: handle });
             props.success(handle);
         })().catch(() => {
@@ -108,7 +86,7 @@ namespace ScoreFile {
 
                 const newFileHandle = toHandle(path);
                 const fileContents = await readUtf8TextFile(path);
-                const loadedData = JSON.parse(unzip(fileContents)) as DataState.Value;
+                const loadedData = JSON.parse(TextCompression.unzip(fileContents)) as DataState.Value;
 
                 fileStore.set({ score: newFileHandle });
                 dataStore.set(loadedData);

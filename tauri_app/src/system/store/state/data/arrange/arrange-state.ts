@@ -15,7 +15,7 @@ namespace ArrangeState {
     volume: 10,
     isMute: false,
     relations: [],
-    lib: PianoEditorState.createInitialLib(),
+    bank: PianoEditorState.createInitialBank(),
   });
 
   export const createGuitarTrackInitial = (name: string): Track => ({
@@ -24,7 +24,7 @@ namespace ArrangeState {
     volume: 10,
     isMute: false,
     relations: [],
-    lib: GuitarEditorState.createInitialLib(),
+    bank: GuitarEditorState.createInitialBank(),
   });
 
   export const createInitial = (): DataProps => ({
@@ -65,15 +65,21 @@ namespace ArrangeState {
     relations: Relation[];
   };
 
-  export type PianoTrack = TrackBase & {
+  export type PianoTrackBank = {
     method: "piano";
-    lib: PianoEditorState.Lib;
+    bank: PianoEditorState.Bank;
   };
 
-  export type GuitarTrack = TrackBase & {
+  export type GuitarTrackBank = {
     method: "guitar";
-    lib: GuitarEditorState.Lib;
+    bank: GuitarEditorState.Bank;
   };
+
+  export type TrackBank = PianoTrackBank | GuitarTrackBank;
+
+  export type PianoTrack = TrackBase & PianoTrackBank;
+
+  export type GuitarTrack = TrackBase & GuitarTrackBank;
 
   export type Track = PianoTrack | GuitarTrack;
 
@@ -83,9 +89,9 @@ namespace ArrangeState {
   export interface Relation {
     chordSeq: number;
 
-    /** バッキングパターン */
+    /** バッキングパターン連番 */
     bkgPatt: number;
-    /** 構成音パターン */
+    /** 構成音パターン連番 */
     sndsPatt: number;
   }
 
@@ -121,15 +127,14 @@ namespace ArrangeState {
   ) => {
     for (let i = patts.length - 1; i >= 0; i--) {
       const patt = patts[i];
-      // プリセット登録されているパターンは削除しない
+      // プリセットに使われているパターンは削除対象外
       if (isUsePreset(patt)) continue;
       let isRefer = false;
 
       if (layer.relations.map((r) => r[target]).includes(patt.no)) {
         isRefer = true;
       }
-      // 参照が見つからない場合削除
-      // console.log(`削除します。${target}- no:[${patts[i].no}]`);
+      // 参照が存在しない場合は削除する
       if (!isRefer) patts.splice(i, 1);
     }
   };

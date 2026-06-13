@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type ArrangeLibrary from "../../../../../store/state/data/arrange/arrange-library";
+  import type FinderState from "../../../../../store/state/data/arrange/finder-state";
   import type PianoEditorState from "../../../../../store/state/data/arrange/piano/piano-editor-state";
   import createArrangeSelector from "../../../../../service/arrange/arrange-selector";
 
@@ -7,7 +7,7 @@
     import PbPresetExistMark from "./APFinderExistMark.svelte";
   import { controlStore, dataStore } from "../../../../../store/global-store";
 
-    export let finder: ArrangeLibrary.PianoArrangeFinder;
+    export let finder: FinderState.PianoArrangeFinder;
     export let backingIndex: number;
     export let soundsIndex: number;
     export let structCnt: number;
@@ -19,7 +19,7 @@
         const {getCurTrack} = createArrangeSelector({ control: $controlStore, data: $dataStore });
         const track = getCurTrack();
         if (track.method !== "piano") throw new Error();
-        const lib = track.lib;
+        const lib = track.bank;
         const regular = lib.regulars.find((p) => p.backingNo === usageBkg.backingNo);
         if (regular == undefined) return false;
         const sndsNo = usageBkg.soundsNos[soundsIndex];

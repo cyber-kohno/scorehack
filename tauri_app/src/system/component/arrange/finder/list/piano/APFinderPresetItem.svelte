@@ -1,12 +1,12 @@
 <script lang="ts">
-  import type ArrangeLibrary from "../../../../../store/state/data/arrange/arrange-library";
+  import type FinderState from "../../../../../store/state/data/arrange/finder-state";
   import type PianoEditorState from "../../../../../store/state/data/arrange/piano/piano-editor-state";
   import createArrangeSelector from "../../../../../service/arrange/arrange-selector";
   import APFinderBacking from "./APFinderBacking.svelte";
   import APFinderVoicsFrame from "./APFinderVoicsFrame.svelte";
   import { controlStore, dataStore } from "../../../../../store/global-store";
 
-  export let finder: ArrangeLibrary.PianoArrangeFinder;
+  export let finder: FinderState.PianoArrangeFinder;
   export let usageBkg: PianoEditorState.Regular;
   export let backingIndex: number;
 
@@ -14,14 +14,14 @@
     const { getCurTrack } = createArrangeSelector({ control: $controlStore, data: $dataStore });
     const track = getCurTrack();
     if (track.method !== "piano") throw new Error();
-    const lib = track.lib;
+    const lib = track.bank;
     const bkgPatt = usageBkg.backingNo === -1
       ? undefined
       : lib.backingPatterns.find(
         (bkgPatt) => bkgPatt.no === usageBkg.backingNo,
       );
     if (usageBkg.backingNo !== -1 && bkgPatt == undefined)
-      throw new Error("bkgPattがundefinedであってはならない。");
+      throw new Error("bkgPatt must exist.");
 
     // const sndsPatts = lib.soundsPatterns.filter((sndsPatt) => {
     //     // return (
@@ -33,7 +33,7 @@
     const sndsPatts = usageBkg.soundsNos.map((vNo) => {
       const sounds = lib.soundsPatterns.find((s) => s.no === vNo);
       if (sounds == undefined)
-        throw new Error("soundsがundefinedであってはならない。");
+        throw new Error("sounds must exist.");
       return sounds;
     });
     return [bkgPatt?.backing ?? null, sndsPatts];

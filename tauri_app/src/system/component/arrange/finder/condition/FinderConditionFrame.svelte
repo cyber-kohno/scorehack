@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type ArrangeLibrary from "../../../../store/state/data/arrange/arrange-library";
+  import type FinderState from "../../../../store/state/data/arrange/finder-state";
   import RhythmTheory from "../../../../domain/theory/rhythm-theory";
   import FinderConditionItem from "./FinderConditionItem.svelte";
 
-  export let request: ArrangeLibrary.SearchRequest;
+  export let request: FinderState.SearchRequest;
 
   $: beatInfo = (() => {
     let ret = request.beat.toString();

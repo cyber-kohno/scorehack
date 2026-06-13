@@ -2,7 +2,7 @@ import RhythmTheory from "../../../../domain/theory/rhythm-theory";
 import type ArrangeState from "./arrange-state";
 import type PianoEditorState from "./piano/piano-editor-state";
 
-namespace ArrangeLibrary {
+namespace FinderState {
 
     export interface BackingCategory {
         tsGloup: RhythmTheory.TimeSignature[];
@@ -45,14 +45,14 @@ namespace ArrangeLibrary {
         soundsNos: number[];
     }
 
-    export const getPianoBackingPatternFromNo = (no: number, lib: PianoEditorState.Lib) => {
-        const patt = lib.backingPatterns.find(p => p.no === no);
-        if (patt == undefined) throw new Error('pattがundefinedであってはならない。');
+    export const getPianoBackingPatternFromNo = (no: number, bank: PianoEditorState.Bank) => {
+        const patt = bank.backingPatterns.find(p => p.no === no);
+        if (patt == undefined) throw new Error("patt must exist.");
         return patt.backing;
     }
-    export const getPianoVoicingPatternFromNo = (no: number, lib: PianoEditorState.Lib) => {
-        const patt = lib.soundsPatterns.find(p => p.no === no);
-        if (patt == undefined) throw new Error('pattがundefinedであってはならない。');
+    export const getPianoVoicingPatternFromNo = (no: number, bank: PianoEditorState.Bank) => {
+        const patt = bank.soundsPatterns.find(p => p.no === no);
+        if (patt == undefined) throw new Error("patt must exist.");
         return patt.sounds;
     }
 
@@ -62,15 +62,15 @@ namespace ArrangeLibrary {
         isFilterPatternOnly: boolean;
     }) => {
         const { req, arrTrack: track, isFilterPatternOnly } = args;
-        const lib = track.lib;
+        const bank = track.bank;
         const createSoundsNos = (backingNo: number) => {
             const soundsNos: number[] = [];
 
-            const regular = lib.regulars.find(p => p.backingNo === backingNo);
+            const regular = bank.regulars.find(p => p.backingNo === backingNo);
             if (regular != undefined) {
                 regular.soundsNos.forEach(vNo => {
-                    const sndsPatt = lib.soundsPatterns.find(p => p.no === vNo);
-                    if (sndsPatt == undefined) throw new Error('sndsPattがundefiendであってはならない。');
+                    const sndsPatt = bank.soundsPatterns.find(p => p.no === vNo);
+                    if (sndsPatt == undefined) throw new Error("sndsPatt must exist.");
                     if (req.structCnt === sndsPatt.category.structCnt) {
                         soundsNos.push(vNo);
                     }
@@ -79,8 +79,8 @@ namespace ArrangeLibrary {
 
             track.relations.forEach(r => {
                 if (r.bkgPatt !== backingNo || r.sndsPatt === -1) return;
-                const sndsPatt = lib.soundsPatterns.find(p => p.no === r.sndsPatt);
-                if (sndsPatt == undefined) throw new Error('sndsPattがundefiendであってはならない。');
+                const sndsPatt = bank.soundsPatterns.find(p => p.no === r.sndsPatt);
+                if (sndsPatt == undefined) throw new Error("sndsPatt must exist.");
                 if (req.structCnt === sndsPatt.category.structCnt && !soundsNos.includes(sndsPatt.no)) {
                     soundsNos.push(r.sndsPatt);
                 }
@@ -89,15 +89,12 @@ namespace ArrangeLibrary {
             return soundsNos;
         };
 
-        // console.log(req);
         // 条件に一致するパターンを抽出
-        const bkgPatts = lib.backingPatterns.filter(patt => {
+        const bkgPatts = bank.backingPatterns.filter(patt => {
             const cond = patt.category;
             const condEatHead = cond.eatHead ?? 0;
             const condEatTail = cond.eatTail ?? 0;
 
-            // console.log(cond);
-            // console.log(req);
             return cond.tsGloup
                 .map(ts => RhythmTheory.formatTS(ts))
                 .includes(RhythmTheory.formatTS(req.ts)) &&
@@ -106,13 +103,7 @@ namespace ArrangeLibrary {
                 condEatTail === req.eatTail
         });
 
-        // console.log(bkgPatts);
         const list: PianoEditorState.Regular[] = bkgPatts.map(bkgPatt => {
-            // // バッキングパターンのレコード数と一致するボイシングの管理連番を取得
-            // const voics = lib.soundsPatterns.filter(sndsPatt => {
-            //     return req.structCnt === sndsPatt.category.structCnt &&
-            //         bkgPatt.backing.recordNum === sndsPatt.sounds.length;
-            // }).map(p => p.no);
             return {
                 backingNo: bkgPatt.no,
                 sortNo: -1,
@@ -133,4 +124,4 @@ namespace ArrangeLibrary {
     }
 }
 
-export default ArrangeLibrary;
+export default FinderState;

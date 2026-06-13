@@ -1,6 +1,6 @@
 import type ChordTheory from "../../domain/theory/chord-theory";
 import type RhythmTheory from "../../domain/theory/rhythm-theory";
-import type ArrangeLibrary from "./data/arrange/arrange-library";
+import type FinderState from "./data/arrange/finder-state";
 
 namespace LibraryState {
 
@@ -19,7 +19,7 @@ namespace LibraryState {
     ];
 
     export type Finder = {
-        cursor: ArrangeLibrary.Cursor;
+        cursor: FinderState.Cursor;
     };
 
     export type Value = {

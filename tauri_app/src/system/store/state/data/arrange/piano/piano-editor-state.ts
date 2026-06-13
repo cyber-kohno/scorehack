@@ -1,5 +1,5 @@
 import ArrangeState from "../arrange-state";
-import type ArrangeLibrary from "../arrange-library";
+import type FinderState from "../finder-state";
 import PianoBackingState from "./piano-backing-state";
 
 namespace PianoEditorState {
@@ -40,7 +40,7 @@ namespace PianoEditorState {
     const props = createInitialProps();
     const relation = track.relations.find((r) => r.chordSeq === chordSeq);
     if (relation != undefined) {
-      const lib = track.lib;
+      const lib = track.bank;
       // console.log(relation);
       if (relation.bkgPatt !== -1) {
         const bkgPatt = lib.backingPatterns.find(
@@ -83,25 +83,25 @@ namespace PianoEditorState {
   export interface BackingPattern extends ArrangeState.Pattern {
     backing: PianoBackingState.DataProps;
 
-    category: ArrangeLibrary.BackingCategory;
+    category: FinderState.BackingCategory;
   }
   export interface SoundsPattern extends ArrangeState.Pattern {
     sounds: string[];
-    category: ArrangeLibrary.SoundsCategory;
+    category: FinderState.SoundsCategory;
   }
   export type Regular = {
     backingNo: number;
     sortNo: number;
     soundsNos: number[];
   };
-  export type Lib = {
+  export type Bank = {
     backingPatterns: BackingPattern[];
     soundsPatterns: SoundsPattern[];
 
     regulars: Regular[];
   };
 
-  export const createInitialLib = (): Lib => ({
+  export const createInitialBank = (): Bank => ({
     backingPatterns: [],
     soundsPatterns: [],
     regulars: [],
@@ -151,26 +151,26 @@ namespace PianoEditorState {
    * @param category 検索用のカテゴリ
    * @param backing バッキング
    * @param sounds ボイシング
-   * @param lib ライブラリ
+   * @param bank バンク
    * @returns アレンジ（バッキング・ボイシング）の識別連番の配列（分割代入で使う想定）
    */
   export const registPattern = (
-    category: ArrangeLibrary.SearchCategory,
+    category: FinderState.SearchCategory,
     backing: PianoBackingState.DataProps | null,
     sounds: string[],
-    lib: Lib,
+    bank: Bank,
   ) => {
     let backingPatt: BackingPattern | undefined = undefined;
     if (backing != null) {
       const backingSrc = JSON.stringify(backing);
       // 既存のバッキングパターンを検索
-      backingPatt = lib.backingPatterns.find((pat) => {
+      backingPatt = bank.backingPatterns.find((pat) => {
         const pattSrc = JSON.stringify(pat.backing);
         return backingSrc === pattSrc;
       });
       // 既存のパターンが見つからなかった場合、新規追加
       if (backingPatt == undefined) {
-        const maxNo = lib.backingPatterns.reduce(
+        const maxNo = bank.backingPatterns.reduce(
           (p, n) => (n.no > p ? n.no : p),
           -1,
         );
@@ -179,19 +179,19 @@ namespace PianoEditorState {
           backing: JSON.parse(backingSrc),
           category: { ...category },
         };
-        lib.backingPatterns.push(backingPatt);
+        bank.backingPatterns.push(backingPatt);
       }
     }
 
     const soundsSrc = JSON.stringify(sounds);
     // 既存の構成音パターンを検索
-    let soundsPatt = lib.soundsPatterns.find((pat) => {
+    let soundsPatt = bank.soundsPatterns.find((pat) => {
       const pattSrc = JSON.stringify(pat.sounds);
       return soundsSrc === pattSrc;
     });
     // 既存のパターンが見つからなかった場合、新規追加
     if (soundsPatt == undefined) {
-      const maxNo = lib.soundsPatterns.reduce(
+      const maxNo = bank.soundsPatterns.reduce(
         (p, n) => (n.no > p ? n.no : p),
         -1,
       );
@@ -200,7 +200,7 @@ namespace PianoEditorState {
         sounds: JSON.parse(soundsSrc),
         category: { ...category },
       };
-      lib.soundsPatterns.push(soundsPatt);
+      bank.soundsPatterns.push(soundsPatt);
     }
     return [backingPatt == null ? -1 : backingPatt.no, soundsPatt.no];
   };
@@ -220,12 +220,12 @@ namespace PianoEditorState {
     const relation = relations.find((r) => r.chordSeq === chordSeq);
 
     if (relation != undefined) {
-      const pianoLib = track.lib;
+      const pianoLib = track.bank;
       const soundsPatt = pianoLib.soundsPatterns.find(
         (patt) => patt.no === relation.sndsPatt,
       );
       if (soundsPatt == null)
-        throw new Error("soundsPattがundefinedであってはならない。");
+        throw new Error("soundsPatt must exist.");
 
       if (relation.bkgPatt === -1) {
         return {
@@ -238,7 +238,7 @@ namespace PianoEditorState {
         (patt) => patt.no === relation.bkgPatt,
       );
       if (backingPatt == null)
-        throw new Error("backingPattがundefinedであってはならない。");
+        throw new Error("backingPatt must exist.");
 
       return {
         voicingSounds: soundsPatt.sounds,
@@ -248,26 +248,26 @@ namespace PianoEditorState {
     return undefined;
   };
 
-  export const isBackingRegular = (lib: Lib, backingNo: number) => {
-    return lib.regulars.some((regular) => regular.backingNo === backingNo);
+  export const isBackingRegular = (bank: Bank, backingNo: number) => {
+    return bank.regulars.some((regular) => regular.backingNo === backingNo);
   };
 
-  export const isSoundsRegular = (lib: Lib, soundsNo: number) => {
-    return lib.regulars.some((regular) => regular.soundsNos.includes(soundsNo));
+  export const isSoundsRegular = (bank: Bank, soundsNo: number) => {
+    return bank.regulars.some((regular) => regular.soundsNos.includes(soundsNo));
   };
 
-  export const deleteBackingPattern = (lib: Lib, backingNo: number) => {
-    const index = lib.backingPatterns.findIndex((pattern) => pattern.no === backingNo);
-    if (index !== -1) lib.backingPatterns.splice(index, 1);
+  export const deleteBackingPattern = (bank: Bank, backingNo: number) => {
+    const index = bank.backingPatterns.findIndex((pattern) => pattern.no === backingNo);
+    if (index !== -1) bank.backingPatterns.splice(index, 1);
   };
 
-  export const deleteSoundsPattern = (lib: Lib, soundsNo: number) => {
-    const index = lib.soundsPatterns.findIndex((pattern) => pattern.no === soundsNo);
-    if (index !== -1) lib.soundsPatterns.splice(index, 1);
+  export const deleteSoundsPattern = (bank: Bank, soundsNo: number) => {
+    const index = bank.soundsPatterns.findIndex((pattern) => pattern.no === soundsNo);
+    if (index !== -1) bank.soundsPatterns.splice(index, 1);
   };
 
   export const deleteUnreferUnit = (track: ArrangeState.PianoTrack) => {
-    const pianoLib = track.lib;
+    const pianoLib = track.bank;
     ArrangeState.deleteUnreferPattern(
       "bkgPatt",
       pianoLib.backingPatterns,

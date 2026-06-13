@@ -1,12 +1,12 @@
 <script lang="ts">
   import RhythmTheory from "../../../../domain/theory/rhythm-theory";
-  import type ArrangeLibrary from "../../../../store/state/data/arrange/arrange-library";
+  import type FinderState from "../../../../store/state/data/arrange/finder-state";
 
-  export let request!: ArrangeLibrary.SearchRequest;
+  export let request!: FinderState.SearchRequest;
   export let method!: string;
 
   const formatEat = (value: number) => {
-    if (value === 0) return "±0";
+    if (value === 0) return "ﾂｱ0";
     return value > 0 ? `+${value}` : `${value}`;
   };
 

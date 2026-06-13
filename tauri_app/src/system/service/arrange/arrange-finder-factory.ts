@@ -1,5 +1,5 @@
 import type RhythmTheory from "../../domain/theory/rhythm-theory";
-import ArrangeLibrary from "../../store/state/data/arrange/arrange-library";
+import FinderState from "../../store/state/data/arrange/finder-state";
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import type DerivedState from "../../store/state/derived-state";
 
@@ -62,7 +62,7 @@ export const createPianoArrangeFinderFromTarget = (props: {
 
 const createPianoArrangeFinderFromSource = (props: PianoFinderSource) => {
     const { ts, beat, compiledChord, chordSeq, arrTrack } = props;
-    const req: ArrangeLibrary.SearchRequest = {
+    const req: FinderState.SearchRequest = {
         beat: beat.num,
         eatHead: beat.eatHead,
         eatTail: beat.eatTail,
@@ -70,11 +70,11 @@ const createPianoArrangeFinderFromSource = (props: PianoFinderSource) => {
         ts,
     };
 
-    const finder: ArrangeLibrary.PianoArrangeFinder = {
+    const finder: FinderState.PianoArrangeFinder = {
         cursor: { backing: -1, sounds: -1 },
         apply: { backing: -1, sounds: -1 },
         request: req,
-        list: ArrangeLibrary.searchPianoPatterns({
+        list: FinderState.searchPianoPatterns({
             req,
             arrTrack,
             isFilterPatternOnly: false,

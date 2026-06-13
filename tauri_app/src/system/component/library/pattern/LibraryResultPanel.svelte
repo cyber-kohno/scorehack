@@ -2,7 +2,7 @@
   import { get } from "svelte/store";
   import { onDestroy, tick } from "svelte";
   import ChordTheory from "../../../domain/theory/chord-theory";
-  import ArrangeLibrary from "../../../store/state/data/arrange/arrange-library";
+  import FinderState from "../../../store/state/data/arrange/finder-state";
   import { controlStore, dataStore, libraryStore, refStore } from "../../../store/global-store";
   import FinderConditionHeader from "../../arrange/finder/condition/FinderConditionHeader.svelte";
   import APFinderPresetItem from "../../arrange/finder/list/piano/APFinderPresetItem.svelte";
@@ -49,7 +49,7 @@
     if (library == null || track == undefined || track.method !== "piano") return null;
     const condition = library.condition;
 
-    const request: ArrangeLibrary.SearchRequest = {
+    const request: FinderState.SearchRequest = {
       ts: condition.ts,
       beat: condition.beat,
       eatHead: condition.eatHead,
@@ -61,7 +61,7 @@
       request,
       cursor: library.focus.finder?.cursor ?? { backing: -1, sounds: -1 },
       apply: { backing: -1, sounds: -1 },
-      list: ArrangeLibrary.searchPianoPatterns({
+      list: FinderState.searchPianoPatterns({
         req: request,
         arrTrack: track,
         isFilterPatternOnly: false,

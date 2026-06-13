@@ -25,7 +25,7 @@
         const {getCurTrack} = createArrangeSelector({ control: $controlStore, data: $dataStore });
         const track = getCurTrack();
         if (track.method !== "piano") throw new Error();
-        const lib = track.lib;
+        const lib = track.bank;
         const regular = lib.regulars.find(p => p.backingNo === usageBkg.backingNo);
         return regular != undefined;
     })();

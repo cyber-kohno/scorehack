@@ -3,14 +3,14 @@
   import { onMount } from "svelte";
   import APFinderVoicItem from "./APFinderVoicItem.svelte";
   import type PianoEditorState from "../../../../../store/state/data/arrange/piano/piano-editor-state";
-  import type ArrangeLibrary from "../../../../../store/state/data/arrange/arrange-library";
-  export let finder: ArrangeLibrary.PianoArrangeFinder;
+  import type FinderState from "../../../../../store/state/data/arrange/finder-state";
+  export let finder: FinderState.PianoArrangeFinder;
   export let sndsPatts: PianoEditorState.SoundsPattern[];
   export let isRecordFocus: boolean;
   export let backingIndex: number;
   export let usageBkg: PianoEditorState.Regular;
 
-  let ref: HTMLElement | null = null; // 要素の参照を保存
+  let ref: HTMLElement | null = null; // 隕∫ｴ縺ｮ蜿ら・繧剃ｿ晏ｭ・
   onMount(() => {
     if (ref != null) {
       const finderRefs = $refStore.arrange.finder;

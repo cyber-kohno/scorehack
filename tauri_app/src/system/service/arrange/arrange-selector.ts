@@ -1,5 +1,5 @@
 import type ControlState from "../../store/state/control-state";
-import type ArrangeLibrary from "../../store/state/data/arrange/arrange-library";
+import type FinderState from "../../store/state/data/arrange/finder-state";
 import type DataState from "../../store/state/data/data-state";
 import type GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import type PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
@@ -27,7 +27,7 @@ const createArrangeSelector = (ctx: Context) => {
     const getPianoFinder = () => {
         const arrange = getArrange();
         if (arrange.method !== "piano" || arrange.finder == undefined) throw new Error();
-        return arrange.finder as ArrangeLibrary.PianoArrangeFinder;
+        return arrange.finder as FinderState.PianoArrangeFinder;
     };
 
     const getGuitarEditor = () => {
@@ -45,7 +45,7 @@ const createArrangeSelector = (ctx: Context) => {
     const getPianoLib = () => {
         const track = getCurTrack();
         if (track.method === "piano") {
-            return track.lib;
+            return track.bank;
         }
         throw new Error();
     };

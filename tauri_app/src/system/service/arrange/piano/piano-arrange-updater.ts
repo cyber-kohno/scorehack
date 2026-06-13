@@ -1,6 +1,6 @@
 import Layout from "../../../layout/layout-constant";
 import ChordTheory from "../../../domain/theory/chord-theory";
-import type ArrangeLibrary from "../../../store/state/data/arrange/arrange-library";
+import type FinderState from "../../../store/state/data/arrange/finder-state";
 import type ArrangeState from "../../../store/state/data/arrange/arrange-state";
 import PianoBackingState from "../../../store/state/data/arrange/piano/piano-backing-state";
 import PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
@@ -36,7 +36,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
 
     const getPianoFinder = () => {
         if (arrange.finder == undefined) throw new Error();
-        return arrange.finder as ArrangeLibrary.PianoArrangeFinder;
+        return arrange.finder as FinderState.PianoArrangeFinder;
     };
 
     const getPianoEditor = () => {
@@ -45,7 +45,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
     };
 
     const getPianoLib = () => {
-        return track.lib;
+        return track.bank;
     };
 
     const moveFinderBacking = (dir: -1 | 1) => {
@@ -56,7 +56,6 @@ const createPianoArrangeUpdater = (ctx: Context) => {
 
         finder.cursor.sounds = -1;
         // 移動する前に列のスクロールをリセットする
-        // adjustPattColumnScroll(finder);
         finder.cursor.backing = temp;
         // adjustPattRecordScroll(finder);
         return true;
@@ -435,18 +434,17 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         const usageBkg = finder.list[finder.cursor.backing];
         const bkgPattNo = usageBkg.backingNo;
         const sndsPattNo = usageBkg.soundsNos[finder.cursor.sounds];
-        const lib = getPianoLib();
+        const bank = getPianoLib();
         const bkgPatt = bkgPattNo === -1
             ? undefined
-            : lib.backingPatterns.find(patt => patt.no === bkgPattNo);
+            : bank.backingPatterns.find(patt => patt.no === bkgPattNo);
         if (bkgPattNo !== -1 && bkgPatt == undefined) throw new Error();
-        const sndsPatt = lib.soundsPatterns.find(patt => patt.no === sndsPattNo);
+        const sndsPatt = bank.soundsPatterns.find(patt => patt.no === sndsPattNo);
         if (bkgPattNo === -1 && sndsPatt == undefined) {
             return { control: false, data: false, closeArrange: false };
         }
 
         const chordSeq = arrange.target.chordSeq;
-
         // 選択したパターンをエディタに対して適用する
         const applyToEditor = () => {
             if (arrange.editor == undefined) throw new Error();
@@ -460,7 +458,6 @@ const createPianoArrangeUpdater = (ctx: Context) => {
                 backing.layers = JSON.parse(JSON.stringify(bkgPatt.backing.layers));
                 backing.recordNum = bkgPatt.backing.recordNum;
             }
-
             // ボイシングは未設定の可能性があるため初期化しておく
             pianoEditor.voicing.items.length = 0;
             if (sndsPatt != undefined) {
@@ -477,16 +474,13 @@ const createPianoArrangeUpdater = (ctx: Context) => {
                 applyToEditor();
                 return { control: true, data: false, closeArrange: false };
             }
-
             // コード連番と参照先ライブラリの紐付け
             const relations = track.relations;
             let relation = relations.find(r => r.chordSeq === chordSeq);
             if (relation == undefined) {
-                // 未定義の場合は紐づけを新たに作成して追加
                 relation = { chordSeq, bkgPatt: -1, sndsPatt: -1 };
                 relations.push(relation);
             } else {
-                // 紐付けが変わったことにより不参照のピアノライブラリのパターンを削除
                 PianoEditorState.deleteUnreferUnit(track);
             }
             relation.bkgPatt = bkgPatt?.no ?? -1;
@@ -511,12 +505,12 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         const chordSeq = arrange.target.chordSeq;
 
         // パターンの登録
-        const pianoLib = track.lib;
+        const pianoLib = track.bank;
 
         // 有効チャンネル外のノーツは削除する
         const patternData = PianoEditorState.createPatternData(pianoEditor);
         // 検索用カテゴリの作成
-        const category: ArrangeLibrary.SearchCategory = {
+        const category: FinderState.SearchCategory = {
             beat: beatCache.num,
             structCnt: compiledChord.structs.length,
             tsGloup: [scoreBase.rhythm.ts],
@@ -557,8 +551,8 @@ const createPianoArrangeUpdater = (ctx: Context) => {
 
         const pianoEditor = getPianoEditor();
         const patternData = PianoEditorState.createPatternData(pianoEditor);
-        const pianoLib = track.lib;
-        const category: ArrangeLibrary.SearchCategory = {
+        const pianoLib = track.bank;
+        const category: FinderState.SearchCategory = {
             beat: arrange.target.beat.num,
             structCnt: arrange.target.compiledChord.structs.length,
             tsGloup: [arrange.target.scoreBase.rhythm.ts],

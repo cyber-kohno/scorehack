@@ -34,6 +34,26 @@ export const saveScoreFilePath = async (extension: string, defaultDirectory?: st
   });
 };
 
+export const saveLibraryFilePath = async (defaultDirectory?: string) => {
+  return saveTextFilePath({
+    extension: "shl",
+    defaultDirectory,
+    name: "Score Hack Library",
+  });
+};
+
+export const openLibraryFilePath = async (defaultDirectory?: string) => {
+  const path = await open({
+    multiple: false,
+    directory: false,
+    defaultPath: defaultDirectory === "" ? undefined : defaultDirectory,
+    filters: [{ name: "Score Hack Library", extensions: ["shl"] }],
+  });
+
+  if (path == null || Array.isArray(path)) return null;
+  return path;
+};
+
 export const openAudioFilePath = async (defaultDirectory?: string) => {
   const path = await open({
     multiple: false,

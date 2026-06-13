@@ -3,7 +3,7 @@
   import ScrollRateFrame from "../../common/ScrollRateFrame.svelte";
   import FinderConditionHeader from "./condition/FinderConditionHeader.svelte";
   import { controlStore, refStore } from "../../../store/global-store";
-  import type ArrangeLibrary from "../../../store/state/data/arrange/arrange-library";
+  import type FinderState from "../../../store/state/data/arrange/finder-state";
   import APFinderPresetItem from "./list/piano/APFinderPresetItem.svelte";
 
   let ref: HTMLElement | null = null;
@@ -30,7 +30,7 @@
   $: finder = (() => {
     const finder = $controlStore.outline.arrange?.finder;
     if (finder == null) throw new Error("finder must not be null.");
-    return finder as ArrangeLibrary.PianoArrangeFinder;
+    return finder as FinderState.PianoArrangeFinder;
   })();
 </script>
 

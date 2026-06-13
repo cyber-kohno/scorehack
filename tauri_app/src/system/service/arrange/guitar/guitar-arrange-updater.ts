@@ -21,7 +21,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
     };
 
     const getGuitarLib = () => {
-        return arrTrack.lib;
+        return arrTrack.bank;
     };
 
     const isCurrentChordTone = () => {
