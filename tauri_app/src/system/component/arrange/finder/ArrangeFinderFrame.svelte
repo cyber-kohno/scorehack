@@ -66,7 +66,7 @@
     height: 600px;
     border: 1px solid #1efe00;
     box-sizing: border-box;
-    z-index: 5;
+    z-index: 7;
     border-radius: 4px;
     opacity: 0.99;
   }

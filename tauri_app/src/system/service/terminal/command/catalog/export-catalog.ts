@@ -1,13 +1,16 @@
 import { get } from "svelte/store";
 import FileUtil from "../../../../infra/file/file-util";
+import { saveTextFilePath } from "../../../../infra/tauri/dialog";
+import { writeBinaryFile } from "../../../../infra/tauri/fs";
 import { derivedStore } from "../../../../store/global-store";
+import createScoreWav from "../../../export/audio/create-score-wav";
 import MusicXmlExporter from "../../../export/musicxml-exporter";
 import TerminalCommand from "../../terminal-command";
 
 const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
   const { logger, settings, terminal } = ctx;
   const defaultProps = TerminalCommand.createDefaultProps("system");
-  const exportFormats = ["musicxml"];
+  const exportFormats = ["musicxml", "wav"];
 
   const finishWaiting = () => {
     terminal.wait = false;
@@ -50,6 +53,41 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     });
   };
 
+  const exportWav = () => {
+    logger.outputInfo("Select the file to export.");
+    terminal.wait = true;
+    ctx.commit.terminal();
+
+    (async () => {
+      const path = await saveTextFilePath({
+        defaultDirectory: settings.envs.SCH_FILE_DIR,
+        extension: "wav",
+        name: "WAV File",
+      });
+
+      if (path == null) {
+        logger.outputInfo("WAV export was canceled.");
+        return;
+      }
+
+      const exportPath = path.toLowerCase().endsWith(".wav")
+        ? path
+        : `${path}.wav`;
+      const bytes = await createScoreWav({
+        data: ctx.data,
+        derived: get(derivedStore),
+        settings,
+      });
+      await writeBinaryFile(exportPath, bytes);
+      logger.outputInfo(`WAV exported successfully. [${exportPath.split(/[\\/]/).pop() ?? exportPath}]`);
+    })().catch((error) => {
+      console.error("Failed to export WAV:", error);
+      logger.outputError("Failed to export WAV.");
+    }).finally(() => {
+      finishWaiting();
+    });
+  };
+
   const outputUnknownFormat = (format: string) => {
     logger.outputError(`Unknown export format. [${format}]`);
     ctx.commit.terminal();
@@ -72,6 +110,9 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       switch (format) {
         case "musicxml":
           exportMusicXml();
+          break;
+        case "wav":
+          exportWav();
           break;
         default:
           outputUnknownFormat(format);

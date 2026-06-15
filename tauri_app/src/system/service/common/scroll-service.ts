@@ -265,7 +265,7 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
         };
         const backing = arrangeSelector.getPianoEditor().backing;
         const pianoRef = ref.arrange.piano;
-        if (pianoRef.col && pianoRef.table && pianoRef.pedal && backing != null) {
+        if (pianoRef.col && pianoRef.measure && pianoRef.table && pianoRef.pedal && backing != null) {
             const width = pianoRef.col.getBoundingClientRect().width;
 
             const currMiddle = backing.layers[backing.layerIndex].cols
@@ -276,7 +276,7 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
                     return total;
                 }, 0);
             const left = currMiddle - width / 2
-            smoothScrollLeft([pianoRef.col, pianoRef.table, pianoRef.pedal], left);
+            smoothScrollLeft([pianoRef.col, pianoRef.measure, pianoRef.table, pianoRef.pedal], left);
         }
     }
 

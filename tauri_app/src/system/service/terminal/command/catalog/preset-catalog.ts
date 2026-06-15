@@ -174,21 +174,21 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     logger.outputInfo(`Deleted library preset. [${name}]`);
   };
 
-  const getRegularCount = (preset: SettingsState.Preset) => {
+  const getVoicingCount = (preset: SettingsState.Preset) => {
     switch (preset.method) {
       case "piano":
-        return preset.bank.regulars.length;
+        return preset.bank.regulars.reduce((total, cur) => total + cur.soundsNos.length, 0);
       case "guitar":
-        return 0;
+        return preset.bank.voicingPatterns.length;
     }
   };
 
-  const getPatternCount = (preset: SettingsState.Preset) => {
+  const getBackingCount = (preset: SettingsState.Preset) => {
     switch (preset.method) {
       case "piano":
-        return preset.bank.backingPatterns.length + preset.bank.soundsPatterns.length;
+        return preset.bank.backingPatterns.length;
       case "guitar":
-        return preset.bank.voicingPatterns.length;
+        return 1;
     }
   };
 
@@ -203,16 +203,16 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       type: "table",
       table: {
         cols: [
-          { headerName: "Name", width: 180, attr: "def" },
-          { headerName: "Method", width: 100, attr: "item" },
-          { headerName: "Regulars", width: 100, attr: "sentence", isNumber: true },
-          { headerName: "Patterns", width: 100, attr: "sentence", isNumber: true },
+          { headerName: "Name", width: 280, attr: "def" },
+          { headerName: "Method", width: 110, attr: "item" },
+          { headerName: "Backings", width: 130, attr: "sentence", isNumber: true },
+          { headerName: "Voicings", width: 130, attr: "sentence", isNumber: true },
         ],
         table: presets.map(preset => [
           preset.name,
           preset.method,
-          getRegularCount(preset).toString(),
-          getPatternCount(preset).toString(),
+          getBackingCount(preset).toString(),
+          getVoicingCount(preset).toString(),
         ]),
       },
     });

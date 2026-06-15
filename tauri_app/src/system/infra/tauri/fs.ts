@@ -1,4 +1,4 @@
-import { readFile, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { readFile, readTextFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 
 export const readBinaryFile = async (path: string) => {
   return readFile(path);
@@ -10,4 +10,8 @@ export const readUtf8TextFile = async (path: string) => {
 
 export const writeUtf8TextFile = async (path: string, text: string) => {
   await writeTextFile(path, text);
+};
+
+export const writeBinaryFile = async (path: string, bytes: Uint8Array) => {
+  await writeFile(path, bytes);
 };

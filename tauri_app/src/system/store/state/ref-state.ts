@@ -30,6 +30,7 @@ namespace RefState {
     }
     export type PianoRefs = {
         col?: HTMLElement;
+        measure?: HTMLElement;
         table?: HTMLElement;
         pedal?: HTMLElement;
     };
