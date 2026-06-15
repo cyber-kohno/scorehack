@@ -9,6 +9,7 @@ import type SettingsState from "../../../store/state/settings-state";
 import GuitarArrangePlaybackUtil from "../../playback/arrange/guitar-arrange-playback-util";
 import PianoArrangePlaybackUtil from "../../playback/arrange/piano-arrange-playback-util";
 import convertNoteToPlayer from "../../playback/timeline/convert-note-to-player";
+import UserSoundFontRenderer from "./user-soundfont-renderer";
 
 type CreateScoreWavProps = {
   data: DataState.Value;
@@ -108,6 +109,41 @@ const collectMelodyTrackEvents = (props: CreateScoreWavProps) => {
 
       return {
         instrumentName: ref.name as InstrumentName,
+        notes,
+      };
+    })
+    .filter((track) => track != null);
+};
+
+const collectUserSoundFontMelodyTrackEvents = (props: CreateScoreWavProps) => {
+  const { data, derived, settings } = props;
+
+  return data.scoreTracks
+    .filter((track) => !track.isMute)
+    .map((track): UserSoundFontRenderer.TrackEvents | null => {
+      const ref = track.instRef;
+      if (ref?.source !== "soundfont") return null;
+
+      const notes = track.notes
+        .map((note) => convertNoteToPlayer(
+          derived.baseCaches,
+          0,
+          note,
+          track.volume,
+          settings.playback.swing,
+        ))
+        .filter((note) => note != null)
+        .map((note) => ({
+          pitchName: note.pitchName,
+          gain: note.gain,
+          startSec: note.startMs / 1000,
+          durationSec: note.sustainMs / 1000,
+        }));
+
+      if (notes.length === 0) return null;
+
+      return {
+        ref,
         notes,
       };
     })
@@ -232,14 +268,140 @@ const collectArrangeTrackEvents = (props: CreateScoreWavProps) => {
     .filter((track) => track != null);
 };
 
+const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
+  const { data, derived, settings } = props;
+  const { baseCaches, chordCaches } = derived;
+
+  return data.arrange.tracks
+    .filter((track) => !track.isMute)
+    .map((track, trackIndex): UserSoundFontRenderer.TrackEvents | null => {
+      const ref = track.instRef;
+      if (ref?.source !== "soundfont") return null;
+
+      const notes: UserSoundFontRenderer.TrackEvents["notes"] = [];
+
+      switch (track.method) {
+        case "piano": {
+          chordCaches.forEach((chordCache) => {
+            if (chordCache.error.arrange.overLengthTrackIndexes.includes(trackIndex)) return;
+
+            const arrPattern = PianoEditorState.getArrangePatternFromRelation(
+              chordCache.chordSeq,
+              track,
+            );
+            if (arrPattern == undefined) return;
+
+            const compiledChord = chordCache.compiledChord;
+            if (compiledChord == undefined) return;
+
+            const baseCache = baseCaches[chordCache.baseSeq];
+            const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(
+              baseCache.scoreBase.rhythm.ts,
+            );
+            const beatRate = beatDiv16Cnt / 4;
+            const startBeat =
+              chordCache.startBeat * beatRate +
+              (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
+            const patternNotes = PianoArrangePlaybackUtil.convertPatternToNotes(
+              arrPattern,
+              compiledChord.chord,
+              { sustainBeat: chordCache.lengthBeatNote },
+            );
+
+            patternNotes.forEach((note) => {
+              const targetNote = MelodyState.calcAddBeat(note, startBeat);
+              const playInfo = convertNoteToPlayer(
+                baseCaches,
+                0,
+                targetNote,
+                track.volume * (note.velocity / 10),
+                settings.playback.swing,
+              );
+              if (playInfo == null) return;
+
+              notes.push({
+                pitchName: playInfo.pitchName,
+                gain: playInfo.gain,
+                startSec: playInfo.startMs / 1000,
+                durationSec: playInfo.sustainMs / 1000,
+              });
+            });
+          });
+          break;
+        }
+        case "guitar": {
+          chordCaches.forEach((chordCache) => {
+            const arrPattern = GuitarEditorState.getArrangePatternFromRelation(
+              chordCache.chordSeq,
+              track,
+            );
+            if (arrPattern == undefined) return;
+
+            const baseCache = baseCaches[chordCache.baseSeq];
+            const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(
+              baseCache.scoreBase.rhythm.ts,
+            );
+            const beatRate = beatDiv16Cnt / 4;
+            const startBeat =
+              chordCache.startBeat * beatRate +
+              (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
+            const patternNotes = GuitarArrangePlaybackUtil.convertPatternToNotes(
+              arrPattern,
+              {
+                sustainBeat: chordCache.lengthBeatNote,
+                stroke: GuitarEditorState.createDefaultStrokeProps(),
+              },
+            );
+
+            patternNotes.forEach((note) => {
+              const targetNote = MelodyState.calcAddBeat(note, startBeat);
+              const playInfo = convertNoteToPlayer(
+                baseCaches,
+                0,
+                targetNote,
+                track.volume,
+                settings.playback.swing,
+              );
+              if (playInfo == null) return;
+
+              notes.push({
+                pitchName: playInfo.pitchName,
+                gain: playInfo.gain,
+                startSec: playInfo.startMs / 1000,
+                durationSec: playInfo.sustainMs / 1000,
+              });
+            });
+          });
+          break;
+        }
+      }
+
+      if (notes.length === 0) return null;
+
+      return {
+        ref,
+        notes,
+      };
+    })
+    .filter((track) => track != null);
+};
+
 const createScoreWav = async (props: CreateScoreWavProps) => {
   const sampleRate = props.sampleRate ?? 44100;
-  const tracks = [
+  const builtinTracks = [
     ...collectMelodyTrackEvents(props),
     ...collectArrangeTrackEvents(props),
   ];
+  const userSoundFontTracks = [
+    ...collectUserSoundFontMelodyTrackEvents(props),
+    ...collectUserSoundFontArrangeTrackEvents(props),
+  ];
+  const tracks = [
+    ...builtinTracks,
+    ...userSoundFontTracks,
+  ];
   if (tracks.length === 0) {
-    throw new Error("No builtin notes to export.");
+    throw new Error("No notes to export.");
   }
 
   const lastNoteSec = Math.max(
@@ -254,7 +416,17 @@ const createScoreWav = async (props: CreateScoreWavProps) => {
     sampleRate,
   });
 
-  for (const track of tracks) {
+  const userSoundFontSynths = [];
+  for (const track of userSoundFontTracks) {
+    const synth = await UserSoundFontRenderer.render({
+      context,
+      settings: props.settings,
+      track,
+    });
+    userSoundFontSynths.push(synth);
+  }
+
+  for (const track of builtinTracks) {
     const preloadNotes = [...new Set(track.notes.map((note) => note.pitchName))];
     const player = await SoundFont.instrument(
       context as unknown as AudioContext,
@@ -275,6 +447,7 @@ const createScoreWav = async (props: CreateScoreWavProps) => {
   }
 
   const buffer = await context.startRendering();
+  userSoundFontSynths.forEach((synth) => synth.destroy());
   return encodeWav(buffer);
 };
 
