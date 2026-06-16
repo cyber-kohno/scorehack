@@ -1,5 +1,7 @@
 import SoundFont, { type InstrumentName } from "soundfont-player";
 import RhythmTheory from "../../../domain/theory/rhythm-theory";
+import FilePathRef from "../../../infra/file/file-path-ref";
+import { readBinaryFile } from "../../../infra/tauri/fs";
 import type DataState from "../../../store/state/data/data-state";
 import MelodyState from "../../../store/state/data/melody-state";
 import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
@@ -26,6 +28,13 @@ type TrackEvents = {
     startSec: number;
     durationSec: number;
   }[];
+};
+
+type AudioTrackEvent = {
+  buffer: AudioBuffer;
+  startSec: number;
+  offsetSec: number;
+  gain: number;
 };
 
 const writeAscii = (
@@ -386,6 +395,64 @@ const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
     .filter((track) => track != null);
 };
 
+const toArrayBuffer = (bytes: Uint8Array) => {
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+};
+
+const collectAudioTrackEvents = async (
+  props: CreateScoreWavProps,
+  sampleRate: number,
+) => {
+  const { data, settings } = props;
+  const decoder = new OfflineAudioContext({
+    numberOfChannels: 2,
+    length: 1,
+    sampleRate,
+  });
+  const events: AudioTrackEvent[] = [];
+
+  for (const track of data.audioTracks) {
+    if (track.isMute) continue;
+    if (track.pathRef == undefined) continue;
+
+    const path = FilePathRef.resolvePath(track.pathRef, settings.envs.HOME_DIR);
+    if (path === "") continue;
+
+    const bytes = await readBinaryFile(path);
+    const buffer = await decoder.decodeAudioData(toArrayBuffer(bytes));
+    const adjustSec = track.adjust / 1000;
+    const startSec = Math.max(0, adjustSec);
+    const offsetSec = Math.max(0, -adjustSec);
+    if (offsetSec >= buffer.duration) continue;
+
+    events.push({
+      buffer,
+      startSec,
+      offsetSec,
+      gain: Math.max(0, Math.min(1, track.volume / 10)),
+    });
+  }
+
+  return events;
+};
+
+const scheduleAudioTrackEvents = (
+  context: OfflineAudioContext,
+  events: AudioTrackEvent[],
+) => {
+  events.forEach((event) => {
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    source.buffer = event.buffer;
+    gain.gain.value = event.gain;
+    source.connect(gain).connect(context.destination);
+    source.start(event.startSec, event.offsetSec);
+  });
+};
+
 const createScoreWav = async (props: CreateScoreWavProps) => {
   const sampleRate = props.sampleRate ?? 44100;
   const builtinTracks = [
@@ -400,16 +467,23 @@ const createScoreWav = async (props: CreateScoreWavProps) => {
     ...builtinTracks,
     ...userSoundFontTracks,
   ];
-  if (tracks.length === 0) {
-    throw new Error("No notes to export.");
-  }
+  const audioTrackEvents = await collectAudioTrackEvents(props, sampleRate);
 
-  const lastNoteSec = Math.max(
+  const lastNoteSec = tracks.length === 0 ? 0 : Math.max(
     ...tracks.flatMap((track) =>
       track.notes.map((note) => note.startSec + note.durationSec),
     ),
   );
-  const durationSec = lastNoteSec + 0.5;
+  const lastAudioSec = audioTrackEvents.length === 0 ? 0 : Math.max(
+    ...audioTrackEvents.map((event) =>
+      event.startSec + event.buffer.duration - event.offsetSec,
+    ),
+  );
+  if (tracks.length === 0 && audioTrackEvents.length === 0) {
+    throw new Error("No notes or audio tracks to export.");
+  }
+
+  const durationSec = Math.max(lastNoteSec, lastAudioSec) + 0.5;
   const context = new OfflineAudioContext({
     numberOfChannels: 2,
     length: Math.ceil(sampleRate * durationSec),
@@ -445,6 +519,8 @@ const createScoreWav = async (props: CreateScoreWavProps) => {
       });
     });
   }
+
+  scheduleAudioTrackEvents(context, audioTrackEvents);
 
   const buffer = await context.startRendering();
   userSoundFontSynths.forEach((synth) => synth.destroy());
