@@ -11,15 +11,15 @@ namespace TextCompression {
         return window.btoa(binary);
     };
 
-    export const zip = (baseStr: string) => {
+    export const zip = (plainText: string) => {
         const encoder = new TextEncoder();
-        const textUint8Array = encoder.encode(baseStr);
+        const textUint8Array = encoder.encode(plainText);
         const compressed = pako.gzip(textUint8Array);
         return uint8ArrayToBase64(compressed);
     };
 
-    export const unzip = (baseStr: string) => {
-        const compressedFromBase64 = Uint8Array.from(atob(baseStr), c => c.charCodeAt(0));
+    export const unzip = (compressedBase64Text: string) => {
+        const compressedFromBase64 = Uint8Array.from(atob(compressedBase64Text), c => c.charCodeAt(0));
         return pako.inflate(compressedFromBase64, { to: "string" });
     };
 }
