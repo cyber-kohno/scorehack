@@ -13,6 +13,8 @@ import PianoArrangePlaybackUtil from "../../playback/arrange/piano-arrange-playb
 import convertNoteToPlayer from "../../playback/timeline/convert-note-to-player";
 import UserSoundFontRenderer from "./user-soundfont-renderer";
 
+const MILLISECONDS_PER_SECOND = 1000;
+
 type CreateScoreWavProps = {
   data: DataState.Value;
   derived: DerivedState.Value;
@@ -110,8 +112,8 @@ const collectMelodyTrackEvents = (props: CreateScoreWavProps) => {
         .map((note) => ({
           pitchName: note.pitchName,
           gain: note.gain,
-          startSec: note.startMs / 1000,
-          durationSec: note.sustainMs / 1000,
+          startSec: note.startMs / MILLISECONDS_PER_SECOND,
+          durationSec: note.sustainMs / MILLISECONDS_PER_SECOND,
         }));
 
       if (notes.length === 0) return null;
@@ -145,8 +147,8 @@ const collectUserSoundFontMelodyTrackEvents = (props: CreateScoreWavProps) => {
         .map((note) => ({
           pitchName: note.pitchName,
           gain: note.gain,
-          startSec: note.startMs / 1000,
-          durationSec: note.sustainMs / 1000,
+          startSec: note.startMs / MILLISECONDS_PER_SECOND,
+          durationSec: note.sustainMs / MILLISECONDS_PER_SECOND,
         }));
 
       if (notes.length === 0) return null;
@@ -213,8 +215,8 @@ const collectArrangeTrackEvents = (props: CreateScoreWavProps) => {
               notes.push({
                 pitchName: playInfo.pitchName,
                 gain: playInfo.gain,
-                startSec: playInfo.startMs / 1000,
-                durationSec: playInfo.sustainMs / 1000,
+                startSec: playInfo.startMs / MILLISECONDS_PER_SECOND,
+                durationSec: playInfo.sustainMs / MILLISECONDS_PER_SECOND,
               });
             });
           });
@@ -258,8 +260,8 @@ const collectArrangeTrackEvents = (props: CreateScoreWavProps) => {
               notes.push({
                 pitchName: playInfo.pitchName,
                 gain: playInfo.gain,
-                startSec: playInfo.startMs / 1000,
-                durationSec: playInfo.sustainMs / 1000,
+                startSec: playInfo.startMs / MILLISECONDS_PER_SECOND,
+                durationSec: playInfo.sustainMs / MILLISECONDS_PER_SECOND,
               });
             });
           });
@@ -331,8 +333,8 @@ const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
               notes.push({
                 pitchName: playInfo.pitchName,
                 gain: playInfo.gain,
-                startSec: playInfo.startMs / 1000,
-                durationSec: playInfo.sustainMs / 1000,
+                startSec: playInfo.startMs / MILLISECONDS_PER_SECOND,
+                durationSec: playInfo.sustainMs / MILLISECONDS_PER_SECOND,
               });
             });
           });
@@ -376,8 +378,8 @@ const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
               notes.push({
                 pitchName: playInfo.pitchName,
                 gain: playInfo.gain,
-                startSec: playInfo.startMs / 1000,
-                durationSec: playInfo.sustainMs / 1000,
+                startSec: playInfo.startMs / MILLISECONDS_PER_SECOND,
+                durationSec: playInfo.sustainMs / MILLISECONDS_PER_SECOND,
               });
             });
           });
@@ -423,7 +425,7 @@ const collectAudioTrackEvents = async (
 
     const bytes = await readBinaryFile(path);
     const buffer = await decoder.decodeAudioData(toArrayBuffer(bytes));
-    const adjustSec = track.adjust / 1000;
+    const adjustSec = track.adjust / MILLISECONDS_PER_SECOND;
     const startSec = Math.max(0, adjustSec);
     const offsetSec = Math.max(0, -adjustSec);
     if (offsetSec >= buffer.duration) continue;

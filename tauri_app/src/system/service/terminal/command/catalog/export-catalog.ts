@@ -4,13 +4,14 @@ import { saveTextFilePath } from "../../../../infra/tauri/dialog";
 import { writeBinaryFile } from "../../../../infra/tauri/fs";
 import { derivedStore } from "../../../../store/global-store";
 import createScoreWav from "../../../export/audio/create-score-wav";
+import MidiExporter from "../../../export/midi-exporter";
 import MusicXmlExporter from "../../../export/musicxml-exporter";
 import TerminalCommand from "../../terminal-command";
 
 const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
   const { logger, settings, terminal } = ctx;
   const defaultProps = TerminalCommand.createDefaultProps("system");
-  const exportFormats = ["musicxml", "wav"];
+  const exportFormats = ["musicxml", "wav", "midi"];
 
   const finishWaiting = () => {
     terminal.wait = false;
@@ -88,6 +89,59 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     });
   };
 
+  const exportMidi = () => {
+    const track = ctx.selectors.melody.getCurrScoreTrack();
+    const { focus } = ctx.control.melody;
+    if (focus === -1) {
+      logger.outputError("Cannot export MIDI: no melody notes selected.");
+      ctx.commit.terminal();
+      return;
+    }
+
+    const [start, end] = ctx.selectors.melody.getFocusRange();
+    const notes = track.notes.slice(start, end + 1);
+    const result = MidiExporter.create({
+      title: track.name,
+      notes,
+      volume: track.volume,
+      derived: get(derivedStore),
+    });
+
+    if (!result.ok) {
+      logger.outputError("Cannot export MIDI: no melody notes selected.");
+      ctx.commit.terminal();
+      return;
+    }
+
+    logger.outputInfo("Select the file to export.");
+    terminal.wait = true;
+    ctx.commit.terminal();
+
+    (async () => {
+      const path = await saveTextFilePath({
+        defaultDirectory: settings.envs.SCH_FILE_DIR,
+        extension: "mid",
+        name: "MIDI File",
+      });
+
+      if (path == null) {
+        logger.outputInfo("MIDI export was canceled.");
+        return;
+      }
+
+      const exportPath = path.toLowerCase().endsWith(".mid")
+        ? path
+        : `${path}.mid`;
+      await writeBinaryFile(exportPath, result.bytes);
+      logger.outputInfo(`MIDI exported successfully. [${exportPath.split(/[\\/]/).pop() ?? exportPath}]`);
+    })().catch((error) => {
+      console.error("Failed to export MIDI:", error);
+      logger.outputError("Failed to export MIDI.");
+    }).finally(() => {
+      finishWaiting();
+    });
+  };
+
   const outputUnknownFormat = (format: string) => {
     logger.outputError(`Unknown export format. [${format}]`);
     ctx.commit.terminal();
@@ -113,6 +167,9 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
           break;
         case "wav":
           exportWav();
+          break;
+        case "midi":
+          exportMidi();
           break;
         default:
           outputUnknownFormat(format);

@@ -120,8 +120,25 @@ const createOutlineActions = () => {
         const isLastSection = element.type === "section" && sectionCount === 1;
 
         // 初期値ブロックと、最後の1つのセクションは消せない
-        if (element.type === "init" || isLastSection) {
-            Toast.create({ ...ToastState.createInitial(), text: 'test', x: 50, y: 50 });
+        if (element.type === "init") {
+            Toast.create({
+                ...ToastState.createInitial(),
+                x: 12,
+                y: 48,
+                width: 280,
+                text: "Cannot delete: Init block is required.",
+            });
+            return;
+        }
+
+        if (isLastSection) {
+            Toast.create({
+                ...ToastState.createInitial(),
+                x: 12,
+                y: 48,
+                width: 380,
+                text: "Cannot delete: at least one section is required.",
+            });
             return;
         }
 

@@ -41,13 +41,14 @@
   ): OperationStatus => {
     if (playback) return "playback";
     if (!isFocus) return "focus";
+    if (focusLock !== -1) return "range";
     if (isTerminalActive) return "none";
 
     if (inputState.holdD) return "move";
     if (inputState.holdF && focusLock === -1) return "len";
     if (inputState.holdC) return "scale";
     if (inputState.holdX) return "octave";
-    if (inputState.holdShift || focusLock !== -1) return "range";
+    if (inputState.holdShift) return "range";
     return "none";
   };
 

@@ -1,4 +1,3 @@
-import MidiWriter from 'midi-writer-js';
 import { get } from 'svelte/store';
 import FilePathRef from './file-path-ref';
 import { openAudioFilePath, saveTextFilePath } from '../tauri/dialog';
@@ -51,17 +50,6 @@ namespace FileUtil {
                 cancel();
             }
         })();
-    }
-
-    export const downloadMidi = (fileName: string) => {
-        const track = new MidiWriter.Track();
-        track.addEvent(new MidiWriter.ProgramChangeEvent({ instrument: 1 }));
-
-        const writer = new MidiWriter.Writer(track);
-        const link = document.createElement('a');
-        link.href = writer.dataUri();
-        link.download = `${fileName}.mid`;
-        link.click();
     }
 
     export const saveTextFile = (props: SaveTextFile) => {

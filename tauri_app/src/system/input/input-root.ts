@@ -61,7 +61,16 @@ const useInputRoot = () => {
     }
 
     const controlKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "F5") return;
+        const normalizedKey = e.key.toLowerCase();
+        if (
+            e.key === "F5" ||
+            (e.ctrlKey && normalizedKey === "r") ||
+            (e.ctrlKey && e.shiftKey && normalizedKey === "r")
+        ) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
 
         if (isConfirmDialogActive()) {
             e.preventDefault();
@@ -125,7 +134,6 @@ const useInputRoot = () => {
 
         const control = get(controlStore);
         const eventKey = e.key;
-        const normalizedKey = eventKey.toLowerCase();
 
         const mode = control.mode;
 

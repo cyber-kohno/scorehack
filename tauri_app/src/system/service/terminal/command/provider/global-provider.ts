@@ -1,4 +1,5 @@
 import { openDirectoryPath } from "../../../../infra/tauri/dialog";
+import { invoke } from "@tauri-apps/api/core";
 import SettingsState from "../../../../store/state/settings-state";
 import TerminalCommand from "../../terminal-command";
 import createAudioCatalog from "../catalog/audio-catalog";
@@ -56,6 +57,27 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
       createAudioCatalog(ctx),
       createSoundfontCatalog(ctx),
       createShortcutCatalog(ctx),
+      {
+        ...defaultProps,
+        funcKey: "restart",
+        usage: "Restart the application process.",
+        args: [],
+        callback: () => {
+          if (import.meta.env.DEV) {
+            logger.outputInfo("Reloading application UI.");
+            ctx.commit.terminal();
+            window.location.reload();
+            return;
+          }
+
+          logger.outputInfo("Restarting application.");
+          ctx.commit.terminal();
+          void invoke("restart_app").catch((error) => {
+            logger.outputError(`${error}`);
+            ctx.commit.terminal();
+          });
+        },
+      },
       {
         ...defaultProps,
         funcKey: "env",

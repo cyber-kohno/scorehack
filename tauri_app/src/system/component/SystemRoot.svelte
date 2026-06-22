@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { invoke } from "@tauri-apps/api/core";
   import FatalErrorFrame from "./FatalErrorFrame.svelte";
   import MainFrame from "./MainFrame.svelte";
   import LayoutInitializer from "../layout/layout-initializer";
@@ -25,7 +26,13 @@
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onUnhandledRejection);
 
-    void initializeApp();
+    void (async () => {
+      try {
+        await initializeApp();
+      } finally {
+        await invoke("show_main_window");
+      }
+    })();
 
     return () => {
       window.removeEventListener("error", onError);

@@ -19,15 +19,17 @@
 
   $: noteColor = COLOR_ARR[item.trackIndex % COLOR_ARR.length];
   $: note = item.note;
-  $: [isDisp, left, width] = (() => {
+  $: [isDisp, left, width, attackWidth, sustainWidth] = (() => {
     const beatSide = MelodyState.calcBeatSide(note);
     const [left, width] = [beatSide.pos, beatSide.len].map(
       (v) => v * $settingsStore.view.timeline.beatWidth,
     );
+    const attackWidth = Math.min(width, $settingsStore.view.timeline.beatWidth / 4);
+    const sustainWidth = Math.max(0, width - attackWidth);
     const isDisp =
       Math.abs(scrollLimitProps.scrollMiddleX - (left + width / 2)) <=
       scrollLimitProps.rectWidth;
-    return [isDisp, left, width];
+    return [isDisp, left, width, attackWidth, sustainWidth];
   })();
 
   const HEIGHT = 10;
@@ -40,10 +42,24 @@
     style:width="{width}px"
     data-muted={item.isMute}
   >
+    {#if sustainWidth > 0}
+      <div
+        class="note sustain"
+        style:top="{Layout.getPitchTop(note.pitch) +
+          (Layout.pitch.ITEM_HEIGHT - HEIGHT) / 2}px"
+        style:left="{attackWidth}px"
+        style:width="{sustainWidth}px"
+        style:height="{HEIGHT}px"
+        style:--note-color={noteColor}
+        data-method={item.method}
+        data-active={$controlStore.mode === "harmonize"}
+      ></div>
+    {/if}
     <div
-      class="note"
+      class="note attack"
       style:top="{Layout.getPitchTop(note.pitch) +
         (Layout.pitch.ITEM_HEIGHT - HEIGHT) / 2}px"
+      style:width="{attackWidth}px"
       style:height="{HEIGHT}px"
       style:--note-color={noteColor}
       data-method={item.method}
@@ -71,7 +87,6 @@
     display: inline-block;
     position: absolute;
     left: 0;
-    width: 100%;
     min-width: 3px;
     z-index: 2;
     border-radius: 2px;
@@ -81,6 +96,15 @@
 
   .note[data-active="true"] {
     background-color: color-mix(in srgb, var(--note-color) 62%, transparent);
+  }
+
+  .note.sustain {
+    min-width: 0;
+    opacity: 0.3;
+  }
+
+  .note.attack {
+    opacity: 1;
   }
 
   .note[data-method="guitar"] {

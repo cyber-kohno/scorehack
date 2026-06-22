@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scorehack</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #101418;
+        color: #f8fafc;
+        font-family:
+          Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(86, 211, 255, 0.16), transparent 42%),
+          linear-gradient(180deg, #141a21 0%, #0e1116 100%);
+      }
+
+      .splash {
+        display: grid;
+        justify-items: center;
+        gap: 16px;
+        transform: translateY(-2px);
+      }
+
+      .icon {
+        width: 92px;
+        height: 92px;
+        filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.26));
+      }
+
+      .name {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .caption {
+        color: #9fb0c1;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .bar {
+        position: relative;
+        width: 148px;
+        height: 3px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(159, 176, 193, 0.28);
+      }
+
+      .bar::after {
+        content: "";
+        position: absolute;
+        inset-block: 0;
+        left: -45%;
+        width: 45%;
+        border-radius: inherit;
+        background: #56d3ff;
+        animation: load 1.1s ease-in-out infinite;
+      }
+
+      @keyframes load {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(322%);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="splash" aria-label="Scorehack is starting">
+      <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Scorehack">
+        <path
+          d="M148 166c29-34 75-54 128-54 66 0 114 26 142 65"
+          fill="none"
+          stroke="#56d3ff"
+          stroke-width="54"
+          stroke-linecap="round"
+        />
+        <path
+          d="M362 198c-24-31-60-46-105-46-48 0-82 18-82 49 0 32 32 42 96 53 82 14 128 43 128 105 0 64-56 105-139 105-72 0-126-27-158-76"
+          fill="none"
+          stroke="#f8fafc"
+          stroke-width="54"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M122 350c28 48 79 74 138 74 55 0 89-22 89-59 0-35-35-47-94-57-82-14-130-39-130-102 0-57 50-94 130-94"
+          fill="none"
+          stroke="#9fb0c1"
+          stroke-width="22"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          opacity="0.72"
+        />
+      </svg>
+      <div class="name">Scorehack</div>
+      <div class="caption">Preparing score workspace</div>
+      <div class="bar" aria-hidden="true"></div>
+    </main>
+  </body>
+</html>

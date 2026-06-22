@@ -4,3 +4,4 @@ dist-ssr
 *.local
 src-tauri/gen
 src-tauri/target
+src-tauri/target-codex-check
