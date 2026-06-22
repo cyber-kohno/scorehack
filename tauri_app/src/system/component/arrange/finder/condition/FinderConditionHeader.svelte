@@ -6,7 +6,7 @@
   export let method!: string;
 
   const formatEat = (value: number) => {
-    if (value === 0) return "ﾂｱ0";
+    if (value === 0) return "±0";
     return value > 0 ? `+${value}` : `${value}`;
   };
 

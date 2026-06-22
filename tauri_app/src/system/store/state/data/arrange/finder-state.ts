@@ -111,13 +111,11 @@ namespace FinderState {
             }
         });
         const noBackingSoundsNos = createSoundsNos(-1);
-        if (noBackingSoundsNos.length > 0) {
-            list.unshift({
-                backingNo: -1,
-                sortNo: -1,
-                soundsNos: noBackingSoundsNos,
-            });
-        }
+        list.unshift({
+            backingNo: -1,
+            sortNo: -1,
+            soundsNos: noBackingSoundsNos,
+        });
         return list
             // パターンのみのオプション時、ボイシング0のパターンを除外
             .filter(patt => !(isFilterPatternOnly && patt.soundsNos.length === 0));

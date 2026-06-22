@@ -33,7 +33,7 @@
     })();
 </script>
 
-<div class="wrap" data-apply={isVoicApply}>
+<div class="wrap" data-apply={isVoicApply} data-finder-sounds-index={soundsIndex}>
     {#if isRecordFocus && soundsIndex === finder.cursor.sounds}
         <div class="focus"></div>
     {/if}

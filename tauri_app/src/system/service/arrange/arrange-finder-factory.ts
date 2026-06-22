@@ -70,15 +70,16 @@ const createPianoArrangeFinderFromSource = (props: PianoFinderSource) => {
         ts,
     };
 
+    const list = FinderState.searchPianoPatterns({
+        req,
+        arrTrack,
+        isFilterPatternOnly: false,
+    });
     const finder: FinderState.PianoArrangeFinder = {
-        cursor: { backing: -1, sounds: -1 },
+        cursor: { backing: list.length === 0 ? -1 : 0, sounds: -1 },
         apply: { backing: -1, sounds: -1 },
         request: req,
-        list: FinderState.searchPianoPatterns({
-            req,
-            arrTrack,
-            isFilterPatternOnly: false,
-        }),
+        list,
     };
 
     if (finder.list.length > 0) {

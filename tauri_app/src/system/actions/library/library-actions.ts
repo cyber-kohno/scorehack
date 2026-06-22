@@ -232,8 +232,10 @@ const createLibraryActions = () => {
         if (library == null || library.focus.finder == null) return;
 
         const list = searchPianoPatterns(ctx, library);
+        if (list.length === 0) return;
+
         const next = library.focus.finder.cursor.backing + dir;
-        if (next < -1 || next > list.length - 1) return;
+        if (next < 0 || next > list.length - 1) return;
 
         library.focus.finder.cursor.backing = next;
         library.focus.finder.cursor.sounds = -1;
@@ -256,7 +258,7 @@ const createLibraryActions = () => {
         libraryStore.set({ ...library });
     };
 
-    const openPianoEditor = () => {
+    const openPianoEditor = (modeOption?: ArrangeState.LibraryEditorMode) => {
         const ctx = createContext();
         const library = ctx.library;
         if (library == null || library.focus.finder == null) return;
@@ -281,6 +283,11 @@ const createLibraryActions = () => {
             : pianoLib.soundsPatterns.find(pattern => {
                 return pattern.no === selected.soundsNos[cursor.sounds];
             });
+        const mode: ArrangeState.LibraryEditorMode = (() => {
+            if (modeOption != undefined) return modeOption;
+            if (cursor.sounds !== -1) return "edit-sounds";
+            return "add-sounds";
+        })();
 
         const condition = library.condition;
         const chord = {
@@ -312,6 +319,7 @@ const createLibraryActions = () => {
             method: "piano",
             origin: {
                 type: "library",
+                mode,
                 backingNo: selected == undefined ? -1 : selected.backingNo,
                 soundsNo: selected == undefined || cursor.sounds === -1
                     ? -1
@@ -487,15 +495,36 @@ const createLibraryActions = () => {
         })?.ref;
         if (recordRef == undefined) return;
 
-        const rect = recordRef.getBoundingClientRect();
+        const anchorRef = cursor.sounds === -1
+            ? recordRef
+            : recordRef.querySelector<HTMLElement>(`[data-finder-sounds-index="${cursor.sounds}"]`) ?? recordRef;
+        const rect = anchorRef.getBoundingClientRect();
         const { action } = ActionMenuState.createFactory();
+        const list = searchPianoPatterns(ctx, library);
+        const selected = list[cursor.backing];
+        const actions = (() => {
+            if (cursor.sounds !== -1) {
+                return [
+                    action("Edit", () => openPianoEditor("edit-sounds")),
+                    action("Copy", () => openPianoEditor("add-sounds")),
+                ];
+            }
+            if (selected?.backingNo === -1) {
+                return [
+                    action("Add Backing", () => openPianoEditor("add-backing")),
+                    action("Add Voicing", () => openPianoEditor("add-sounds")),
+                ];
+            }
+            return [
+                action("Edit", () => openPianoEditor("edit-backing")),
+                action("Copy Backing", () => openPianoEditor("add-backing")),
+                action("Add Voicing", () => openPianoEditor("add-sounds")),
+            ];
+        })();
         ActionMenu.openAt(
-            [
-                action("Toggle Preset", togglePreset),
-                action("Edit", openPianoEditor),
-            ],
+            actions,
             rect.left + 8,
-            rect.top + 8,
+            rect.bottom + 8,
         );
     };
 

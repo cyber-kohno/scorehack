@@ -2,10 +2,12 @@ import { get } from "svelte/store";
 import createPianoArrangeUpdater from "../../../service/arrange/piano/piano-arrange-updater";
 import createArrangeSelector from "../../../service/arrange/arrange-selector";
 import useScrollService from "../../../service/common/scroll-service";
+import Toast from "../../../service/common/toast-controller";
 import { createCommitDataAndRecalculate } from "../../../service/derived/recalculate-derived";
 import previewArrangeNote from "../../../service/playback/arrange/preview-arrange-note";
 import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../../store/global-store";
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
+import ToastState from "../../../store/state/toast-state";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -123,7 +125,30 @@ const createPianoArrangeActions = () => {
                 ctx.commitDataAndRecalculate();
                 break;
             case "library":
-                ctx.pianoUpdater.applyLibrary();
+                if (ctx.arrange.origin.mode === "add-backing") {
+                    const editor = ctx.arrange.editor as PianoEditorState.Value;
+                    if (editor.backing == null) {
+                        Toast.create({
+                            ...ToastState.createInitial(),
+                            x: 24,
+                            y: 84,
+                            width: 340,
+                            text: "Create a backing pattern before saving.",
+                        });
+                        return;
+                    }
+                }
+                const result = ctx.pianoUpdater.applyLibrary();
+                if (result.ok === false) {
+                    Toast.create({
+                        ...ToastState.createInitial(),
+                        x: 24,
+                        y: 84,
+                        width: 360,
+                        text: result.message,
+                    });
+                    return;
+                }
                 ctx.commitDataAndRecalculate();
                 break;
         }

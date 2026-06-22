@@ -45,9 +45,16 @@ namespace ArrangeState {
     }
     | {
       type: "library";
+      mode: LibraryEditorMode;
       backingNo: number;
       soundsNo: number;
     };
+
+  export type LibraryEditorMode =
+    | "edit-backing"
+    | "edit-sounds"
+    | "add-backing"
+    | "add-sounds";
 
   export type Target = {
     scoreBase: ElementState.DataInit;

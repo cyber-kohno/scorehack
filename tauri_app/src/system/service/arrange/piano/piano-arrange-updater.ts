@@ -22,6 +22,10 @@ export type PianoVoicingToggleResult = {
     pitch?: number;
 };
 
+export type ApplyLibraryResult =
+    | { ok: true }
+    | { ok: false; message: string };
+
 const createPianoArrangeUpdater = (ctx: Context) => {
     const arrange = (() => {
         if (ctx.arrange.method !== "piano") throw new Error("Piano arrange updater requires piano arrange.");
@@ -52,7 +56,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         const finder = getPianoFinder();
         const temp = finder.cursor.backing + dir;
 
-        if (temp < -1 || temp > finder.list.length - 1) return false;
+        if (temp < 0 || temp > finder.list.length - 1) return false;
 
         finder.cursor.sounds = -1;
         // 移動する前に列のスクロールをリセットする
@@ -440,10 +444,6 @@ const createPianoArrangeUpdater = (ctx: Context) => {
             : bank.backingPatterns.find(patt => patt.no === bkgPattNo);
         if (bkgPattNo !== -1 && bkgPatt == undefined) throw new Error();
         const sndsPatt = bank.soundsPatterns.find(patt => patt.no === sndsPattNo);
-        if (bkgPattNo === -1 && sndsPatt == undefined) {
-            return { control: false, data: false, closeArrange: false };
-        }
-
         const chordSeq = arrange.target.chordSeq;
         // 選択したパターンをエディタに対して適用する
         const applyToEditor = () => {
@@ -545,7 +545,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         }
     };
 
-    const applyLibrary = () => {
+    const applyLibrary = (): ApplyLibraryResult => {
         const origin = arrange.origin;
         if (origin.type !== "library") throw new Error("Piano library apply requires library origin.");
 
@@ -576,61 +576,127 @@ const createPianoArrangeUpdater = (ctx: Context) => {
             }
             if (!regular.soundsNos.includes(soundsNo)) regular.soundsNos.push(soundsNo);
         };
+        const createBackingData = () => {
+            const backing = pianoEditor.backing;
+            if (backing == null) return null;
 
-        if (patternData.backing == null && origin.backingNo !== -1) {
-            throw new Error("Backing pattern data must not be null.");
+            return {
+                recordNum: backing.recordNum,
+                layers: backing.layers.map(layer => ({
+                    cols: JSON.parse(JSON.stringify(layer.cols)) as PianoBackingState.Col[],
+                    items: layer.items.filter(item => {
+                        const [x, y] = item.split(".").map(v => Number(v));
+                        return (
+                            x >= 0 &&
+                            x <= layer.cols.length - 1 &&
+                            y >= 0 &&
+                            y <= backing.recordNum - 1
+                        );
+                    }),
+                })),
+            };
+        };
+        const addBackingPattern = (backing: PianoBackingState.DataProps) => {
+            const no = nextNo(pianoLib.backingPatterns);
+            pianoLib.backingPatterns.push({
+                no,
+                backing: JSON.parse(JSON.stringify(backing)),
+                category: {
+                    beat: category.beat,
+                    tsGloup: category.tsGloup,
+                    eatHead: category.eatHead,
+                    eatTail: category.eatTail,
+                },
+            });
+            return no;
+        };
+        const addSoundsPattern = (sounds: string[]) => {
+            const no = nextNo(pianoLib.soundsPatterns);
+            pianoLib.soundsPatterns.push({
+                no,
+                sounds: JSON.parse(JSON.stringify(sounds)),
+                category: {
+                    structCnt: category.structCnt,
+                },
+            });
+            return no;
+        };
+        const hasSameSoundsInRegular = (backingNo: number, sounds: string[]) => {
+            const regular = pianoLib.regulars.find(regular => {
+                return regular.backingNo === backingNo;
+            });
+            if (regular == undefined) return false;
+
+            const soundsSrc = JSON.stringify(sounds);
+            return regular.soundsNos.some(soundsNo => {
+                const pattern = pianoLib.soundsPatterns.find(pattern => {
+                    return pattern.no === soundsNo;
+                });
+                if (pattern == undefined) throw new Error("Sounds pattern must exist.");
+                return JSON.stringify(pattern.sounds) === soundsSrc;
+            });
+        };
+        const hasSameBacking = (backing: PianoBackingState.DataProps) => {
+            const backingSrc = JSON.stringify(backing);
+            return pianoLib.backingPatterns.some(pattern => {
+                return JSON.stringify(pattern.backing) === backingSrc;
+            });
+        };
+
+        switch (origin.mode) {
+            case "edit-backing": {
+                if (origin.backingNo === -1) throw new Error("Backing pattern must be selected.");
+                const backing = createBackingData();
+                if (backing == null) throw new Error("Backing pattern data must not be null.");
+
+                const backingPattern = pianoLib.backingPatterns.find(pattern => {
+                    return pattern.no === origin.backingNo;
+                });
+                if (backingPattern == undefined) throw new Error("Backing pattern must exist.");
+
+                backingPattern.backing = backing;
+                return { ok: true };
+            }
+            case "edit-sounds": {
+                if (origin.soundsNo === -1) throw new Error("Sounds pattern must be selected.");
+                const soundsPattern = pianoLib.soundsPatterns.find(pattern => {
+                    return pattern.no === origin.soundsNo;
+                });
+                if (soundsPattern == undefined) throw new Error("Sounds pattern must exist.");
+
+                soundsPattern.sounds = JSON.parse(JSON.stringify(patternData.sounds));
+                return { ok: true };
+            }
+            case "add-backing": {
+                const backing = createBackingData();
+                if (backing == null) throw new Error("Backing pattern data must not be null.");
+                if (hasSameBacking(backing)) {
+                    return {
+                        ok: false,
+                        message: "This backing pattern already exists.",
+                    };
+                }
+
+                const backingNo = addBackingPattern(backing);
+                const soundsNo = addSoundsPattern(patternData.sounds);
+                ensureRegular(backingNo, soundsNo);
+                return { ok: true };
+            }
+            case "add-sounds": {
+                if (hasSameSoundsInRegular(origin.backingNo, patternData.sounds)) {
+                    return {
+                        ok: false,
+                        message: "This voicing is already linked to the backing.",
+                    };
+                }
+
+                const soundsNo = addSoundsPattern(patternData.sounds);
+                ensureRegular(origin.backingNo, soundsNo);
+                return { ok: true };
+            }
         }
 
-        const backingNo = (() => {
-            if (patternData.backing == null) return -1;
-
-            const backing = JSON.parse(JSON.stringify(patternData.backing));
-            if (origin.backingNo === -1) {
-                const no = nextNo(pianoLib.backingPatterns);
-                pianoLib.backingPatterns.push({
-                    no,
-                    backing,
-                    category: {
-                        beat: category.beat,
-                        tsGloup: category.tsGloup,
-                        eatHead: category.eatHead,
-                        eatTail: category.eatTail,
-                    },
-                });
-                return no;
-            }
-            const backingPattern = pianoLib.backingPatterns.find(pattern => {
-                return pattern.no === origin.backingNo;
-            });
-            if (backingPattern == undefined) throw new Error("Backing pattern must exist.");
-
-            backingPattern.backing = backing;
-            return origin.backingNo;
-        })();
-
-        const soundsNo = (() => {
-            const sounds = JSON.parse(JSON.stringify(patternData.sounds));
-            if (origin.soundsNo === -1) {
-                const no = nextNo(pianoLib.soundsPatterns);
-                pianoLib.soundsPatterns.push({
-                    no,
-                    sounds,
-                    category: {
-                        structCnt: category.structCnt,
-                    },
-                });
-                return no;
-            }
-            const soundsPattern = pianoLib.soundsPatterns.find(pattern => {
-                return pattern.no === origin.soundsNo;
-            });
-            if (soundsPattern == undefined) throw new Error("Sounds pattern must exist.");
-
-            soundsPattern.sounds = sounds;
-            return origin.soundsNo;
-        })();
-
-        ensureRegular(backingNo, soundsNo);
+        return { ok: true };
     };
 
     return {
