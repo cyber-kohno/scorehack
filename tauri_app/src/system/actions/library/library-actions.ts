@@ -14,6 +14,15 @@ import Toast from "../../service/common/toast-controller";
 import ToastState from "../../store/state/toast-state";
 import ConfirmDialog from "../../service/common/confirm-dialog-controller";
 
+const FINDER_BACKING_RECORD_HEIGHT = 71;
+const FINDER_VOICING_CELL_WIDTH = 109;
+
+const getFinderVoicingScrollLeft = (frame: HTMLElement, soundsIndex: number) => {
+    const rect = frame.getBoundingClientRect();
+    const targetCenter = soundsIndex * FINDER_VOICING_CELL_WIDTH + FINDER_VOICING_CELL_WIDTH / 2;
+    return Math.max(0, targetCenter - rect.width / 2);
+};
+
 const createContext = () => {
     const data = get(dataStore);
     const control = get(controlStore);
@@ -30,6 +39,50 @@ const createContext = () => {
 };
 
 const createLibraryActions = () => {
+    const adjustFinderBackingScroll = (ctx: ReturnType<typeof createContext>) => {
+        const library = ctx.library;
+        if (library == null || library.focus.finder == null) return;
+
+        const frame = ctx.ref.library.finder.frame;
+        if (frame == undefined) return;
+
+        const rect = frame.getClientRects()[0];
+        if (rect == undefined) return;
+
+        const top = -rect.width / 2 + library.focus.finder.cursor.backing * FINDER_BACKING_RECORD_HEIGHT;
+        frame.scrollTo({ top, behavior: "smooth" });
+    };
+
+    const adjustFinderVoicingScroll = (ctx: ReturnType<typeof createContext>) => {
+        const library = ctx.library;
+        if (library == null || library.focus.finder == null) return;
+
+        const cursor = library.focus.finder.cursor;
+        const recordRef = ctx.ref.library.finder.records.find(record => {
+            return record.seq === cursor.backing;
+        })?.ref;
+        if (recordRef == undefined) return;
+
+        const targetRef = cursor.sounds === -1
+            ? recordRef.querySelector<HTMLElement>("[data-finder-sounds-index]")
+            : recordRef.querySelector<HTMLElement>(`[data-finder-sounds-index="${cursor.sounds}"]`);
+        const frame = targetRef?.parentElement;
+        if (frame == undefined) return;
+
+        const left = getFinderVoicingScrollLeft(frame, cursor.sounds);
+        frame.scrollTo({ left, behavior: "smooth" });
+    };
+
+    const resetFinderVoicingScroll = (ctx: ReturnType<typeof createContext>, backingIndex: number) => {
+        if (backingIndex < 0) return;
+
+        const recordRef = ctx.ref.library.finder.records.find(record => {
+            return record.seq === backingIndex;
+        })?.ref;
+        const targetRef = recordRef?.querySelector<HTMLElement>("[data-finder-sounds-index]");
+        targetRef?.parentElement?.scrollTo({ left: 0, behavior: "smooth" });
+    };
+
     const close = () => {
         createContext();
         libraryStore.set(null);
@@ -237,9 +290,13 @@ const createLibraryActions = () => {
         const next = library.focus.finder.cursor.backing + dir;
         if (next < 0 || next > list.length - 1) return;
 
+        const previousBackingIndex = library.focus.finder.cursor.backing;
         library.focus.finder.cursor.backing = next;
         library.focus.finder.cursor.sounds = -1;
         libraryStore.set({ ...library });
+        resetFinderVoicingScroll(ctx, previousBackingIndex);
+        adjustFinderBackingScroll(ctx);
+        adjustFinderVoicingScroll(ctx);
     };
 
     const moveFinderVoicing = (dir: -1 | 1) => {
@@ -256,6 +313,7 @@ const createLibraryActions = () => {
 
         library.focus.finder.cursor.sounds = next;
         libraryStore.set({ ...library });
+        adjustFinderVoicingScroll(ctx);
     };
 
     const openPianoEditor = (modeOption?: ArrangeState.LibraryEditorMode) => {

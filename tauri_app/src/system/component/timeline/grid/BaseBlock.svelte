@@ -83,16 +83,6 @@
     return list;
   })();
 
-  const getRecordColor = (type: PitchType) => {
-    switch (type) {
-      case "other":
-        return "#00000041";
-      case "tonic":
-        return "#3000ffaa";
-      case "scale":
-        return "#ffffff48";
-    }
-  };
 </script>
 
 <div
@@ -115,7 +105,7 @@
     <div
       class="pitch"
       style:top="{pitch.top}px"
-      style:background-color={getRecordColor(pitch.type)}
+      data-pitch-type={pitch.type}
     ></div>
   {/each}
 </div>
@@ -125,12 +115,12 @@
     display: inline-block;
     position: absolute;
 
-    background-color: #3ec9ce70;
+    background-color: #bae0e270;
     top: 0;
     height: calc(var(--pitch-top-margin) + var(--pitch-frame-height) + var(--pitch-bottom-margin));
   }
   .wrap[data-even="false"] {
-    background-color: #3ecea370;
+    background-color: #b7e0d470;
   }
 
   .line {
@@ -149,6 +139,16 @@
     left: 0;
     width: 100%;
     height: var(--pitch-item-height);
+    opacity: 0.05;
+  }
+  .pitch[data-pitch-type="other"] {
+    background-color: #000000;
+  }
+  .pitch[data-pitch-type="tonic"] {
+    background-color: #ff0000;
     opacity: 0.2;
+  }
+  .pitch[data-pitch-type="scale"] {
+    background-color: #ffffff;
   }
 </style>

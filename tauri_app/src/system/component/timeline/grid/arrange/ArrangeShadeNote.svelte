@@ -90,6 +90,7 @@
     min-width: 3px;
     z-index: 2;
     border-radius: 2px;
+    border-radius: 0 10px 10px 0;
     background-color: color-mix(in srgb, var(--note-color) 22%, transparent);
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
   }
@@ -105,9 +106,10 @@
 
   .note.attack {
     opacity: 1;
+    border-radius: 0;
   }
 
   .note[data-method="guitar"] {
-    border-radius: 5px;
+    border-radius: 5px 15px 15px 5px;
   }
 </style>

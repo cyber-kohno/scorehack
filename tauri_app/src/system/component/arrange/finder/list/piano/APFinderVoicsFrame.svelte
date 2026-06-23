@@ -10,7 +10,14 @@
   export let backingIndex: number;
   export let usageBkg: PianoEditorState.Regular;
 
-  let ref: HTMLElement | null = null; // 隕∫ｴ縺ｮ蜿ら・繧剃ｿ晏ｭ・
+  const VOICING_CELL_WIDTH = 109;
+  const getScrollLeft = (frame: HTMLElement, soundsIndex: number) => {
+    const rect = frame.getBoundingClientRect();
+    const targetCenter = soundsIndex * VOICING_CELL_WIDTH + VOICING_CELL_WIDTH / 2;
+    return Math.max(0, targetCenter - rect.width / 2);
+  };
+
+  let ref: HTMLElement | null = null;
   onMount(() => {
     if (ref != null) {
       const finderRefs = $refStore.arrange.finder;
@@ -18,7 +25,7 @@
       let instance = finderRefs.records.find((r) => r.seq === backingIndex);
 
       if (backingIndex === finder.cursor.backing) {
-        const left = finder.cursor.sounds * 109;
+        const left = getScrollLeft(ref, finder.cursor.sounds);
         ref.scrollTo({ left });
       }
       if (instance == undefined) {

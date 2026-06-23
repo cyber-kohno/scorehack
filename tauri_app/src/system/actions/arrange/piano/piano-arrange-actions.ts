@@ -9,6 +9,15 @@ import { controlStore, dataStore, derivedStore, refStore, settingsStore, termina
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import ToastState from "../../../store/state/toast-state";
 
+const FINDER_BACKING_RECORD_HEIGHT = 71;
+const FINDER_VOICING_CELL_WIDTH = 109;
+
+const getFinderVoicingScrollLeft = (frame: HTMLElement, soundsIndex: number) => {
+    const rect = frame.getBoundingClientRect();
+    const targetCenter = soundsIndex * FINDER_VOICING_CELL_WIDTH + FINDER_VOICING_CELL_WIDTH / 2;
+    return Math.max(0, targetCenter - rect.width / 2);
+};
+
 const createContext = () => {
     const control = get(controlStore);
     const data = get(dataStore);
@@ -30,6 +39,7 @@ const createContext = () => {
         arrange,
         control,
         arrTrack,
+        ref,
         pianoUpdater: createPianoArrangeUpdater({ arrange, track: arrTrack }),
         refUpdater: useScrollService({
             control,
@@ -46,6 +56,42 @@ const createContext = () => {
 };
 
 const createPianoArrangeActions = () => {
+    const adjustFinderBackingScroll = (ctx: ReturnType<typeof createContext>) => {
+        const finder = ctx.arrange.finder;
+        if (finder == undefined) return;
+
+        const ref = ctx.ref.arrange.finder.frame;
+        if (ref == undefined) return;
+
+        const rect = ref.getClientRects()[0];
+        if (rect == undefined) return;
+
+        const top = -rect.width / 2 + finder.cursor.backing * FINDER_BACKING_RECORD_HEIGHT;
+        ref.scrollTo({ top, behavior: "smooth" });
+    };
+
+    const adjustFinderVoicingScroll = (ctx: ReturnType<typeof createContext>) => {
+        const finder = ctx.arrange.finder;
+        if (finder == undefined) return;
+
+        const refProps = ctx.ref.arrange.finder.records.find(record => {
+            return record.seq === finder.cursor.backing;
+        });
+        if (refProps == undefined) return;
+
+        const left = getFinderVoicingScrollLeft(refProps.ref, finder.cursor.sounds);
+        refProps.ref.scrollTo({ left, behavior: "smooth" });
+    };
+
+    const resetFinderVoicingScroll = (ctx: ReturnType<typeof createContext>, backingIndex: number) => {
+        if (backingIndex < 0) return;
+
+        const refProps = ctx.ref.arrange.finder.records.find(record => {
+            return record.seq === backingIndex;
+        });
+        refProps?.ref.scrollTo({ left: 0, behavior: "smooth" });
+    };
+
     const updateControl = (
         update: (updater: ReturnType<typeof createPianoArrangeUpdater>) => void | boolean,
     ) => {
@@ -72,13 +118,27 @@ const createPianoArrangeActions = () => {
         };
     };
 
-    const moveFinderBacking = updateControlWithArg<-1 | 1>((updater, dir) => {
-        return updater.moveFinderBacking(dir);
-    });
+    const moveFinderBacking = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const finder = ctx.arrange.finder;
+        const previousBackingIndex = finder?.cursor.backing ?? -1;
+        const moved = ctx.pianoUpdater.moveFinderBacking(dir);
+        if (!moved) return;
 
-    const moveFinderVoicing = updateControlWithArg<-1 | 1>((updater, dir) => {
-        return updater.moveFinderVoicing(dir);
-    });
+        resetFinderVoicingScroll(ctx, previousBackingIndex);
+        ctx.commitControl();
+        adjustFinderBackingScroll(ctx);
+        adjustFinderVoicingScroll(ctx);
+    };
+
+    const moveFinderVoicing = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const moved = ctx.pianoUpdater.moveFinderVoicing(dir);
+        if (!moved) return;
+
+        ctx.commitControl();
+        adjustFinderVoicingScroll(ctx);
+    };
 
     const openFinderFromEditor = () => {
         const ctx = createContext();

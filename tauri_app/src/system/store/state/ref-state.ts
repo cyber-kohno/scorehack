@@ -18,6 +18,7 @@ namespace RefState {
         }
         library: {
             finder: {
+                frame?: HTMLElement;
                 records: { seq: number, ref: HTMLElement }[];
             };
         };

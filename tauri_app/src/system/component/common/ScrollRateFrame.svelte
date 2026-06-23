@@ -7,9 +7,10 @@
 
     export let dependencies!: any[];
 
-    $: [rate, posLength] = (() => {
+    $: [rate, posLength, isScrollable] = (() => {
         let rate = 0;
         let posLength = 0;
+        let isScrollable = false;
         if (ref != null) {
             const rect = ref.getBoundingClientRect();
             dependencies.forEach((d) => d);
@@ -17,6 +18,7 @@
                 case "x":
                     {
                         const scrollTargetWidth = rect.width;
+                        isScrollable = ref.scrollWidth > rect.width;
                         rate = ref.scrollLeft / (ref.scrollWidth - rect.width);
                         posLength =
                             (scrollTargetWidth / ref.scrollWidth) *
@@ -26,6 +28,7 @@
                 case "y":
                     {
                         const scrollTargetWidth = rect.height;
+                        isScrollable = ref.scrollHeight > rect.height;
                         rate = ref.scrollTop / (ref.scrollHeight - rect.height);
                         posLength =
                             (scrollTargetWidth / ref.scrollHeight) *
@@ -35,10 +38,11 @@
             }
         }
         // console.log(`posLength:${posLength}, frameLength:${frameLength}`);
-        return [rate, posLength];
+        return [rate, posLength, isScrollable];
     })();
 </script>
 
+{#if isScrollable}
 <div class="wrap">
     <div
         class="frame"
@@ -62,6 +66,7 @@
         ></div>
     </div>
 </div>
+{/if}
 
 <style>
     .wrap {

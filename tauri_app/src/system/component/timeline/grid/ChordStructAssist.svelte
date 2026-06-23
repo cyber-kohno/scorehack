@@ -118,21 +118,22 @@
         left: 0;
         width: 100%;
         height: var(--pitch-item-height);
+        opacity: 0.3;
     }
 
     .record[data-is-struct="true"] {
-        background-color: rgba(0, 255, 174, 0.651);
+        background-color: rgb(0, 255, 174);
     }
 
     .record[data-is-borrowed-struct="true"] {
-        background-color: rgba(255, 190, 58, 0.76);
+        background-color: rgb(255, 190, 58);
     }
 
     .record[data-is-root="true"] {
-        background-color: rgba(64, 112, 255, 0.72);
+        background-color: rgb(64, 112, 255);
     }
 
     .record[data-is-on="true"] {
-        background-color: rgba(255, 74, 96, 0.78);
+        background-color: rgb(255, 74, 96);
     }
 </style>

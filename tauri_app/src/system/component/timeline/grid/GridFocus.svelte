@@ -21,7 +21,7 @@
     top: var(--pitch-top-margin);
     height: var(--pitch-frame-height);
     z-index: 1;
-    background-color: rgba(177, 169, 0, 0.169);
+    background-color: rgba(255, 242, 0, 0.121);
   }
   .wrap[data-isChord="false"] {
     background-color: #d90000;

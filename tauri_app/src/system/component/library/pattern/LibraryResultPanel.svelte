@@ -3,14 +3,17 @@
   import { onDestroy, tick } from "svelte";
   import ChordTheory from "../../../domain/theory/chord-theory";
   import FinderState from "../../../store/state/data/arrange/finder-state";
+  import ScrollRateFrame from "../../common/ScrollRateFrame.svelte";
   import { controlStore, dataStore, libraryStore, refStore } from "../../../store/global-store";
   import FinderConditionHeader from "../../arrange/finder/condition/FinderConditionHeader.svelte";
   import APFinderPresetItem from "../../arrange/finder/list/piano/APFinderPresetItem.svelte";
 
+  let listRef: HTMLElement | null = null;
   let recordRefs: HTMLElement[] = [];
 
   const syncRecordRefs = (length: number) => {
     const refState = get(refStore);
+    refState.library.finder.frame = listRef ?? undefined;
     refState.library.finder.records = recordRefs
       .slice(0, length)
       .map((ref, seq) => ({ seq, ref }))
@@ -20,6 +23,7 @@
 
   const clearRecordRefs = () => {
     const refState = get(refStore);
+    refState.library.finder.frame = undefined;
     refState.library.finder.records = [];
     refStore.set({ ...refState });
   };
@@ -82,6 +86,13 @@
     <div class="condition-placeholder"></div>
   {/if}
   <div class="list-base">
+    <ScrollRateFrame
+      ref={listRef}
+      dir={"y"}
+      frameLength={300}
+      frameWidth={10}
+      dependencies={[finder?.cursor.backing]}
+    />
     {#if track == undefined}
       <div class="msg">No arrange track found.</div>
     {:else if track.method !== "piano"}
@@ -89,7 +100,7 @@
     {:else if finder == null || finder.list.length === 0}
       <div class="msg">No matching presets found.</div>
     {:else}
-      <div class="list-inner">
+      <div class="list-inner" bind:this={listRef}>
         {#each finder.list as preset, backingIndex}
           <div class="record-ref" bind:this={recordRefs[backingIndex]}>
             <APFinderPresetItem {finder} usageBkg={preset} {backingIndex} />
