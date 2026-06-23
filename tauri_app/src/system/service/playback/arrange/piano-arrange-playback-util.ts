@@ -41,7 +41,7 @@ namespace PianoArrangePlaybackUtil {
           velocity: 10,
         });
       });
-      return notes;
+      return trimSamePitchOverlaps(notes);
     }
 
     /** ペダル要素は0レイヤーでのみ管理するためベースとして保持する */
@@ -115,6 +115,30 @@ namespace PianoArrangePlaybackUtil {
         notes.push({ pos, len, pitch, norm, velocity });
       });
     });
+    return trimSamePitchOverlaps(notes);
+  };
+
+  const trimSamePitchOverlaps = (notes: PlaybackCacheState.SoundNote[]) => {
+    const latestByPitch = new Map<number, PlaybackCacheState.SoundNote>();
+    const sorted = [...notes].sort((a, b) => {
+      const aSide = MelodyState.calcBeatSide(a);
+      const bSide = MelodyState.calcBeatSide(b);
+      return aSide.pos - bSide.pos;
+    });
+
+    sorted.forEach((note) => {
+      const prev = latestByPitch.get(note.pitch);
+      if (prev != undefined) {
+        const prevSide = MelodyState.calcBeatSide(prev);
+        const noteSide = MelodyState.calcBeatSide(note);
+        const cutBeat = noteSide.pos - prevSide.pos;
+        if (cutBeat > 0 && prevSide.len > cutBeat) {
+          prev.len = cutBeat / MelodyState.calcBeat(prev.norm, 1);
+        }
+      }
+      latestByPitch.set(note.pitch, note);
+    });
+
     return notes;
   };
 

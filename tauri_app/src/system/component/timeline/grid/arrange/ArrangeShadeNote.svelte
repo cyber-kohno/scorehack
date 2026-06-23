@@ -41,6 +41,7 @@
     style:left="{left}px"
     style:width="{width}px"
     data-muted={item.isMute}
+    data-active={$controlStore.mode === "harmonize"}
   >
     {#if sustainWidth > 0}
       <div
@@ -52,7 +53,6 @@
         style:height="{HEIGHT}px"
         style:--note-color={noteColor}
         data-method={item.method}
-        data-active={$controlStore.mode === "harmonize"}
       ></div>
     {/if}
     <div
@@ -63,7 +63,6 @@
       style:height="{HEIGHT}px"
       style:--note-color={noteColor}
       data-method={item.method}
-      data-active={$controlStore.mode === "harmonize"}
     ></div>
   </div>
 {/if}
@@ -77,10 +76,19 @@
     z-index: 2;
     box-sizing: border-box;
     pointer-events: none;
+    opacity: 0.45;
+  }
+
+  .itemwrap[data-active="true"] {
+    opacity: 1;
   }
 
   .itemwrap[data-muted="true"] {
     opacity: 0.22;
+  }
+
+  .itemwrap[data-muted="true"][data-active="false"] {
+    display: none;
   }
 
   .note {
@@ -89,24 +97,22 @@
     left: 0;
     min-width: 3px;
     z-index: 2;
-    border-radius: 2px;
-    border-radius: 0 10px 10px 0;
-    background-color: color-mix(in srgb, var(--note-color) 22%, transparent);
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
-  }
-
-  .note[data-active="true"] {
-    background-color: color-mix(in srgb, var(--note-color) 62%, transparent);
+    /* box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08); */
   }
 
   .note.sustain {
     min-width: 0;
-    opacity: 0.3;
+    border-radius: 0 10px 10px 0;
+    background: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--note-color) 34%, transparent),
+      transparent
+    );
   }
 
   .note.attack {
-    opacity: 1;
-    border-radius: 0;
+    border-radius: 10px 0 0 10px;
+    background-color: color-mix(in srgb, var(--note-color) 80%, transparent);
   }
 
   .note[data-method="guitar"] {

@@ -95,7 +95,7 @@
     position: relative;
     width: 100%;
     height: 100%;
-    background-color: #acd3d2;
+    background-color: #acd3d26c;
     border: solid 1px #2e6d77;
     box-sizing: border-box;
     border-radius: 4px;

@@ -1,16 +1,12 @@
 <script lang="ts">
     import RefState from "../../../store/state/ref-state";
-    import { controlStore, dataStore, refStore } from "../../../store/global-store";    import ShadeNote from "./ShadeNote.svelte";
+    import { controlStore, dataStore, refStore } from "../../../store/global-store";
+    import ShadeNote from "./ShadeNote.svelte";
 
-    /** 選択中のトラック */
     $: currentTrackIndex = $controlStore.melody.trackIndex;
-
-    /** 表示するか否かを判定する */
     $: isDisp = (i: number) =>
-        // メロディモード時は、カレントトラックはアクティブ表示するので除外する
-        i !== currentTrackIndex ||
-        // ハーモニーモード時は全てがシェイドトラックになるため無条件で表示する
-        $controlStore.mode === "harmonize";
+        $controlStore.mode === "melody" &&
+        i !== currentTrackIndex;
 
     $: scoreTracks = $dataStore.scoreTracks;
 
