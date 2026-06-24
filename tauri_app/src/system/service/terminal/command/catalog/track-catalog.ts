@@ -1,8 +1,7 @@
 import SoundFontFile from "../../../../infra/audio/soundfont-file";
 import { openTextFilePath, saveTextFilePath } from "../../../../infra/tauri/dialog";
-import { readUtf8TextFile, writeUtf8TextFile } from "../../../../infra/tauri/fs";
+import CompressedJsonFile from "../../../common/compressed-json-file";
 import useScrollService from "../../../common/scroll-service";
-import TextCompression from "../../../common/text-compression";
 import ArrangeState from "../../../../store/state/data/arrange/arrange-state";
 import MelodyState from "../../../../store/state/data/melody-state";
 import TerminalCommand from "../../terminal-command";
@@ -91,13 +90,7 @@ const createTrackCatalog = (
   const validateImportedNotesRange = (notes: MelodyState.VocalNote[]) => {
     const notesTailBeatNote = getNotesTailBeatNote(notes);
     const outlineTailBeatNote = ctx.selectors.derived.getBeatNoteTail();
-    if (notesTailBeatNote > outlineTailBeatNote + 1e-9) {
-      logger.outputError(
-        `Cannot import: outline chord blocks are too short. [notes tail: ${notesTailBeatNote}, outline tail: ${outlineTailBeatNote}]`,
-      );
-      return false;
-    }
-    return true;
+    return notesTailBeatNote <= outlineTailBeatNote + 1e-9;
   };
 
   const isObject = (value: unknown): value is Record<string, unknown> => {
@@ -109,10 +102,6 @@ const createTrackCatalog = (
       && value.type === "scorehack.melody-track-notes"
       && value.version === 1
       && Array.isArray(value.notes);
-  };
-
-  const parseMelodyTrackNotesFile = (text: string) => {
-    return JSON.parse(TextCompression.unzip(text)) as unknown;
   };
 
   const formatMelodyTrackSoundFont = (track: MelodyState.ScoreTrack) => {
@@ -346,7 +335,7 @@ const createTrackCatalog = (
       const exportPath = path.toLowerCase().endsWith(`.${MELODY_TRACK_NOTES_FILE_EXTENSION}`)
         ? path
         : `${path}.${MELODY_TRACK_NOTES_FILE_EXTENSION}`;
-      await writeUtf8TextFile(exportPath, TextCompression.zip(JSON.stringify(payload)));
+      await CompressedJsonFile.write(exportPath, payload);
       logger.outputInfo(`Melody notes exported. [${track.name} -> ${getFileName(exportPath)}]`);
     })().catch((error) => {
       console.error("Failed to export melody notes:", error);
@@ -375,22 +364,41 @@ const createTrackCatalog = (
         return;
       }
 
-      const text = await readUtf8TextFile(path);
-      const payload = parseMelodyTrackNotesFile(text);
-      if (!isMelodyTrackNotesFile(payload)) {
-        logger.outputError("Invalid melody notes file.");
-        return;
+      const readResult = await CompressedJsonFile.read<unknown>(path);
+      switch (readResult.type) {
+        case "read-error":
+          console.error("Failed to read melody notes file:", readResult.error);
+          logger.outputError("Failed to read melody notes file.");
+          return;
+        case "parse-error":
+          console.error("Failed to parse melody notes file:", readResult.error);
+          logger.outputError("Failed to parse melody notes file.");
+          return;
       }
 
-      const importedNotes = cloneNotes(payload.notes);
-      if (!validateImportedNotesRange(importedNotes)) return;
+      try {
+        const payload = readResult.value;
+        if (!isMelodyTrackNotesFile(payload)) {
+          logger.outputError("Invalid melody notes data.");
+          return;
+        }
 
-      track.notes = importedNotes;
-      ref.noteRefs[trackIndex] = [];
-      logger.outputInfo(`Melody notes imported. [${getFileName(path)} -> ${track.name}]`);
-      ctx.commit.data();
-      ctx.commit.ref();
-      listTracks();
+        const importedNotes = cloneNotes(payload.notes);
+        if (!validateImportedNotesRange(importedNotes)) {
+          logger.outputError("Invalid melody notes data.");
+          return;
+        }
+
+        track.notes = importedNotes;
+        ref.noteRefs[trackIndex] = [];
+        logger.outputInfo(`Melody notes imported. [${getFileName(path)} -> ${track.name}]`);
+        ctx.commit.data();
+        ctx.commit.ref();
+        listTracks();
+      } catch (error) {
+        console.error("Invalid melody notes data:", error);
+        logger.outputError("Invalid melody notes data.");
+      }
     })().catch((error) => {
       console.error("Failed to import melody notes:", error);
       logger.outputError("Failed to import melody notes.");

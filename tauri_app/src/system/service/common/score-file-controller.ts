@@ -1,13 +1,14 @@
 import { get } from "svelte/store";
 import { openScoreFilePath, saveScoreFilePath } from "../../infra/tauri/dialog";
-import { readUtf8TextFile, writeUtf8TextFile } from "../../infra/tauri/fs";
 import { dataStore, fileStore, refStore } from "../../store/global-store";
 import type DataState from "../../store/state/data/data-state";
 import type FileState from "../../store/state/file-state";
 import recalculate from "../derived/recalculate-derived";
-import TextCompression from "./text-compression";
+import CompressedJsonFile from "./compressed-json-file";
 
 namespace ScoreFile {
+    export type LoadFailureReason = "read-error" | "parse-error" | "invalid-data";
+
     export interface SaveProps {
         success: (handle: FileState.Handle) => void;
         cancel: () => void;
@@ -26,18 +27,17 @@ namespace ScoreFile {
     });
 
     const createSaveText = () => {
-        return JSON.stringify(get(dataStore));
+        return get(dataStore);
     };
 
     const restoreRefTracks = (data: DataState.Value) => {
-        const ref = get(refStore);
-        ref.trackArr.length = 0;
-        ref.noteRefs.length = 0;
+        const trackArr = [];
+        const noteRefs = [];
         for (let i = 0; i < data.scoreTracks.length; i++) {
-            ref.trackArr.push([]);
-            ref.noteRefs.push([]);
+            trackArr.push([]);
+            noteRefs.push([]);
         }
-        refStore.set({ ...ref });
+        refStore.set({ ...get(refStore), trackArr, noteRefs });
     };
 
     export const save = (props: SaveProps) => {
@@ -47,7 +47,7 @@ namespace ScoreFile {
         if (fileHandle.score) {
             const storeFileHandle = fileHandle.score;
             (async () => {
-                await writeUtf8TextFile(storeFileHandle.path, TextCompression.zip(plainData));
+                await CompressedJsonFile.write(storeFileHandle.path, plainData);
                 props.success(storeFileHandle);
             })().catch(() => {
                 props.cancel();
@@ -63,7 +63,7 @@ namespace ScoreFile {
             }
 
             const handle = toHandle(path);
-            await writeUtf8TextFile(handle.path, TextCompression.zip(plainData));
+            await CompressedJsonFile.write(handle.path, plainData);
             fileStore.set({ ...fileHandle, score: handle });
             props.success(handle);
         })().catch(() => {
@@ -74,29 +74,47 @@ namespace ScoreFile {
     export const load = (
         success: (handle: FileState.Handle) => void,
         cancel: () => void,
+        failure: (reason: LoadFailureReason, error: unknown) => void,
         defaultDirectory?: string,
     ) => {
         (async () => {
-            try {
-                const path = await openScoreFilePath(defaultDirectory);
-                if (path == null) {
-                    cancel();
+            const path = await openScoreFilePath(defaultDirectory);
+            if (path == null) {
+                cancel();
+                return;
+            }
+
+            const readResult = await CompressedJsonFile.read<DataState.Value>(path);
+            switch (readResult.type) {
+                case "read-error":
+                    failure("read-error", readResult.error);
                     return;
-                }
+                case "parse-error":
+                    failure("parse-error", readResult.error);
+                    return;
+            }
 
-                const newFileHandle = toHandle(path);
-                const fileContents = await readUtf8TextFile(path);
-                const loadedData = JSON.parse(TextCompression.unzip(fileContents)) as DataState.Value;
+            const newFileHandle = toHandle(path);
+            const prevFile = get(fileStore);
+            const prevData = get(dataStore);
+            const prevRef = get(refStore);
+            const loadedData = readResult.value;
 
+            try {
                 fileStore.set({ score: newFileHandle });
                 dataStore.set(loadedData);
                 restoreRefTracks(loadedData);
                 recalculate();
                 success(newFileHandle);
-            } catch {
-                cancel();
+            } catch (error) {
+                fileStore.set(prevFile);
+                dataStore.set(prevData);
+                refStore.set(prevRef);
+                failure("invalid-data", error);
             }
-        })();
+        })().catch((error) => {
+            failure("read-error", error);
+        });
     };
 }
 

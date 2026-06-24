@@ -1,9 +1,8 @@
 import TerminalCommand from "../../terminal-command";
 import { openLibraryFilePath, saveLibraryFilePath } from "../../../../infra/tauri/dialog";
-import { readUtf8TextFile, writeUtf8TextFile } from "../../../../infra/tauri/fs";
 import type SettingsState from "../../../../store/state/settings-state";
 import type PianoEditorState from "../../../../store/state/data/arrange/piano/piano-editor-state";
-import TextCompression from "../../../common/text-compression";
+import CompressedJsonFile from "../../../common/compressed-json-file";
 import type ArrangeState from "../../../../store/state/data/arrange/arrange-state";
 
 const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
@@ -306,7 +305,6 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     const track = data.arrange.tracks[control.outline.trackIndex];
     if (track == undefined) throw new Error();
     if (track.method !== libraryFile.method) {
-      logger.outputError(`The active track method does not match the library file. [${track.method} -> ${libraryFile.method}]`);
       return false;
     }
 
@@ -344,7 +342,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       const exportPath = path.toLowerCase().endsWith(".shl")
         ? path
         : `${path}.shl`;
-      await writeUtf8TextFile(exportPath, TextCompression.zip(JSON.stringify(libraryFile)));
+      await CompressedJsonFile.write(exportPath, libraryFile);
       logger.outputInfo(`Exported library file. [${getFileName(exportPath)}]`);
     })().catch((error) => {
       console.error("Failed to export library file:", error);
@@ -362,10 +360,27 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
         return;
       }
 
-      const text = await readUtf8TextFile(path);
-      const libraryFile = JSON.parse(TextCompression.unzip(text)) as ArrangeState.TrackBank;
-      if (applyLibraryFile(libraryFile)) {
-        logger.outputInfo(`Imported library file to the active track. [${getFileName(path)}]`);
+      const readResult = await CompressedJsonFile.read<ArrangeState.TrackBank>(path);
+      switch (readResult.type) {
+        case "read-error":
+          console.error("Failed to read library file:", readResult.error);
+          logger.outputError("Failed to read library file.");
+          return;
+        case "parse-error":
+          console.error("Failed to parse library file:", readResult.error);
+          logger.outputError("Failed to parse library file.");
+          return;
+      }
+
+      try {
+        if (applyLibraryFile(readResult.value)) {
+          logger.outputInfo(`Imported library file to the active track. [${getFileName(path)}]`);
+        } else {
+          logger.outputError("Invalid library data.");
+        }
+      } catch (error) {
+        console.error("Invalid library data:", error);
+        logger.outputError("Invalid library data.");
       }
     })().catch((error) => {
       console.error("Failed to import library file:", error);

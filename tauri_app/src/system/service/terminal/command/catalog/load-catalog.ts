@@ -104,6 +104,21 @@ const createLoadCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props 
         logger.outputInfo("File loading was canceled.");
         finishWaiting();
       },
+      (reason, error) => {
+        console.error("Failed to load project file:", error);
+        switch (reason) {
+          case "read-error":
+            logger.outputError("Failed to read project file.");
+            break;
+          case "parse-error":
+            logger.outputError("Failed to parse project file.");
+            break;
+          case "invalid-data":
+            logger.outputError("Invalid project data.");
+            break;
+        }
+        finishWaiting();
+      },
       settings.envs.SCH_FILE_DIR,
     );
   };
