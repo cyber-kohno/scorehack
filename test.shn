@@ -1,0 +1,86 @@
+{
+  "type": "scorehack.melody-track-notes",
+  "version": 1,
+  "notes": [
+    {
+      "norm": {
+        "div": 1
+      },
+      "pos": 1,
+      "len": 1,
+      "pitch": 47
+    },
+    {
+      "norm": {
+        "div": 1
+      },
+      "pos": 2,
+      "len": 1,
+      "pitch": 50
+    },
+    {
+      "norm": {
+        "div": 1
+      },
+      "pos": 3,
+      "len": 1,
+      "pitch": 47
+    },
+    {
+      "norm": {
+        "div": 2
+      },
+      "pos": 9,
+      "len": 2,
+      "pitch": 50
+    },
+    {
+      "norm": {
+        "div": 4
+      },
+      "pos": 22,
+      "len": 1,
+      "pitch": 55
+    },
+    {
+      "norm": {
+        "div": 4
+      },
+      "pos": 23,
+      "len": 3,
+      "pitch": 57
+    },
+    {
+      "norm": {
+        "div": 2
+      },
+      "pos": 13,
+      "len": 1,
+      "pitch": 52
+    },
+    {
+      "norm": {
+        "div": 4
+      },
+      "pos": 28,
+      "len": 3,
+      "pitch": 50
+    },
+    {
+      "norm": {
+        "div": 4
+      },
+      "pos": 31,
+      "len": 3,
+      "pitch": 53
+    },
+    {
+      "norm": {
+        "div": 2
+      },
+      "pos": 17,
+      "len": 2,
+      "pitch": 55
+    }
+  ]
+}

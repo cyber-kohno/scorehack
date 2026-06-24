@@ -3,6 +3,7 @@ import type DataState from "../../store/state/data/data-state";
 import type RefState from "../../store/state/ref-state";
 import type SettingsState from "../../store/state/settings-state";
 import type TerminalState from "../../store/state/terminal-state";
+import type useDerivedSelector from "../derived/derived-selector";
 import type useMelodySelector from "../melody/melody-selector";
 import type useOutlineSelector from "../outline/outline-selector";
 import type useTerminalLogger from "./terminal-logger";
@@ -33,6 +34,7 @@ namespace TerminalCommand {
         terminal: TerminalState.Value;
         logger: ReturnType<typeof useTerminalLogger>;
         selectors: {
+            derived: ReturnType<typeof useDerivedSelector>;
             melody: ReturnType<typeof useMelodySelector>;
             outline: ReturnType<typeof useOutlineSelector>;
         };

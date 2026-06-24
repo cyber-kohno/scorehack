@@ -2,6 +2,7 @@ import { get } from "svelte/store";
 import useScrollService from "../../service/common/scroll-service";
 import createCommandRegistry from "../../service/terminal/command-registry";
 import { createCommitDataAndRecalculate } from "../../service/derived/recalculate-derived";
+import useDerivedSelector from "../../service/derived/derived-selector";
 import useMelodySelector from "../../service/melody/melody-selector";
 import useOutlineSelector from "../../service/outline/outline-selector";
 import useTerminalLogger from "../../service/terminal/terminal-logger";
@@ -44,6 +45,7 @@ const createContext = () => {
         terminal,
         logger: useTerminalLogger(terminal),
         selectors: {
+            derived: useDerivedSelector(derived, control),
             melody: useMelodySelector({ control, data }),
             outline: useOutlineSelector({ data, control }),
         },

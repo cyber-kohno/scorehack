@@ -12,6 +12,22 @@ export const openScoreFilePath = async (defaultDirectory?: string) => {
   return path;
 };
 
+export const openTextFilePath = async (props: {
+  extension: string;
+  name: string;
+  defaultDirectory?: string;
+}) => {
+  const path = await open({
+    multiple: false,
+    directory: false,
+    defaultPath: props.defaultDirectory === "" ? undefined : props.defaultDirectory,
+    filters: [{ name: props.name, extensions: [props.extension] }],
+  });
+
+  if (path == null || Array.isArray(path)) return null;
+  return path;
+};
+
 export const saveTextFilePath = async (props: {
   extension: string;
   name: string;
