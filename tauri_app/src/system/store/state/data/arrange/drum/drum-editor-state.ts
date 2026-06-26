@@ -1,10 +1,11 @@
-import type RhythmTheory from "../../../../../domain/theory/rhythm-theory";
+import RhythmTheory from "../../../../../domain/theory/rhythm-theory";
+import type DerivedState from "../../../derived-state";
 import type ArrangeState from "../arrange-state";
 
 namespace DrumEditorState {
   export type Phase = "preset" | "edit" | "playback";
   export type Control = "criteria" | "col" | "record" | "hits";
-  export type CriteriaDiv = 1 | 2 | 4;
+  export type CriteriaDiv = 1 | 2 | 3 | 4 | 6;
   export type SplitDiv = 2 | 3 | 4;
 
   export type Mapping = {
@@ -92,6 +93,70 @@ namespace DrumEditorState {
     patterns: [],
     regulars: [],
   });
+
+  const formatSixteenthDuration = (duration: number) => {
+    switch (duration) {
+      case 6: return "4n.";
+      case 4: return "4n";
+      case 3: return "8n.";
+      case 2: return "8n";
+      case 1: return "16n";
+    }
+    return `${duration}/16`;
+  };
+
+  export const getAvailableCriteriaDivs = (
+    ts: RhythmTheory.TimeSignature,
+  ): CriteriaDiv[] => {
+    switch (RhythmTheory.getBeatDiv16Count(ts)) {
+      case 4: return [1, 2, 4];
+      case 6: return [1, 3, 6];
+    }
+    return [1];
+  };
+
+  export const getCriteriaDivLabel = (
+    div: CriteriaDiv,
+    ts: RhythmTheory.TimeSignature,
+  ) => {
+    const beatDiv16Count = RhythmTheory.getBeatDiv16Count(ts);
+    return formatSixteenthDuration(beatDiv16Count / div);
+  };
+
+  export const getMinCriteriaDiv = (
+    beat: DerivedState.BeatCache,
+    ts: RhythmTheory.TimeSignature,
+  ): CriteriaDiv => {
+    const divs = getAvailableCriteriaDivs(ts);
+    const eatHead = Math.abs(beat.eatHead);
+    const eatTail = Math.abs(beat.eatTail);
+    const beatDiv16Count = RhythmTheory.getBeatDiv16Count(ts);
+
+    return divs.find((div) => {
+      const unit = beatDiv16Count / div;
+      return eatHead % unit === 0 && eatTail % unit === 0;
+    }) ?? divs[divs.length - 1] ?? 1;
+  };
+
+  export const getEffectiveCriteriaDiv = (
+    div: CriteriaDiv,
+    beat: DerivedState.BeatCache,
+    ts: RhythmTheory.TimeSignature,
+  ): CriteriaDiv => {
+    const divs = getAvailableCriteriaDivs(ts);
+    const minDiv = getMinCriteriaDiv(beat, ts);
+    if (divs.includes(div) && div >= minDiv) return div;
+    return divs.find(item => item >= minDiv) ?? minDiv;
+  };
+
+  export const getColumnCount = (
+    div: CriteriaDiv,
+    beat: DerivedState.BeatCache,
+    ts: RhythmTheory.TimeSignature,
+  ) => {
+    const totalSixteenth = beat.num * RhythmTheory.getBeatDiv16Count(ts) - beat.eatHead + beat.eatTail;
+    return Math.max(0, Math.ceil((totalSixteenth * div) / RhythmTheory.getBeatDiv16Count(ts)));
+  };
 }
 
 export default DrumEditorState;

@@ -1,9 +1,10 @@
 import { get } from "svelte/store";
 import InputState from "../store/state/input-state";
-import { actionMenuStore, confirmDialogStore, controlStore, floatingTextInputStore, inputStore, libraryStore, mappingStore, playbackStore, terminalStore, trackManagerStore } from "../store/global-store";
+import { actionMenuStore, confirmDialogStore, controlStore, floatingSelectStore, floatingTextInputStore, inputStore, libraryStore, mappingStore, playbackStore, terminalStore, trackManagerStore } from "../store/global-store";
 import createTrackManagerActions from "../actions/track/track-manager-actions";
 import createMappingActions from "../actions/library/mapping-actions";
 import useInputActionMenu from "./input-action-menu";
+import useInputFloatingSelect from "./input-floating-select";
 import useInputFloatingTextInput from "./input-floating-text-input";
 import useInputLibrary from "./input-library";
 import useInputMapping from "./input-mapping";
@@ -24,6 +25,7 @@ const useInputRoot = () => {
     const inputMelody = useInputMelody();
     const isTerminalActive = () => get(terminalStore) != null;
     const isConfirmDialogActive = () => get(confirmDialogStore) != null;
+    const isFloatingSelectActive = () => get(floatingSelectStore) != null;
     const isFloatingTextInputActive = () => get(floatingTextInputStore) != null;
     const isActionMenuActive = () => get(actionMenuStore) != null;
     const isMappingActive = () => get(mappingStore) != null;
@@ -95,6 +97,13 @@ const useInputRoot = () => {
             useInputFloatingTextInput().control(e.key, { shiftKey: e.shiftKey });
             return;
         }
+        if (isFloatingSelectActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            useInputFloatingSelect().control(e.key);
+            return;
+        }
         if (isActionMenuActive()) {
             e.preventDefault();
             e.stopPropagation();
@@ -122,8 +131,11 @@ const useInputRoot = () => {
         if (isMappingActive()) {
             e.preventDefault();
             e.stopPropagation();
-            inputStore.set(InputState.createInitial());
-            useInputMapping().control(e.key, { shiftKey: e.shiftKey });
+            if (e.key === "d") {
+                controlKeyHold(e.key, true);
+                return;
+            }
+            useInputMapping().control(e.key, { holdD: get(inputStore).holdD });
             return;
         }
         if (isLibraryActive()) {
@@ -215,6 +227,12 @@ const useInputRoot = () => {
             inputStore.set(InputState.createInitial());
             return;
         }
+        if (isFloatingSelectActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            return;
+        }
         if (isActionMenuActive()) {
             e.preventDefault();
             e.stopPropagation();
@@ -230,7 +248,7 @@ const useInputRoot = () => {
         if (isMappingActive()) {
             e.preventDefault();
             e.stopPropagation();
-            inputStore.set(InputState.createInitial());
+            if (e.key === "d") controlKeyHold(e.key, false);
             return;
         }
         if (isLibraryActive()) {

@@ -11,6 +11,7 @@ import SettingsState from "./state/settings-state";
 import ToastState from "./state/toast-state";
 import ConfirmDialogState from "./state/confirm-dialog-state";
 import ActionMenuState from "./state/action-menu-state";
+import FloatingSelectState from "./state/floating-select-state";
 import FloatingTextInputState from "./state/floating-text-input-state";
 import TrackManagerState from "./state/track-manager-state";
 import AppErrorState from "./state/app-error-state";
@@ -29,6 +30,7 @@ export const settingsStore = writable<SettingsState.Value>(SettingsState.createI
 export const toastStore = writable<ToastState.Value | null>(null);
 export const confirmDialogStore = writable<ConfirmDialogState.Value | null>(null);
 export const actionMenuStore = writable<ActionMenuState.Value | null>(null);
+export const floatingSelectStore = writable<FloatingSelectState.Value | null>(null);
 export const floatingTextInputStore = writable<FloatingTextInputState.Value | null>(null);
 export const trackManagerStore = writable<TrackManagerState.Value | null>(null);
 export const appErrorStore = writable<AppErrorState.Value | null>(null);

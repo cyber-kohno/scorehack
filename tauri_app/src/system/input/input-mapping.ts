@@ -3,8 +3,8 @@ import createMappingActions from "../actions/library/mapping-actions";
 const useInputMapping = () => {
     const actions = createMappingActions();
 
-    const control = (eventKey: string, option: { shiftKey?: boolean } = {}) => {
-        if (option.shiftKey) {
+    const control = (eventKey: string, option: { holdD?: boolean } = {}) => {
+        if (option.holdD) {
             switch (eventKey) {
                 case "ArrowUp":
                     actions.swapRecord(-1);

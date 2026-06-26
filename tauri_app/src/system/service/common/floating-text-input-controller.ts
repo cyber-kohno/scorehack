@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import { floatingTextInputStore, inputStore } from "../../store/global-store";
+import { floatingSelectStore, floatingTextInputStore, inputStore } from "../../store/global-store";
 import InputState from "../../store/state/input-state";
 import type FloatingTextInputState from "../../store/state/floating-text-input-state";
 
@@ -14,6 +14,7 @@ const isPermitted = (state: FloatingTextInputState.Value) => {
 namespace FloatingTextInput {
     export const open = (props: FloatingTextInputState.Value) => {
         inputStore.set(InputState.createInitial());
+        floatingSelectStore.set(null);
         floatingTextInputStore.set({
             ...props,
             cursor: clampCursor(props.value, props.cursor),

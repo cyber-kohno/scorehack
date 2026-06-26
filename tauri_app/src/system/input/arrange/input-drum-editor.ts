@@ -22,14 +22,40 @@ const useInputDrumEditor = () => {
             switch (eventKey) {
                 case "ArrowDown": drumActions.moveRecordCursor(-1); break;
                 case "ArrowUp": drumActions.moveRecordCursor(1); break;
+                case "W":
+                case "w": drumActions.openRecordKeySelect(); break;
                 case "a": drumActions.insertRecord(); break;
                 case "Delete": drumActions.deleteRecord(); break;
             }
         };
 
         switch (editor.control) {
+            case "criteria":
+                switch (eventKey) {
+                    case "W":
+                    case "w": drumActions.openCriteriaDivSelect(); break;
+                }
+                break;
+            case "col":
+                switch (eventKey) {
+                    case "ArrowLeft": drumActions.moveColCursor(-1); break;
+                    case "ArrowRight": drumActions.moveColCursor(1); break;
+                    case "W":
+                    case "w": drumActions.openColDivSelect(); break;
+                }
+                break;
             case "record":
                 recordControl();
+                break;
+            case "hits":
+                switch (eventKey) {
+                    case "ArrowLeft": drumActions.movePatternColCursor(-1); break;
+                    case "ArrowRight": drumActions.movePatternColCursor(1); break;
+                    case "ArrowDown": drumActions.movePatternRecordCursor(-1); break;
+                    case "ArrowUp": drumActions.movePatternRecordCursor(1); break;
+                    case "A":
+                    case "a": drumActions.toggleHit(); break;
+                }
                 break;
         }
     };
@@ -58,6 +84,15 @@ const useInputDrumEditor = () => {
                     if (eventKey === "ArrowUp") drumActions.shiftControl("col");
                     if (eventKey === "ArrowLeft") drumActions.shiftControl("record");
                     break;
+            }
+        };
+
+        callbacks.holdD = () => {
+            if (editor.control !== "record") return;
+
+            switch (eventKey) {
+                case "ArrowDown": drumActions.swapRecord(-1); break;
+                case "ArrowUp": drumActions.swapRecord(1); break;
             }
         };
 

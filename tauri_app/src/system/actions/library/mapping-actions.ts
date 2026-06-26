@@ -1,10 +1,12 @@
 import { get } from "svelte/store";
 import TonalityTheory from "../../domain/theory/tonality-theory";
 import ScoreHistory from "../../infra/tauri/history/score-history";
+import FloatingSelect from "../../service/common/floating-select-controller";
 import FloatingTextInput from "../../service/common/floating-text-input-controller";
 import Toast from "../../service/common/toast-controller";
 import previewArrangeNote from "../../service/playback/arrange/preview-arrange-note";
-import { actionMenuStore, confirmDialogStore, controlStore, dataStore, floatingTextInputStore, inputStore, mappingStore, refStore } from "../../store/global-store";
+import { actionMenuStore, confirmDialogStore, controlStore, dataStore, floatingSelectStore, floatingTextInputStore, inputStore, mappingStore, refStore } from "../../store/global-store";
+import type FloatingSelectState from "../../store/state/floating-select-state";
 import InputState from "../../store/state/input-state";
 import MappingState from "../../store/state/mapping-state";
 import ToastState from "../../store/state/toast-state";
@@ -94,11 +96,13 @@ const createMappingActions = () => {
 
         actionMenuStore.set(null);
         confirmDialogStore.set(null);
+        floatingSelectStore.set(null);
         floatingTextInputStore.set(null);
         mappingStore.set(MappingState.createInitial(track.bank.mappings.length));
     };
 
     const close = () => {
+        floatingSelectStore.set(null);
         mappingStore.set(null);
         inputStore.set(InputState.createInitial());
     };
@@ -153,7 +157,6 @@ const createMappingActions = () => {
             : mapping.focus.recordIndex + 1;
         track.bank.mappings.splice(insertIndex, 0, {
             key: createDefaultKey(),
-            name: "",
             pitch: -1,
         });
         mapping.focus.recordIndex = insertIndex;
@@ -297,36 +300,44 @@ const createMappingActions = () => {
         });
     };
 
-    const isValidPitch = (
-        value: string,
-        recordIndex: number,
-        mappings: { pitch: number }[],
-    ) => {
-        const text = value.trim();
-        if (text.length === 0) return true;
-
-        const pitch = TonalityTheory.parseKey12FullName(text);
-        if (pitch == null) return false;
-
-        return mappings.every((item, index) => {
-            return index === recordIndex || item.pitch !== pitch;
-        });
-    };
-
-    const setPitch = (recordIndex: number, value: string) => {
+    const setPitch = (recordIndex: number, pitch: number) => {
         const ctx = createContext();
         const track = getActiveDrumTrack(ctx);
         if (track == undefined) return;
 
         const record = track.bank.mappings[recordIndex];
         if (record == undefined) return;
-        if (!isValidPitch(value, recordIndex, track.bank.mappings)) return;
+        if (pitch !== -1 && track.bank.mappings.some((item, index) => {
+            return index !== recordIndex && item.pitch === pitch;
+        })) return;
 
-        const text = value.trim();
-        record.pitch = text.length === 0
-            ? -1
-            : TonalityTheory.parseKey12FullName(text) ?? -1;
+        record.pitch = pitch;
         ctx.commitData();
+    };
+
+    const createPitchItems = (
+        recordIndex: number,
+        mappings: { pitch: number }[],
+    ): FloatingSelectState.Item[] => {
+        const usedPitches = new Set(mappings
+            .filter((_, index) => index !== recordIndex)
+            .map(item => item.pitch)
+            .filter(pitch => pitch !== -1));
+
+        const items: FloatingSelectState.Item[] = [{
+            value: "-1",
+            label: "",
+        }];
+
+        for (let pitch = 0; pitch <= 127; pitch++) {
+            items.push({
+                value: String(pitch),
+                label: TonalityTheory.getKey12FullName(pitch),
+                disabled: usedPitches.has(pitch),
+            });
+        }
+
+        return items;
     };
 
     const openSoundInput = () => {
@@ -345,18 +356,22 @@ const createMappingActions = () => {
         })?.ref;
         if (cellRef == undefined) return;
 
-        const value = record.pitch === -1
-            ? ""
-            : TonalityTheory.getKey12FullName(record.pitch);
         const rect = cellRef.getBoundingClientRect();
-        FloatingTextInput.open({
-            value,
-            cursor: value.length,
+        FloatingSelect.open({
+            value: String(record.pitch),
+            filter: "",
+            cursor: 0,
+            focusIndex: 0,
             left: rect.left,
             top: rect.bottom + 6,
             width: Math.max(120, rect.width),
-            permit: value => isValidPitch(value, recordIndex, track.bank.mappings),
-            apply: value => setPitch(recordIndex, value),
+            height: 220,
+            items: createPitchItems(recordIndex, track.bank.mappings),
+            apply: value => {
+                const pitch = Number(value);
+                if (!Number.isInteger(pitch)) return;
+                setPitch(recordIndex, pitch);
+            },
         });
     };
 

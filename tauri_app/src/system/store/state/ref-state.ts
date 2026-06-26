@@ -11,6 +11,11 @@ namespace RefState {
 
         arrange: {
             piano: PianoRefs;
+            drum: {
+                criteria?: HTMLElement;
+                cols: { colIndex: number, ref: HTMLElement }[];
+                records: { recordIndex: number, ref: HTMLElement }[];
+            };
             finder: {
                 frame?: HTMLElement;
                 records: { seq: number, ref: HTMLElement }[];
@@ -54,7 +59,7 @@ namespace RefState {
         trackArr: [[]],
         noteRefs: [[]],
         timerKeys: [],
-        arrange: { piano: {}, finder: { records: [] } },
+        arrange: { piano: {}, drum: { cols: [], records: [] }, finder: { records: [] } },
         library: { finder: { records: [] }, mapping: { cells: [] } }
     });
 

@@ -3,6 +3,7 @@
   import ArrangeFinderFrame from "./arrange/finder/ArrangeFinderFrame.svelte";
   import ActionMenuLayer from "./common/ActionMenuLayer.svelte";
   import ConfirmDialogLayer from "./common/ConfirmDialogLayer.svelte";
+  import FloatingSelectLayer from "./common/FloatingSelectLayer.svelte";
   import FloatingTextInputLayer from "./common/FloatingTextInputLayer.svelte";
   import LibraryDialog from "./library/LibraryDialog.svelte";
   import MappingDialog from "./library/mapping/MappingDialog.svelte";
@@ -60,6 +61,7 @@
         <ActionMenuLayer />
     {/if}
     <ConfirmDialogLayer />
+    <FloatingSelectLayer />
     <FloatingTextInputLayer />
     <ToastLayer />
 </div>
