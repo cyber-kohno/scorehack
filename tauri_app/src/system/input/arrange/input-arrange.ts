@@ -3,6 +3,7 @@ import type InputState from "../../store/state/input-state";
 import createArrangeActions from "../../actions/arrange/arrange-actions";
 import { controlStore, playbackStore } from "../../store/global-store";
 import stopPlaybackTimeline from "../../service/playback/timeline/stop-playback-timeline";
+import useInputDrumEditor from "./input-drum-editor";
 import useInputGuitarEditor from "./input-guitar-editor";
 import useInputPianoEditor from "./input-piano-editor";
 
@@ -26,12 +27,14 @@ const useInputArrange = () => {
 
         const inputPianoEditor = useInputPianoEditor();
         const inputGuitarEditor = useInputGuitarEditor();
+        const inputDrumEditor = useInputDrumEditor();
         const arrange = get(controlStore).outline.arrange;
         if (arrange == null) throw new Error();
 
         switch (arrange.method) {
             case 'piano': { inputPianoEditor.control(eventKey); } break;
             case 'guitar': { inputGuitarEditor.control(eventKey); } break;
+            case 'drum': { inputDrumEditor.control(eventKey); } break;
         }
     }
 
@@ -41,12 +44,14 @@ const useInputArrange = () => {
 
         const inputPianoEditor = useInputPianoEditor();
         const inputGuitarEditor = useInputGuitarEditor();
+        const inputDrumEditor = useInputDrumEditor();
         const arrange = get(controlStore).outline.arrange;
         if (arrange == null) throw new Error();
 
         switch (arrange.method) {
             case 'piano': return inputPianoEditor.getHoldCallbacks(eventKey);
             case 'guitar': return inputGuitarEditor.getHoldCallbacks(eventKey);
+            case 'drum': return inputDrumEditor.getHoldCallbacks(eventKey);
         }
     }
 

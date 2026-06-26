@@ -1,5 +1,6 @@
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
 import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
+import DrumEditorState from "../../store/state/data/arrange/drum/drum-editor-state";
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
@@ -345,21 +346,35 @@ const createOutlineUpdater = (ctx: Context) => {
 
         const chordCache = chordCaches[chordSeq];
         const scoreBase = baseCaches[baseSeq].scoreBase;
+        if (track.method !== "drum" && chordCache.compiledChord == undefined) return false;
 
-        if (chordCache.compiledChord == undefined) return false;
-
-        const target: ArrangeState.Target = {
+        const targetBase: ArrangeState.TargetBase = {
             scoreBase,
             beat: chordCache.beat,
-            compiledChord: chordCache.compiledChord,
             chordSeq: chordCache.chordSeq,
         };
 
-        const arrange: ArrangeState.EditorProps = {
-            method: track.method,
-            origin: { type: "chord-block" },
-            target,
-        };
+        const arrange: ArrangeState.EditorProps = (() => {
+            switch (track.method) {
+                case "piano":
+                case "guitar":
+                    if (chordCache.compiledChord == undefined) throw new Error();
+                    return {
+                        method: track.method,
+                        origin: { type: "chord-block" },
+                        target: {
+                            ...targetBase,
+                            compiledChord: chordCache.compiledChord,
+                        },
+                    };
+                case "drum":
+                    return {
+                        method: "drum",
+                        origin: { type: "chord-block" },
+                        target: targetBase,
+                    };
+            }
+        })();
         buildDetail({ arrange, arrTrack: track, chordCache });
 
         outline.arrange = arrange;
@@ -383,6 +398,9 @@ const createOutlineUpdater = (ctx: Context) => {
                         chordCache.chordSeq,
                         arrTrack,
                     );
+                    break;
+                case "drum":
+                    arrange.editor = DrumEditorState.createInitialProps();
                     break;
             }
         });

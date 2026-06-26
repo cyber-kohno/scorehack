@@ -1,6 +1,7 @@
 import type ControlState from "../../store/state/control-state";
 import type FinderState from "../../store/state/data/arrange/finder-state";
 import type DataState from "../../store/state/data/data-state";
+import type DrumEditorState from "../../store/state/data/arrange/drum/drum-editor-state";
 import type GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import type PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
 
@@ -36,6 +37,12 @@ const createArrangeSelector = (ctx: Context) => {
         return arrange.editor as GuitarEditorState.Value;
     };
 
+    const getDrumEditor = () => {
+        const arrange = getArrange();
+        if (arrange.method !== "drum" || arrange.editor == undefined) throw new Error();
+        return arrange.editor as DrumEditorState.Value;
+    };
+
     const getCurTrack = () => {
         const track = data.arrange.tracks[control.outline.trackIndex];
         if (track == undefined) throw new Error();
@@ -53,6 +60,7 @@ const createArrangeSelector = (ctx: Context) => {
     return {
         getArrange,
         getCurTrack,
+        getDrumEditor,
         getGuitarEditor,
         getPianoEditor,
         getPianoFinder,

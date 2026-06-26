@@ -8,8 +8,8 @@
     $: backing = $bp.backing;
 
     $: structs = (() => {
-        const chord = $arrange.target.compiledChord;
-        return chord.structs;
+        if (!("compiledChord" in $arrange.target)) throw new Error();
+        return $arrange.target.compiledChord.structs;
     })();
 
     $: getSoundName = (index: number) => {

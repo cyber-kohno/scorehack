@@ -4,7 +4,10 @@
   import { getPianoArrange, getPianoEditor } from "../piano-editor-context";
 
   const arrange = getPianoArrange();
-  $: structs = $arrange.target.compiledChord.structs;
+  $: structs = (() => {
+    if (!("compiledChord" in $arrange.target)) throw new Error();
+    return $arrange.target.compiledChord.structs;
+  })();
 
   const editor = getPianoEditor();
 

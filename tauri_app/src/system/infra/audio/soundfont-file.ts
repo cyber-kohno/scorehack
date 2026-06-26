@@ -104,13 +104,6 @@ namespace SoundFontFile {
         return `${bank}_${program}`;
     };
 
-    export const parsePresetKey = (key: string): PresetKey | null => {
-        if (!/^\d{3}_\d{3}$/.test(key)) return null;
-
-        const [bank, program] = key.split("_").map((value) => Number(value));
-        return { bank, program };
-    };
-
     export const formatPresetTableRow = (preset: Preset) => {
         return [
             preset.bank.toString().padStart(3, "0"),

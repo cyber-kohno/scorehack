@@ -1,10 +1,11 @@
-<script lang="ts">  import { actionMenuStore, controlStore, libraryStore, terminalStore, trackManagerStore } from "../store/global-store";
+<script lang="ts">  import { actionMenuStore, controlStore, libraryStore, mappingStore, terminalStore, trackManagerStore } from "../store/global-store";
   import ArrangeFrame from "./arrange/ArrangeFrame.svelte";
   import ArrangeFinderFrame from "./arrange/finder/ArrangeFinderFrame.svelte";
   import ActionMenuLayer from "./common/ActionMenuLayer.svelte";
   import ConfirmDialogLayer from "./common/ConfirmDialogLayer.svelte";
   import FloatingTextInputLayer from "./common/FloatingTextInputLayer.svelte";
   import LibraryDialog from "./library/LibraryDialog.svelte";
+  import MappingDialog from "./library/mapping/MappingDialog.svelte";
   import RootHeader from "./header/RootHeader.svelte";
   import OutlineFrame from "./outline/OutlineFrame.svelte";
   import TerminalFrame from "./terminal/TerminalFrame.svelte";
@@ -15,6 +16,7 @@
     $: isDispTerminal = $terminalStore != null;
     $: isDispTrackManager = $trackManagerStore != null && $controlStore.outline.arrange == null;
     $: isDispLibraryDialog = $libraryStore != null;
+    $: isDispMappingDialog = $mappingStore != null;
     $: isDispActionMenu = $actionMenuStore != null;
 
     $: isDispArrangeEditor = (() => {
@@ -50,6 +52,9 @@
     {/if}
     {#if isDispLibraryDialog}
         <LibraryDialog />
+    {/if}
+    {#if isDispMappingDialog}
+        <MappingDialog />
     {/if}
     {#if isDispActionMenu}
         <ActionMenuLayer />

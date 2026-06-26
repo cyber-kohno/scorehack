@@ -108,6 +108,22 @@ namespace TonalityTheory {
         return `${KEY12_SHARP_LIST[keyIndex]}${octave}`;
     }
 
+    export const parseKey12FullName = (name: string) => {
+        const matched = name.match(/^([A-G])(#?)(\d+)$/);
+        if (matched == null) return null;
+
+        const keyName = `${matched[1]}${matched[2]}`;
+        const keyIndex = KEY12_SHARP_LIST.findIndex(key => key === keyName);
+        if (keyIndex === -1) return null;
+
+        const octave = Number(matched[3]);
+        if (!Number.isInteger(octave)) return null;
+
+        const pitch = octave * 12 + keyIndex;
+        if (pitch < 0 || pitch > 127) return null;
+        return pitch;
+    }
+
     export const getKey12Name = (key12: Key12dProps) => {
         const list = key12.isFlat ? KEY12_FLAT_LIST : KEY12_SHARP_LIST;
         return list[key12.key12];

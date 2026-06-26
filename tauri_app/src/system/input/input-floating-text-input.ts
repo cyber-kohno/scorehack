@@ -1,6 +1,6 @@
 import FloatingTextInput from "../service/common/floating-text-input-controller";
 
-const VALID_TEXT = /^[a-zA-Z0-9 _'.,-]$/;
+const VALID_TEXT = /^[a-zA-Z0-9 _'.,#-]$/;
 
 const useInputFloatingTextInput = () => {
     const control = (eventKey: string, option?: { shiftKey?: boolean }) => {

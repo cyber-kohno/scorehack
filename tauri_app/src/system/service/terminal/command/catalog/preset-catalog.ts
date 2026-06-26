@@ -298,6 +298,9 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
           method: "guitar",
           bank: clone(track.bank),
         };
+      case "drum":
+        logger.outputError("Drum library file export is not implemented yet.");
+        throw new Error("Drum library file export is not implemented yet.");
     }
   };
 
@@ -315,6 +318,9 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
         break;
       case "guitar":
         logger.outputError("Guitar library file import is not implemented yet.");
+        return false;
+      case "drum":
+        logger.outputError("Drum library file import is not implemented yet.");
         return false;
     }
 

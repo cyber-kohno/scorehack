@@ -12,8 +12,14 @@ export type GuitarFretToggleResult = {
 };
 
 const createGuitarArrangeUpdater = (ctx: Context) => {
-    const { arrange, arrTrack } = ctx;
-    if (arrTrack.method !== "guitar") throw new Error();
+    const arrange = (() => {
+        if (ctx.arrange.method !== "guitar") throw new Error();
+        return ctx.arrange;
+    })();
+    const arrTrack = (() => {
+        if (ctx.arrTrack.method !== "guitar") throw new Error();
+        return ctx.arrTrack;
+    })();
 
     const getGuitarEditor = () => {
         if (arrange.method !== "guitar" || arrange.editor == undefined) throw new Error();
@@ -24,11 +30,15 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         return arrTrack.bank;
     };
 
+    const getCompiledChord = () => {
+        return arrange.target.compiledChord;
+    };
+
     const isCurrentChordTone = () => {
         const editor = getGuitarEditor();
         const tuning = GuitarEditorState.STANDARD_TUNING[editor.cursorString];
         const pitchClass = (tuning.openMidi + editor.cursorFret) % 12;
-        return arrange.target.compiledChord.structs
+        return getCompiledChord().structs
             .map(s => ((s.key12 % 12) + 12) % 12)
             .includes(pitchClass);
     };

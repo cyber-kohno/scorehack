@@ -52,6 +52,10 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         return track.bank;
     };
 
+    const getCompiledChord = (): NonNullable<ArrangeState.Target["compiledChord"]> => {
+        return arrange.target.compiledChord;
+    };
+
     const moveFinderBacking = (dir: -1 | 1) => {
         const finder = getPianoFinder();
         const temp = finder.cursor.backing + dir;
@@ -89,7 +93,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
 
     const getVoicingContext = () => {
         const pianoEditor = getPianoEditor();
-        const compiledChord = arrange.target.compiledChord;
+        const compiledChord = getCompiledChord();
         const structs = compiledChord.structs;
         let structCnt = structs.length;
         const onChord = compiledChord.chord.on;
@@ -124,7 +128,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
     };
 
     const toggleVoicing = () => {
-        const structs = arrange.target.compiledChord.structs;
+        const structs = getCompiledChord().structs;
         const { voicing } = getVoicingContext();
         const key = `${voicing.cursorX}.${voicing.cursorY}`;
         let result: PianoVoicingToggleResult;
@@ -499,7 +503,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
     const applyChordBlock = () => {
         const pianoEditor = getPianoEditor();
 
-        const compiledChord = arrange.target.compiledChord;
+        const compiledChord = getCompiledChord();
         const scoreBase = arrange.target.scoreBase;
         const beatCache = arrange.target.beat;
         const chordSeq = arrange.target.chordSeq;
@@ -554,7 +558,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         const pianoLib = track.bank;
         const category: FinderState.SearchCategory = {
             beat: arrange.target.beat.num,
-            structCnt: arrange.target.compiledChord.structs.length,
+            structCnt: getCompiledChord().structs.length,
             tsGloup: [arrange.target.scoreBase.rhythm.ts],
             eatHead: arrange.target.beat.eatHead,
             eatTail: arrange.target.beat.eatTail,

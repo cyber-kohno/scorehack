@@ -25,15 +25,16 @@ const useTerminalLogger = (terminal: TerminalState.Value) => {
         });
     }
 
-    const getNumberName = (argNo: 1 | 2 | 3) => {
+    const getNumberName = (argNo: 1 | 2 | 3 | 4) => {
         switch (argNo) {
             case 1: return 'first';
             case 2: return 'sectond';
             case 3: return 'third';
+            case 4: return 'fourth';
         }
     }
 
-    const validateRequired = (str: string | undefined, argNo: 1 | 2 | 3) => {
+    const validateRequired = (str: string | undefined, argNo: 1 | 2 | 3 | 4) => {
         if (str == undefined) {
             terminal.outputs.push({
                 type: 'record',
@@ -48,7 +49,7 @@ const useTerminalLogger = (terminal: TerminalState.Value) => {
         }
         return str;
     }
-    const validateNumber = (numStr: string, argNo: 1 | 2 | 3) => {
+    const validateNumber = (numStr: string, argNo: 1 | 2 | 3 | 4) => {
         const targetNum = Number(numStr);
         if (Number.isNaN(targetNum)) {
             terminal.outputs.push({

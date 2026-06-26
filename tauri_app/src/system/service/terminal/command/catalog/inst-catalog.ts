@@ -67,7 +67,7 @@ const createInstCatalog = (
         ],
         table: [
           ["inst builtin <name>", "Use a built-in instrument for the active track."],
-          ["inst soundfont <name> <presetKey>", "Use a SoundFont preset for the active track."],
+          ["inst soundfont <name> <bank> <program>", "Use a SoundFont preset for the active track."],
         ],
       },
     });
@@ -110,12 +110,29 @@ const createInstCatalog = (
     }
   };
 
-  const useSoundFont = (definitionName: string | undefined, preset: string | undefined) => {
+  const parsePresetNumber = (value: string | undefined, argIndex: 1 | 2 | 3 | 4, label: string) => {
+    const text = logger.validateRequired(value, argIndex);
+    if (text == null) return null;
+    if (!/^\d+$/.test(text)) {
+      logger.outputError(`The ${label} must be a number. [${text}]`);
+      return null;
+    }
+    return Number(text);
+  };
+
+  const useSoundFont = (
+    definitionName: string | undefined,
+    bankArg: string | undefined,
+    programArg: string | undefined,
+  ) => {
     const name = logger.validateRequired(definitionName, 2);
     if (name == null) return;
 
-    const presetKeyText = logger.validateRequired(preset, 3);
-    if (presetKeyText == null) return;
+    const bank = parsePresetNumber(bankArg, 3, "bank");
+    if (bank == null) return;
+
+    const program = parsePresetNumber(programArg, 4, "program");
+    if (program == null) return;
 
     const soundFont = findSoundFont(name);
     if (soundFont == undefined) {
@@ -123,17 +140,13 @@ const createInstCatalog = (
       return;
     }
 
-    const presetKey = SoundFontFile.parsePresetKey(presetKeyText);
-    if (presetKey == null) {
-      logger.outputError(`The preset key must be formatted as 000_000. [${presetKeyText}]`);
-      return;
-    }
+    const presetKeyText = SoundFontFile.formatPresetKey({ bank, program });
 
     const instRef = {
       source: "soundfont",
       definitionName: name,
-      bank: presetKey.bank,
-      program: presetKey.program,
+      bank,
+      program,
     } as const;
 
     terminal.wait = true;
@@ -192,12 +205,23 @@ const createInstCatalog = (
         },
       },
       {
-        name: "presetKey?: string",
+        name: "bank: number",
         getCandidate: (args) => {
           if (args[0] !== "soundfont") return [];
           const soundFont = findSoundFont(args[1]);
           if (soundFont == undefined) return [];
-          return UserSoundFontCache.getPresetKeys(UserSoundFontPath.resolvePath(soundFont, settings));
+          return UserSoundFontCache.getPresetBanks(UserSoundFontPath.resolvePath(soundFont, settings));
+        },
+      },
+      {
+        name: "program: number",
+        getCandidate: (args) => {
+          if (args[0] !== "soundfont") return [];
+          const soundFont = findSoundFont(args[1]);
+          if (soundFont == undefined) return [];
+          const bank = Number(args[2]);
+          if (!Number.isFinite(bank)) return [];
+          return UserSoundFontCache.getPresetPrograms(UserSoundFontPath.resolvePath(soundFont, settings), bank);
         },
       },
     ],
@@ -214,7 +238,7 @@ const createInstCatalog = (
           useBuiltin(args[1]);
           break;
         case "soundfont":
-          useSoundFont(args[1], args[2]);
+          useSoundFont(args[1], args[2], args[3]);
           break;
         default:
           outputUnknownSource(source);

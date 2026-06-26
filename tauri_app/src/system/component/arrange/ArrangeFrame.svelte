@@ -1,6 +1,7 @@
 <script lang="ts">
   import useOutlineSelector from "../../service/outline/outline-selector";
   import { controlStore, dataStore } from "../../store/global-store";
+  import ArrangeDrumEditor from "./drum/ArrangeDrumEditor.svelte";
   import ArrangeGuitarEditor from "./guitar/ArrangeGuitarEditor.svelte";
   import ArrangePianoEditor from "./piano/ArrangePianoEditor.svelte";
   import ArrangeStatusBar from "./status/ArrangeStatusBar.svelte";
@@ -18,6 +19,8 @@
         <ArrangePianoEditor />
       {:else if track.method === "guitar"}
         <ArrangeGuitarEditor />
+      {:else if track.method === "drum"}
+        <ArrangeDrumEditor />
       {/if}
     </div>
   </div>

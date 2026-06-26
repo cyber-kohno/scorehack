@@ -1,10 +1,12 @@
 import { get } from "svelte/store";
 import InputState from "../store/state/input-state";
-import { actionMenuStore, confirmDialogStore, controlStore, floatingTextInputStore, inputStore, libraryStore, playbackStore, terminalStore, trackManagerStore } from "../store/global-store";
+import { actionMenuStore, confirmDialogStore, controlStore, floatingTextInputStore, inputStore, libraryStore, mappingStore, playbackStore, terminalStore, trackManagerStore } from "../store/global-store";
 import createTrackManagerActions from "../actions/track/track-manager-actions";
+import createMappingActions from "../actions/library/mapping-actions";
 import useInputActionMenu from "./input-action-menu";
 import useInputFloatingTextInput from "./input-floating-text-input";
 import useInputLibrary from "./input-library";
+import useInputMapping from "./input-mapping";
 import useInputMelody from "./input-melody";
 import useInputOutline from "./input-outline";
 import useInputTerminal from "./input-terminal";
@@ -16,6 +18,7 @@ import ConfirmDialog from "../service/common/confirm-dialog-controller";
 const useInputRoot = () => {
     const terminalActions = createTerminalActions();
     const trackManagerActions = createTrackManagerActions();
+    const mappingActions = createMappingActions();
 
     const inputOutline = useInputOutline();
     const inputMelody = useInputMelody();
@@ -23,6 +26,7 @@ const useInputRoot = () => {
     const isConfirmDialogActive = () => get(confirmDialogStore) != null;
     const isFloatingTextInputActive = () => get(floatingTextInputStore) != null;
     const isActionMenuActive = () => get(actionMenuStore) != null;
+    const isMappingActive = () => get(mappingStore) != null;
     const isArrangeEditorActive = () => {
         const arrange = get(controlStore).outline.arrange;
         return arrange != null && arrange.editor != undefined;
@@ -113,6 +117,13 @@ const useInputRoot = () => {
                 return;
             }
             setHoldControl(inputTerminal.getHoldCallbacks(e.key));
+            return;
+        }
+        if (isMappingActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            useInputMapping().control(e.key, { shiftKey: e.shiftKey });
             return;
         }
         if (isLibraryActive()) {
@@ -216,6 +227,12 @@ const useInputRoot = () => {
             if (e.key === "Shift") controlKeyHold(e.key, false);
             return;
         }
+        if (isMappingActive()) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputStore.set(InputState.createInitial());
+            return;
+        }
         if (isLibraryActive()) {
             e.preventDefault();
             e.stopPropagation();
@@ -254,6 +271,9 @@ const useInputRoot = () => {
             if (get(playbackStore).timerKeys != null) return;
 
             switch (eventKey.toLowerCase()) {
+                case "m": {
+                    mappingActions.open();
+                } break;
                 case "r": {
                     trackManagerActions.toggle();
                 } break;

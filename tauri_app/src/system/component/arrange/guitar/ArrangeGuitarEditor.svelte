@@ -10,7 +10,11 @@
   $: selector = createArrangeSelector({ control: $controlStore, data: $dataStore });
   $: arrange = selector.getArrange();
   $: editor = selector.getGuitarEditor();
-  $: pitchClasses = arrange.target.compiledChord.structs.map((s) => ((s.key12 % 12) + 12) % 12);
+  $: compiledChord = (() => {
+    if (!("compiledChord" in arrange.target)) throw new Error();
+    return arrange.target.compiledChord;
+  })();
+  $: pitchClasses = compiledChord.structs.map((s) => ((s.key12 % 12) + 12) % 12);
   $: frets = Array.from({ length: GuitarEditorState.MAX_FRET + 1 }, (_, fret) => fret);
 
   const getMidi = (stringIndex: number, fret: number) => {

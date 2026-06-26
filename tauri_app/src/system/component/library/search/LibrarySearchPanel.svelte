@@ -8,6 +8,7 @@
   import LSISymbol from "./item/LSISymbol.svelte";
   import LSISymbolTones from "./item/LSISymbolTones.svelte";
   import LSITimeSignature from "./item/LSITimeSignature.svelte";
+  import { controlStore, dataStore } from "../../../store/global-store";
   import type LibraryState from "../../../store/state/library-state";
 
   export let library!: LibraryState.Value;
@@ -38,20 +39,29 @@
   }
 
   $: condition = library.condition;
+  $: track = $dataStore.arrange.tracks[$controlStore.outline.trackIndex];
+  $: isDrum = track?.method === "drum";
   $: getFocus = (condition: LibraryState.Condition) => {
     return library.focus.finder == null && library.focus.condition === condition;
   };
 </script>
 
 <div class="panel" bind:this={panelRef}>
-  <LSITimeSignature isFocus={getFocus("ts")} ts={condition.ts} />
-  <LSIBeat isFocus={getFocus("beat")} beat={condition.beat} />
-  <LSIEatHead isFocus={getFocus("eat-head")} eatHead={condition.eatHead} />
-  <LSIEatTail isFocus={getFocus("eat-tail")} eatTail={condition.eatTail} />
-  <LSIRoot isFocus={getFocus("root")} root={condition.root} />
-  <LSIOnChord isFocus={getFocus("on")} on={condition.on} />
-  <LSISymbolTones isFocus={getFocus("symbol-tones")} symbol={condition.symbol} />
-  <LSISymbol isFocus={getFocus("symbol")} symbol={condition.symbol} />
+  {#if isDrum}
+    <LSITimeSignature isFocus={getFocus("ts")} ts={condition.ts} />
+    <LSIBeat isFocus={getFocus("beat")} beat={condition.beat} />
+    <LSIEatHead isFocus={getFocus("eat-head")} eatHead={condition.eatHead} />
+    <LSIEatTail isFocus={getFocus("eat-tail")} eatTail={condition.eatTail} />
+  {:else}
+    <LSITimeSignature isFocus={getFocus("ts")} ts={condition.ts} />
+    <LSIBeat isFocus={getFocus("beat")} beat={condition.beat} />
+    <LSIEatHead isFocus={getFocus("eat-head")} eatHead={condition.eatHead} />
+    <LSIEatTail isFocus={getFocus("eat-tail")} eatTail={condition.eatTail} />
+    <LSIRoot isFocus={getFocus("root")} root={condition.root} />
+    <LSIOnChord isFocus={getFocus("on")} on={condition.on} />
+    <LSISymbolTones isFocus={getFocus("symbol-tones")} symbol={condition.symbol} />
+    <LSISymbol isFocus={getFocus("symbol")} symbol={condition.symbol} />
+  {/if}
 </div>
 
 <style>

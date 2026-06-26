@@ -39,6 +39,27 @@ const createContext = () => {
 };
 
 const createLibraryActions = () => {
+    const getActiveTrack = (ctx: ReturnType<typeof createContext>) => {
+        return ctx.arrange.tracks[ctx.control.outline.trackIndex];
+    };
+
+    const getConditions = (ctx: ReturnType<typeof createContext>) => {
+        return getActiveTrack(ctx)?.method === "drum"
+            ? LibraryState.DrumConditions
+            : LibraryState.Conditions;
+    };
+
+    const ensureConditionVisible = (ctx: ReturnType<typeof createContext>) => {
+        const library = ctx.library;
+        if (library == null || library.focus.finder != null) return;
+
+        const conditions = getConditions(ctx);
+        if (conditions.includes(library.focus.condition)) return;
+
+        library.focus.condition = conditions[0];
+        libraryStore.set({ ...library });
+    };
+
     const adjustFinderBackingScroll = (ctx: ReturnType<typeof createContext>) => {
         const library = ctx.library;
         if (library == null || library.focus.finder == null) return;
@@ -94,16 +115,18 @@ const createLibraryActions = () => {
         const library = ctx.library;
         if (library == null || library.focus.finder != null) return;
 
-        const index = LibraryState.Conditions.indexOf(library.focus.condition);
+        const conditions = getConditions(ctx);
+        const index = conditions.indexOf(library.focus.condition);
         const next = index + dir;
-        if (next < 0 || next > LibraryState.Conditions.length - 1) return;
+        if (next < 0 || next > conditions.length - 1) return;
 
-        library.focus.condition = LibraryState.Conditions[next];
+        library.focus.condition = conditions[next];
         libraryStore.set({ ...library });
     };
 
     const moveTimeSignature = (dir: -1 | 1) => {
         const ctx = createContext();
+        ensureConditionVisible(ctx);
         const library = ctx.library;
         if (library == null || library.focus.finder != null || library.focus.condition !== "ts") return;
 

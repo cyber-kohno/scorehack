@@ -18,6 +18,13 @@ namespace LibraryState {
         'symbol',
     ];
 
+    export const DrumConditions: Condition[] = [
+        'ts',
+        'beat',
+        'eat-head',
+        'eat-tail',
+    ];
+
     export type Finder = {
         cursor: FinderState.Cursor;
     };

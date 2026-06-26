@@ -338,6 +338,7 @@ const createOutlineBackingActions = (
         switch (track.method) {
             case "piano": return getPianoRemoveBackingWarnings(ctx, track);
             case "guitar": return getGuitarRemoveBackingWarnings(ctx, track);
+            case "drum": return [];
         }
     };
 
@@ -385,6 +386,7 @@ const createOutlineBackingActions = (
                 if (!removed) return false;
                 return true;
             } break;
+            case "drum": return false;
         }
 
         return false;

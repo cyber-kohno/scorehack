@@ -1,12 +1,13 @@
 import type DerivedState from "../../derived-state";
 import type ElementState from "../element-state";
 import type { TrackInstRef } from "../track-inst-ref";
+import DrumEditorState from "./drum/drum-editor-state";
 import GuitarEditorState from "./guitar/guitar-editor-state";
 import PianoEditorState from "./piano/piano-editor-state";
 
 namespace ArrangeState {
 
-  export const ArrangeMedhods = ["piano", "guitar"] as const;
+  export const ArrangeMedhods = ["piano", "guitar", "drum"] as const;
   export type ArrangeMedhod = (typeof ArrangeMedhods)[number];
 
   export const createPianoTrackInitial = (name: string): Track => ({
@@ -27,16 +28,43 @@ namespace ArrangeState {
     bank: GuitarEditorState.createInitialBank(),
   });
 
+  export const createDrumTrackInitial = (name: string): Track => ({
+    name,
+    method: "drum",
+    volume: 10,
+    isMute: false,
+    relations: [],
+    bank: DrumEditorState.createInitialBank(),
+  });
+
   export const createInitial = (): DataProps => ({
     tracks: [createPianoTrackInitial("track0")],
   });
 
-  export type EditorProps = {
-    method: ArrangeState.ArrangeMedhod;
+  export type EditorProps =
+    | PianoEditorProps
+    | GuitarEditorProps
+    | DrumEditorProps;
+
+  type EditorPropsBase = {
     origin: EditorOrigin;
-    target: Target;
     editor?: any;
     finder?: any;
+  };
+
+  export type PianoEditorProps = EditorPropsBase & {
+    method: "piano";
+    target: Target;
+  };
+
+  export type GuitarEditorProps = EditorPropsBase & {
+    method: "guitar";
+    target: Target;
+  };
+
+  export type DrumEditorProps = EditorPropsBase & {
+    method: "drum";
+    target: TargetBase;
   };
 
   export type EditorOrigin =
@@ -56,11 +84,14 @@ namespace ArrangeState {
     | "add-backing"
     | "add-sounds";
 
-  export type Target = {
+  export type TargetBase = {
     scoreBase: ElementState.DataInit;
     beat: DerivedState.BeatCache;
-    compiledChord: DerivedState.CompiledChord;
     chordSeq: number;
+  };
+
+  export type Target = TargetBase & {
+    compiledChord: DerivedState.CompiledChord;
   };
 
   export type TrackBase = {
@@ -82,13 +113,20 @@ namespace ArrangeState {
     bank: GuitarEditorState.Bank;
   };
 
-  export type TrackBank = PianoTrackBank | GuitarTrackBank;
+  export type DrumTrackBank = {
+    method: "drum";
+    bank: DrumEditorState.Bank;
+  };
+
+  export type TrackBank = PianoTrackBank | GuitarTrackBank | DrumTrackBank;
 
   export type PianoTrack = TrackBase & PianoTrackBank;
 
   export type GuitarTrack = TrackBase & GuitarTrackBank;
 
-  export type Track = PianoTrack | GuitarTrack;
+  export type DrumTrack = TrackBase & DrumTrackBank;
+
+  export type Track = PianoTrack | GuitarTrack | DrumTrack;
 
   /**
    * コード要素とアレンジの紐づけを管理するプロパティ

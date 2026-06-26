@@ -50,30 +50,35 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
         usage: "Change the arrange method for the active track.",
         args: [
           {
-            name: "method: piano | guitar",
+            name: "method: piano | guitar | drum",
             getCandidate: () => [...ArrangeState.ArrangeMedhods],
           },
         ],
         callback: (args) => {
           const arg0 = logger.validateRequired(args[0], 1);
           if (arg0 == null) return;
-          if (arg0 !== "piano" && arg0 !== "guitar") {
+          if (!ArrangeState.ArrangeMedhods.includes(arg0 as ArrangeState.ArrangeMedhod)) {
             logger.outputError(`The specified arrange method does not exist. [${arg0}]`);
             return;
           }
+          const method = arg0 as ArrangeState.ArrangeMedhod;
 
           const trackIndex = control.outline.trackIndex;
           const track = data.arrange.tracks[trackIndex];
           if (track == undefined) throw new Error();
           const prev = track.method;
-          if (prev === arg0) {
-            logger.outputInfo(`Arrange method is already selected. [${arg0}]`);
+          if (prev === method) {
+            logger.outputInfo(`Arrange method is already selected. [${method}]`);
             return;
           }
 
-          const nextTrack = arg0 === "piano"
-            ? ArrangeState.createPianoTrackInitial(track.name)
-            : ArrangeState.createGuitarTrackInitial(track.name);
+          const nextTrack = (() => {
+            switch (method) {
+              case "piano": return ArrangeState.createPianoTrackInitial(track.name);
+              case "guitar": return ArrangeState.createGuitarTrackInitial(track.name);
+              case "drum": return ArrangeState.createDrumTrackInitial(track.name);
+            }
+          })();
           nextTrack.instRef = track.instRef;
           nextTrack.volume = track.volume;
           nextTrack.isMute = track.isMute;
@@ -82,7 +87,7 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
 
           ctx.commit.control();
           ctx.commit.dataAndRecalculate();
-          logger.outputInfo(`Changed arrange method. [${prev} -> ${arg0}]`);
+          logger.outputInfo(`Changed arrange method. [${prev} -> ${method}]`);
           listHarmonizeTracks();
         },
       },

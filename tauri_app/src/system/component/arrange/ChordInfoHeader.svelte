@@ -7,12 +7,15 @@
 
   $: selector = createArrangeSelector({ control: $controlStore, data: $dataStore });
   $: target = selector.getArrange().target;
+  $: chordName = "compiledChord" in target
+    ? ChordTheory.getKeyChordName(target.compiledChord.chord)
+    : "-";
 </script>
 
 <div class="wrap">
   <div class="item">
     <div class="label">Chord</div>
-    <div class="value">{ChordTheory.getKeyChordName(target.compiledChord.chord)}</div>
+    <div class="value">{chordName}</div>
   </div>
   <div class="item">
     <div class="label">TS</div>

@@ -27,8 +27,16 @@ namespace UserSoundFontCache {
         return presetCacheByFilePath.get(filePath)?.presets ?? [];
     };
 
-    export const getPresetKeys = (filePath: string) => {
-        return getPresets(filePath).map(SoundFontFile.formatPresetKey);
+    export const getPresetBanks = (filePath: string) => {
+        return Array.from(new Set(
+            getPresets(filePath).map((preset) => preset.bank),
+        )).map((bank) => bank.toString());
+    };
+
+    export const getPresetPrograms = (filePath: string, bank: number) => {
+        return getPresets(filePath)
+            .filter((preset) => preset.bank === bank)
+            .map((preset) => preset.program.toString());
     };
 
     export const findPreset = (

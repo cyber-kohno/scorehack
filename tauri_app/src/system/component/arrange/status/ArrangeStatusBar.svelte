@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
   import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
   import { controlStore } from "../../../store/global-store";
   import SideItemLabel from "./SideItemLabel.svelte";
@@ -15,6 +16,10 @@
   $: pianoBacking = (() => {
     if (!pianoEditor?.backing) return null;
     return pianoEditor.backing;
+  })();
+  $: drumEditor = (() => {
+    if (arrange.method !== "drum") return null;
+    return arrange.editor as DrumEditorState.Value;
   })();
 </script>
 
@@ -47,6 +52,32 @@
         margin="connect"
       />
     {/if}
+  {/if}
+  {#if drumEditor != null}
+    <SideItemLabel
+      label={"Criteria"}
+      type="control"
+      active={drumEditor.control === "criteria"}
+      margin="next"
+    />
+    <SideItemLabel
+      label={"Column"}
+      type="control"
+      active={drumEditor.control === "col"}
+      margin="connect"
+    />
+    <SideItemLabel
+      label={"Record"}
+      type="control"
+      active={drumEditor.control === "record"}
+      margin="connect"
+    />
+    <SideItemLabel
+      label={"Pattern"}
+      type="control"
+      active={drumEditor.control === "hits"}
+      margin="connect"
+    />
   {/if}
 </div>
 
