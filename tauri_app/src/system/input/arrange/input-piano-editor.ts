@@ -1,7 +1,6 @@
 import { get } from "svelte/store";
 import createPianoArrangeActions from "../../actions/arrange/piano/piano-arrange-actions";
 import createArrangeSelector from "../../service/arrange/arrange-selector";
-import startPlaybackPianoEditor from "../../service/playback/arrange/start-playback-piano-editor";
 import { controlStore, dataStore } from "../../store/global-store";
 import type InputState from "../../store/state/input-state";
 
@@ -23,7 +22,7 @@ const useInputPianoEditor = () => {
         {
           switch (eventKey) {
             case " ":
-              startPlaybackPianoEditor();
+              pianoActions.playbackPattern();
               break;
             case "w":
               pianoActions.openFinderFromEditor();

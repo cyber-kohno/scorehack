@@ -18,6 +18,11 @@ const useInputDrumEditor = () => {
 
         if (editor.phase !== "edit") return;
 
+        if (eventKey === " ") {
+            drumActions.playbackPattern();
+            return;
+        }
+
         const recordControl = () => {
             switch (eventKey) {
                 case "ArrowDown": drumActions.moveRecordCursor(-1); break;
@@ -67,6 +72,11 @@ const useInputDrumEditor = () => {
         const callbacks: InputState.Callbacks = {};
 
         callbacks.holdShift = () => {
+            if (eventKey === "Enter") {
+                drumActions.applyArrange();
+                return;
+            }
+
             switch (editor.control) {
                 case "criteria":
                     if (eventKey === "ArrowRight") drumActions.shiftControl("col");
@@ -93,6 +103,15 @@ const useInputDrumEditor = () => {
             switch (eventKey) {
                 case "ArrowDown": drumActions.swapRecord(-1); break;
                 case "ArrowUp": drumActions.swapRecord(1); break;
+            }
+        };
+
+        callbacks.holdC = () => {
+            if (editor.control !== "hits") return;
+
+            switch (eventKey) {
+                case "ArrowUp": drumActions.modifyHitVelocity(1); break;
+                case "ArrowDown": drumActions.modifyHitVelocity(-1); break;
             }
         };
 

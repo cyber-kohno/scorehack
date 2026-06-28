@@ -2,25 +2,11 @@ import { get } from "svelte/store";
 import TonalityTheory from "../../../domain/theory/tonality-theory";
 import { playbackStore } from "../../../store/global-store";
 import type ArrangeState from "../../../store/state/data/arrange/arrange-state";
+import PlaybackState from "../../../store/state/playback-state";
 
 const previewArrangeNote = (track: ArrangeState.Track, pitch: number) => {
-    if (track.isMute) return;
-
     const playback = get(playbackStore);
-    const player = (() => {
-        const ref = track.instRef;
-        if (ref?.source === "soundfont") {
-            return playback.userSfItems.find((item) => {
-                return item.definitionName === ref.definitionName
-                    && item.bank === ref.bank
-                    && item.program === ref.program;
-            })?.player;
-        }
-
-        const instrumentName = ref?.source === "builtin" ? ref.name : "";
-        if (instrumentName === "") return undefined;
-        return playback.sfItems.find(item => item.instrumentName === instrumentName)?.player;
-    })();
+    const player = PlaybackState.getInstPlayer(track.instRef, playback);
     if (player == undefined) return;
 
     const pitchName = TonalityTheory.getKey12FullName(pitch);

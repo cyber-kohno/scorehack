@@ -1,9 +1,12 @@
 import { get } from "svelte/store";
 import createGuitarArrangeUpdater from "../../../service/arrange/guitar/guitar-arrange-updater";
 import createArrangeSelector from "../../../service/arrange/arrange-selector";
+import Toast from "../../../service/common/toast-controller";
 import { createCommitDataAndRecalculate } from "../../../service/derived/recalculate-derived";
+import playbackGuitarEditor from "../../../service/playback/arrange/playback-guitar-editor";
 import previewArrangeNote from "../../../service/playback/arrange/preview-arrange-note";
 import { controlStore, dataStore } from "../../../store/global-store";
+import ToastState from "../../../store/state/toast-state";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -28,6 +31,19 @@ const createContext = () => {
 };
 
 const createGuitarArrangeActions = () => {
+    const playbackPattern = () => {
+        const result = playbackGuitarEditor();
+        if (result.ok || result.reason !== "inst-not-set") return;
+
+        Toast.create({
+            ...ToastState.createInitial(),
+            x: 24,
+            y: 84,
+            width: 300,
+            text: "Instrument is not assigned.",
+        });
+    };
+
     const updateControlWithArg = <T>(
         update: (updater: ReturnType<typeof createGuitarArrangeUpdater>, arg: T) => void | boolean,
     ) => {
@@ -87,6 +103,7 @@ const createGuitarArrangeActions = () => {
         applyArrange,
         moveCursor,
         muteString,
+        playbackPattern,
         toggleFret,
     };
 };

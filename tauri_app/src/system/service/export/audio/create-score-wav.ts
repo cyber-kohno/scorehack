@@ -8,8 +8,8 @@ import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-e
 import PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import type DerivedState from "../../../store/state/derived-state";
 import type SettingsState from "../../../store/state/settings-state";
-import GuitarArrangePlaybackUtil from "../../playback/arrange/guitar-arrange-playback-util";
-import PianoArrangePlaybackUtil from "../../playback/arrange/piano-arrange-playback-util";
+import GuitarArrangePatternNote from "../../playback/arrange/guitar-arrange-pattern-note";
+import PianoArrangePatternNote from "../../playback/arrange/piano-arrange-pattern-note";
 import convertNoteToPlayer from "../../playback/timeline/convert-note-to-player";
 import UserSoundFontRenderer from "./user-soundfont-renderer";
 
@@ -195,7 +195,7 @@ const collectArrangeTrackEvents = (props: CreateScoreWavProps) => {
             const startBeat =
               chordCache.startBeat * beatRate +
               (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
-            const patternNotes = PianoArrangePlaybackUtil.convertPatternToNotes(
+            const patternNotes = PianoArrangePatternNote.createNotes(
               arrPattern,
               compiledChord.chord,
               { sustainBeat: chordCache.lengthBeatNote },
@@ -238,7 +238,7 @@ const collectArrangeTrackEvents = (props: CreateScoreWavProps) => {
             const startBeat =
               chordCache.startBeat * beatRate +
               (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
-            const patternNotes = GuitarArrangePlaybackUtil.convertPatternToNotes(
+            const patternNotes = GuitarArrangePatternNote.createNotes(
               arrPattern,
               {
                 sustainBeat: chordCache.lengthBeatNote,
@@ -313,7 +313,7 @@ const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
             const startBeat =
               chordCache.startBeat * beatRate +
               (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
-            const patternNotes = PianoArrangePlaybackUtil.convertPatternToNotes(
+            const patternNotes = PianoArrangePatternNote.createNotes(
               arrPattern,
               compiledChord.chord,
               { sustainBeat: chordCache.lengthBeatNote },
@@ -356,7 +356,7 @@ const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
             const startBeat =
               chordCache.startBeat * beatRate +
               (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
-            const patternNotes = GuitarArrangePlaybackUtil.convertPatternToNotes(
+            const patternNotes = GuitarArrangePatternNote.createNotes(
               arrPattern,
               {
                 sustainBeat: chordCache.lengthBeatNote,

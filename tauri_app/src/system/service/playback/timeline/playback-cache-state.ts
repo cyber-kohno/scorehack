@@ -3,6 +3,7 @@ import type { PlaybackInstrument } from "../../../infra/audio/playback-instrumen
 import MelodyState from "../../../store/state/data/melody-state";
 import { get } from "svelte/store";
 import { playbackStore } from "../../../store/global-store";
+import PlaybackState from "../../../store/state/playback-state";
 
 namespace PlaybackCacheState {
 
@@ -40,20 +41,7 @@ namespace PlaybackCacheState {
 
   export const playbackSF = (track: MelodyState.ScoreTrack, pitchIndex: number) => {
     const preview = get(playbackStore);
-    const ref = track.instRef;
-    const player = (() => {
-      if (ref?.source === "soundfont") {
-        return preview.userSfItems.find((item) => {
-          return item.definitionName === ref.definitionName
-            && item.bank === ref.bank
-            && item.program === ref.program;
-        })?.player;
-      }
-
-      const sfName = ref?.source === "builtin" ? ref.name : "";
-      if (sfName === "") return undefined;
-      return preview.sfItems.find(item => item.instrumentName === sfName)?.player;
-    })();
+    const player = PlaybackState.getInstPlayer(track.instRef, preview);
 
     if (player == undefined) return;
     const soundName = TonalityTheory.getKey12FullName(pitchIndex);

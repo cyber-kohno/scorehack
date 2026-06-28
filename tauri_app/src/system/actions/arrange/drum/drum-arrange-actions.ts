@@ -1,10 +1,15 @@
 import { get } from "svelte/store";
 import createArrangeSelector from "../../../service/arrange/arrange-selector";
-import Layout from "../../../layout/layout-constant";
+import createDrumArrangeUpdater from "../../../service/arrange/drum/drum-arrange-updater";
 import FloatingSelect from "../../../service/common/floating-select-controller";
+import ConfirmDialog from "../../../service/common/confirm-dialog-controller";
+import Toast from "../../../service/common/toast-controller";
+import { createCommitDataAndRecalculate } from "../../../service/derived/recalculate-derived";
+import playbackDrumEditor from "../../../service/playback/arrange/playback-drum-editor";
 import { controlStore, dataStore, refStore } from "../../../store/global-store";
 import DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
 import type FloatingSelectState from "../../../store/state/floating-select-state";
+import ToastState from "../../../store/state/toast-state";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -17,45 +22,101 @@ const createContext = () => {
     if (arrange.method !== "drum") throw new Error("Drum arrange action requires drum arrange.");
     if (arrTrack.method !== "drum") throw new Error("Drum arrange action requires drum track.");
 
+    const commitData = () => dataStore.set({ ...data });
+
     return {
+        control,
         arrange,
         arrTrack,
         editor: arrangeSelector.getDrumEditor(),
         ref,
+        drumUpdater: createDrumArrangeUpdater({ arrange, track: arrTrack }),
         commitControl: () => controlStore.set({ ...control }),
+        commitData,
+        commitDataAndRecalculate: createCommitDataAndRecalculate(commitData),
     };
 };
 
 const createDrumArrangeActions = () => {
+    const playbackPattern = () => {
+        const result = playbackDrumEditor();
+        if (result.ok || result.reason !== "inst-not-set") return;
+
+        Toast.create({
+            ...ToastState.createInitial(),
+            x: 24,
+            y: 84,
+            width: 300,
+            text: "Instrument is not assigned.",
+        });
+    };
+
     const getMappingDisplay = (mapping: DrumEditorState.Mapping) => {
         return mapping.name ?? mapping.key;
     };
 
-    const updateControl = (update: (editor: DrumEditorState.Value) => void | boolean) => {
-        const ctx = createContext();
-        const result = update(ctx.editor);
-        if (result === false) return;
+    const updateControl = (
+        update: (updater: ReturnType<typeof createDrumArrangeUpdater>) => void | boolean,
+    ) => {
+        return () => {
+            const ctx = createContext();
+            const result = update(ctx.drumUpdater);
+            if (result === false) return;
 
-        ctx.commitControl();
+            ctx.commitControl();
+        };
     };
 
-    const shiftControl = (next: DrumEditorState.Control) => {
-        const ctx = createContext();
-        ctx.editor.control = next;
-        if ((next === "record" || next === "hits") && ctx.editor.cursorY < 0 && ctx.editor.records.length > 0) {
-            ctx.editor.cursorY = 0;
-        }
-        ctx.commitControl();
+    const updateControlWithArg = <T>(
+        update: (updater: ReturnType<typeof createDrumArrangeUpdater>, arg: T) => void | boolean,
+    ) => {
+        return (arg: T) => {
+            const ctx = createContext();
+            const result = update(ctx.drumUpdater, arg);
+            if (result === false) return;
+
+            ctx.commitControl();
+        };
     };
+
+    const shiftControl = updateControlWithArg<DrumEditorState.Control>((updater, next) => {
+        updater.shiftControl(next);
+    });
 
     const isCriteriaDiv = (value: number): value is DrumEditorState.CriteriaDiv => {
         return value === 1 || value === 2 || value === 3 || value === 4 || value === 6;
     };
 
+    const applyCriteriaDiv = (div: DrumEditorState.CriteriaDiv) => {
+        const ctx = createContext();
+        ctx.drumUpdater.applyCriteriaDiv(div);
+        ctx.commitControl();
+    };
+
     const setCriteriaDiv = (div: DrumEditorState.CriteriaDiv) => {
-        updateControl((editor) => {
-            editor.criteriaDiv = div;
-            return true;
+        const ctx = createContext();
+        if (ctx.editor.criteriaDiv === div) return;
+
+        const hasPatternData = ctx.editor.colDivs.length > 0 || ctx.editor.hits.length > 0;
+        if (!hasPatternData) {
+            applyCriteriaDiv(div);
+            return;
+        }
+
+        ConfirmDialog.open({
+            tone: "danger",
+            title: "Change Criteria",
+            messageLines: [
+                "Changing criteria will remove column splits and hits.",
+                "Continue?",
+            ],
+            choices: [
+                {
+                    label: "Change",
+                    role: "proceed",
+                    callback: () => applyCriteriaDiv(div),
+                },
+            ],
         });
     };
 
@@ -111,189 +172,39 @@ const createDrumArrangeActions = () => {
         });
     };
 
-    const moveRecordCursor = (dir: -1 | 1) => {
-        updateControl((editor) => {
-            const next = editor.cursorY + dir;
-            if (next < 0 || next > editor.records.length - 1) return false;
+    const moveRecordCursor = updateControlWithArg<-1 | 1>((updater, dir) => {
+        return updater.moveRecordCursor(dir);
+    });
 
-            editor.cursorY = next;
-            return true;
-        });
-    };
+    const moveColCursor = updateControlWithArg<-1 | 1>((updater, dir) => {
+        return updater.moveColCursor(dir);
+    });
 
-    const moveColCursor = (dir: -1 | 1) => {
-        const ctx = createContext();
-        const criteriaDiv = DrumEditorState.getEffectiveCriteriaDiv(
-            ctx.editor.criteriaDiv,
-            ctx.arrange.target.beat,
-            ctx.arrange.target.scoreBase.rhythm.ts,
-        );
-        const colCount = DrumEditorState.getColumnCount(
-            criteriaDiv,
-            ctx.arrange.target.beat,
-            ctx.arrange.target.scoreBase.rhythm.ts,
-        );
-        const next = ctx.editor.cursorX + dir;
-        if (next < 0 || next > colCount - 1) return;
+    const movePatternColCursor = updateControlWithArg<-1 | 1>((updater, dir) => {
+        return updater.movePatternColCursor(dir);
+    });
 
-        ctx.editor.cursorX = next;
-        ctx.commitControl();
-    };
+    const movePatternRecordCursor = updateControlWithArg<-1 | 1>((updater, dir) => {
+        return updater.movePatternRecordCursor(dir);
+    });
 
-    const getPatternColCount = (
-        editor: DrumEditorState.Value,
-        colCount: number,
-    ) => {
-        return Array.from({ length: colCount }, (_, index) => {
-            return editor.colDivs.find(item => item.index === index)?.div ?? 1;
-        }).reduce((sum, div) => sum + div, 0);
-    };
+    const toggleHit = updateControl(updater => {
+        return updater.toggleHit();
+    });
 
-    const getBaseColRanges = (
-        colDivs: DrumEditorState.ColDiv[],
-        colCount: number,
-    ) => {
-        let start = 0;
-        return Array.from({ length: colCount }, (_, index) => {
-            const div = colDivs.find(item => item.index === index)?.div ?? 1;
-            const range = { index, start, div };
-            start += div;
-            return range;
-        });
-    };
-
-    const getBaseColByHitIndex = (
-        ranges: ReturnType<typeof getBaseColRanges>,
-        colIndex: number,
-    ) => {
-        return ranges.find((range) => (
-            range.start <= colIndex && colIndex < range.start + range.div
-        ));
-    };
-
-    const adjustHitsForColDivChange = (
-        editor: DrumEditorState.Value,
-        targetIndex: number,
-        prevColDivs: DrumEditorState.ColDiv[],
-        nextColDivs: DrumEditorState.ColDiv[],
-        colCount: number,
-    ) => {
-        const prevRanges = getBaseColRanges(prevColDivs, colCount);
-        const nextRanges = getBaseColRanges(nextColDivs, colCount);
-        const nextHits: DrumEditorState.Hit[] = [];
-
-        editor.hits.forEach((hit) => {
-            const prevRange = getBaseColByHitIndex(prevRanges, hit.colIndex);
-            if (prevRange == undefined) return;
-
-            const nextRange = nextRanges[prevRange.index];
-            if (nextRange == undefined) return;
-
-            const localIndex = hit.colIndex - prevRange.start;
-            if (prevRange.index === targetIndex && localIndex > 0) return;
-            if (localIndex > nextRange.div - 1) return;
-
-            nextHits.push({
-                ...hit,
-                colIndex: nextRange.start + localIndex,
-            });
-        });
-
-        editor.hits = nextHits;
-    };
-
-    const movePatternColCursor = (dir: -1 | 1) => {
-        const ctx = createContext();
-        const criteriaDiv = DrumEditorState.getEffectiveCriteriaDiv(
-            ctx.editor.criteriaDiv,
-            ctx.arrange.target.beat,
-            ctx.arrange.target.scoreBase.rhythm.ts,
-        );
-        const colCount = DrumEditorState.getColumnCount(
-            criteriaDiv,
-            ctx.arrange.target.beat,
-            ctx.arrange.target.scoreBase.rhythm.ts,
-        );
-        const patternColCount = getPatternColCount(ctx.editor, colCount);
-        const next = ctx.editor.cursorX + dir;
-        if (next < 0 || next > patternColCount - 1) return;
-
-        ctx.editor.cursorX = next;
-        ctx.commitControl();
-    };
-
-    const movePatternRecordCursor = (dir: -1 | 1) => {
-        updateControl((editor) => {
-            const next = editor.cursorY + dir;
-            if (next < 0 || next > editor.records.length - 1) return false;
-
-            editor.cursorY = next;
-            return true;
-        });
-    };
-
-    const toggleHit = () => {
-        updateControl((editor) => {
-            if (editor.cursorX < 0 || editor.cursorY < 0) return false;
-            if (editor.cursorY > editor.records.length - 1) return false;
-
-            const index = editor.hits.findIndex((hit) => (
-                hit.colIndex === editor.cursorX && hit.recordIndex === editor.cursorY
-            ));
-            if (index >= 0) {
-                editor.hits.splice(index, 1);
-                return true;
-            }
-
-            editor.hits.push({
-                colIndex: editor.cursorX,
-                recordIndex: editor.cursorY,
-                velocity: 100,
-            });
-            editor.hits.sort((a, b) => {
-                if (a.recordIndex !== b.recordIndex) return a.recordIndex - b.recordIndex;
-                return a.colIndex - b.colIndex;
-            });
-            return true;
-        });
-    };
+    const modifyHitVelocity = updateControlWithArg<-1 | 1>((updater, dir) => {
+        return updater.modifyHitVelocity(dir);
+    });
 
     const setColDiv = (
         colIndex: number,
         div: DrumEditorState.SplitDiv | undefined,
     ) => {
-        updateControl((editor) => {
-            const ctx = createContext();
-            const criteriaDiv = DrumEditorState.getEffectiveCriteriaDiv(
-                editor.criteriaDiv,
-                ctx.arrange.target.beat,
-                ctx.arrange.target.scoreBase.rhythm.ts,
-            );
-            const colCount = DrumEditorState.getColumnCount(
-                criteriaDiv,
-                ctx.arrange.target.beat,
-                ctx.arrange.target.scoreBase.rhythm.ts,
-            );
-            const prevColDivs = editor.colDivs.map(item => ({ ...item }));
-            const index = editor.colDivs.findIndex(item => item.index === colIndex);
+        const ctx = createContext();
+        const result = ctx.drumUpdater.setColDiv(colIndex, div);
+        if (result === false) return;
 
-            if (div == undefined) {
-                if (index >= 0) editor.colDivs.splice(index, 1);
-            } else {
-                if (index >= 0) editor.colDivs[index].div = div;
-                else editor.colDivs.push({ index: colIndex, div });
-                editor.colDivs.sort((a, b) => a.index - b.index);
-            }
-
-            adjustHitsForColDivChange(
-                editor,
-                colIndex,
-                prevColDivs,
-                editor.colDivs,
-                colCount,
-            );
-            return true;
-        });
+        ctx.commitControl();
     };
 
     const openColDivSelect = () => {
@@ -347,78 +258,41 @@ const createDrumArrangeActions = () => {
         });
     };
 
-    const insertRecord = () => {
-        updateControl((editor) => {
-            if (editor.records.length >= Layout.arrange.piano.BACKING_RECORD_MAX) return false;
+    const insertRecord = updateControl(updater => {
+        return updater.insertRecord();
+    });
 
-            if (editor.records.length === 0) {
-                editor.records.push({ key: "" });
-                editor.cursorY = 0;
-                return true;
-            }
+    const deleteRecord = updateControl(updater => {
+        return updater.deleteRecord();
+    });
 
-            editor.records.splice(editor.cursorY + 1, 0, { key: "" });
-            editor.hits.forEach((hit) => {
-                if (editor.cursorY < hit.recordIndex) hit.recordIndex++;
-            });
-            return true;
-        });
-    };
-
-    const deleteRecord = () => {
-        updateControl((editor) => {
-            if (editor.records.length < 1) return false;
-
-            editor.records.splice(editor.cursorY, 1);
-            for (let i = editor.hits.length - 1; i >= 0; i--) {
-                const hit = editor.hits[i];
-                if (hit.recordIndex === editor.cursorY) editor.hits.splice(i, 1);
-            }
-            editor.hits.forEach((hit) => {
-                if (editor.cursorY < hit.recordIndex) hit.recordIndex--;
-            });
-
-            if (editor.records.length === 0) {
-                editor.cursorY = -1;
-                return true;
-            }
-            if (editor.cursorY > 0) editor.cursorY--;
-            return true;
-        });
-    };
-
-    const swapRecord = (dir: -1 | 1) => {
-        updateControl((editor) => {
-            const index = editor.cursorY;
-            const next = index + dir;
-            if (index < 0 || next < 0 || next > editor.records.length - 1) return false;
-
-            const record = editor.records[index];
-            const nextRecord = editor.records[next];
-            if (record == undefined || nextRecord == undefined) return false;
-
-            editor.records[index] = nextRecord;
-            editor.records[next] = record;
-            editor.hits.forEach((hit) => {
-                if (hit.recordIndex === index) hit.recordIndex = next;
-                else if (hit.recordIndex === next) hit.recordIndex = index;
-            });
-            editor.cursorY = next;
-            return true;
-        });
-    };
+    const swapRecord = updateControlWithArg<-1 | 1>((updater, dir) => {
+        return updater.swapRecord(dir);
+    });
 
     const setRecordKey = (recordIndex: number, key: string) => {
-        updateControl((editor) => {
-            const record = editor.records[recordIndex];
-            if (record == undefined) return false;
-            if (key !== "" && editor.records.some((item, index) => {
-                return index !== recordIndex && item.key === key;
-            })) return false;
+        const ctx = createContext();
+        const result = ctx.drumUpdater.setRecordKey(recordIndex, key);
+        if (result === false) return;
 
-            record.key = key;
-            return true;
-        });
+        ctx.commitControl();
+    };
+
+    const registerCurrentPattern = () => {
+        const ctx = createContext();
+        const result = ctx.drumUpdater.registerCurrentPattern();
+        ctx.commitData();
+        return result;
+    };
+
+    const applyArrange = () => {
+        const ctx = createContext();
+        const result = ctx.drumUpdater.applyArrange();
+        console.log("[drum arrange] pattern registered", result);
+        ctx.control.outline.arrange = null;
+        ctx.commitDataAndRecalculate();
+        ctx.commitControl();
+        return result;
     };
 
     const createRecordKeyItems = (
@@ -470,15 +344,19 @@ const createDrumArrangeActions = () => {
     };
 
     return {
+        applyArrange,
         deleteRecord,
         insertRecord,
         moveColCursor,
         movePatternColCursor,
         movePatternRecordCursor,
         moveRecordCursor,
+        modifyHitVelocity,
         openCriteriaDivSelect,
         openColDivSelect,
         openRecordKeySelect,
+        playbackPattern,
+        registerCurrentPattern,
         shiftControl,
         swapRecord,
         toggleHit,

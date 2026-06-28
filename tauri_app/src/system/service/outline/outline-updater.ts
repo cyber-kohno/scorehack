@@ -214,12 +214,14 @@ const createOutlineUpdater = (ctx: Context) => {
                 if (delIndex !== -1) {
                     track.relations.splice(delIndex, 1);
                     // 不要なライブラリユニットの削除
-                    if (track.method === "piano") {
-                        PianoEditorState.deleteUnreferUnit(track);
-                    } else if (track.method === "guitar") {
-                        GuitarEditorState.deleteUnreferUnit(track);
-                    }
-                }
+                      if (track.method === "piano") {
+                          PianoEditorState.deleteUnreferUnit(track);
+                      } else if (track.method === "guitar") {
+                          GuitarEditorState.deleteUnreferUnit(track);
+                      } else if (track.method === "drum") {
+                          DrumEditorState.deleteUnreferUnit(track);
+                      }
+                  }
                 // 対象要素以降のコード連番を繰り下げ
                 track.relations.forEach(relation => {
                     if (relation.chordSeq > chordSeq) relation.chordSeq--;
@@ -400,7 +402,10 @@ const createOutlineUpdater = (ctx: Context) => {
                     );
                     break;
                 case "drum":
-                    arrange.editor = DrumEditorState.createInitialProps();
+                    arrange.editor = DrumEditorState.getEditorProps(
+                        chordCache.chordSeq,
+                        arrTrack,
+                    );
                     break;
             }
         });

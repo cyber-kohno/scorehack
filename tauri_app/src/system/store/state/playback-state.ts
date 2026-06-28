@@ -1,5 +1,6 @@
 import { type InstrumentName } from 'soundfont-player';
 import type { PlaybackInstrument } from '../../infra/audio/playback-instrument';
+import type { TrackInstRef } from './data/track-inst-ref';
 
 namespace PlaybackState {
 
@@ -45,6 +46,23 @@ namespace PlaybackState {
 
         if (matchName == undefined) throw new Error();
         return matchName as InstrumentName;
+    }
+
+    export const getInstPlayer = (
+        instRef: TrackInstRef | undefined,
+        playback: Value,
+    ) => {
+        if (instRef?.source === 'soundfont') {
+            return playback.userSfItems.find((item) => {
+                return item.definitionName === instRef.definitionName
+                    && item.bank === instRef.bank
+                    && item.program === instRef.program;
+            })?.player;
+        }
+
+        const instrumentName = instRef?.source === 'builtin' ? instRef.name : '';
+        if (instrumentName === '') return undefined;
+        return playback.sfItems.find(item => item.instrumentName === instrumentName)?.player;
     }
 
     export const InstrumentNames = [

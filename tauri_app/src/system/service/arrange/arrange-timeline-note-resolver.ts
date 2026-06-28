@@ -4,8 +4,8 @@ import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-edit
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
 import MelodyState from "../../store/state/data/melody-state";
 import type DerivedState from "../../store/state/derived-state";
-import GuitarArrangePlaybackUtil from "../playback/arrange/guitar-arrange-playback-util";
-import PianoArrangePlaybackUtil from "../playback/arrange/piano-arrange-playback-util";
+import GuitarArrangePatternNote from "../playback/arrange/guitar-arrange-pattern-note";
+import PianoArrangePatternNote from "../playback/arrange/piano-arrange-pattern-note";
 
 namespace ArrangeTimelineNoteResolver {
     export type TimelineNote = {
@@ -44,7 +44,7 @@ namespace ArrangeTimelineNoteResolver {
                 const compiledChord = chordCache.compiledChord;
                 if (arrPattern == undefined || compiledChord == undefined) return notes;
 
-                PianoArrangePlaybackUtil.convertPatternToNotes(
+                PianoArrangePatternNote.createNotes(
                     arrPattern,
                     compiledChord.chord,
                     { sustainBeat: chordCache.lengthBeatNote },
@@ -66,7 +66,7 @@ namespace ArrangeTimelineNoteResolver {
                 );
                 if (arrPattern == undefined) return notes;
 
-                GuitarArrangePlaybackUtil.convertPatternToNotes(
+                GuitarArrangePatternNote.createNotes(
                     arrPattern,
                     {
                         sustainBeat: chordCache.lengthBeatNote,

@@ -1,9 +1,12 @@
 <script lang="ts">
   import Layout from "../../../layout/layout-constant";
   import createArrangeSelector from "../../../service/arrange/arrange-selector";
-  import { controlStore, dataStore } from "../../../store/global-store";
+  import { controlStore, dataStore, inputStore } from "../../../store/global-store";
   import DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
+  import VelocityDetailFrame from "../common/VelocityDetailFrame.svelte";
   import DEHitMark from "./DEHitMark.svelte";
+
+  let frame: HTMLDivElement;
 
   $: selector = createArrangeSelector({ control: $controlStore, data: $dataStore });
   $: arrange = selector.getArrange();
@@ -31,9 +34,29 @@
     }));
   });
   $: hitKeys = new Set(editor.hits.map((hit) => `${hit.colIndex}.${hit.recordIndex}`));
+  $: currentHit = editor.hits.find((hit) => (
+    hit.colIndex === editor.cursorX && hit.recordIndex === editor.cursorY
+  ));
+  $: isDetailActive = editor.phase === "edit" &&
+    editor.control === "hits" &&
+    $inputStore.holdC &&
+    currentHit != undefined;
+  $: detailPosition = (() => {
+    if (frame == undefined) return { left: 0, top: 0 };
+    const rect = frame.getBoundingClientRect();
+    const colLeft = cells
+      .slice(0, editor.cursorX)
+      .reduce((sum, cell) => sum + cell.width + 1, 1);
+    const rowIndex = editor.records.length - 1 - editor.cursorY;
+    const rowTop = 1 + rowIndex * (Layout.arrange.piano.BACKING_RECORD_HEIGHT + 1);
+    return {
+      left: rect.left + colLeft - frame.scrollLeft,
+      top: rect.top + rowTop + Layout.arrange.piano.BACKING_RECORD_HEIGHT - frame.scrollTop,
+    };
+  })();
 </script>
 
-<div class="frame">
+<div class="frame" bind:this={frame}>
   <div class="content" style:width={`${colWidth * colCount + 1}px`}>
     {#each Array.from({ length: editor.records.length }, (_, i) => editor.records.length - 1 - i) as recordIndex}
       <div class="record">
@@ -51,6 +74,13 @@
       </div>
     {/each}
   </div>
+  {#if isDetailActive && currentHit != undefined}
+    <VelocityDetailFrame
+      velocity={currentHit.velocity}
+      left={detailPosition.left}
+      top={detailPosition.top}
+    />
+  {/if}
 </div>
 
 <style>

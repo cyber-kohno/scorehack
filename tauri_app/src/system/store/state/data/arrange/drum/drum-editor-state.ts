@@ -1,6 +1,6 @@
 import RhythmTheory from "../../../../../domain/theory/rhythm-theory";
 import type DerivedState from "../../../derived-state";
-import type ArrangeState from "../arrange-state";
+import ArrangeState from "../arrange-state";
 
 namespace DrumEditorState {
   export type Phase = "preset" | "edit" | "playback";
@@ -36,14 +36,21 @@ namespace DrumEditorState {
     eatTail?: number;
   };
 
-  export type PatternData = {
+  export type EditorPatternData = {
     records: Record[];
     criteriaDiv: CriteriaDiv;
     colDivs: ColDiv[];
     hits: Hit[];
   };
 
-  export interface Value extends PatternData {
+  export type PatternData = {
+    records: Record[];
+    criteriaDiv: CriteriaDiv;
+    colDivs: ColDiv[];
+    hits: string[];
+  };
+
+  export interface Value extends EditorPatternData {
     phase: Phase;
     control: Control;
     cursorX: number;
@@ -72,7 +79,7 @@ namespace DrumEditorState {
     pattern: PatternData;
   }
 
-  export const createInitialPatternData = (): PatternData => ({
+  export const createInitialPatternData = (): EditorPatternData => ({
     records: [],
     criteriaDiv: 1,
     colDivs: [],
@@ -88,11 +95,117 @@ namespace DrumEditorState {
     lastSource: "",
   });
 
+  export const createPatternDataEditorProps = (pattern: PatternData): EditorPatternData => ({
+    records: JSON.parse(JSON.stringify(pattern.records)),
+    criteriaDiv: pattern.criteriaDiv,
+    colDivs: JSON.parse(JSON.stringify(pattern.colDivs)),
+    hits: pattern.hits.map(convHitInfo),
+  });
+
+  export const getEditorProps = (
+    chordSeq: number,
+    track: ArrangeState.DrumTrack,
+  ): Value => {
+    const editor = createInitialProps();
+    const relation = track.relations.find((item) => item.chordSeq === chordSeq);
+    if (relation == undefined || relation.sndsPatt === -1) return editor;
+
+    const pattern = track.bank.patterns.find((item) => item.no === relation.sndsPatt);
+    if (pattern == undefined) throw new Error("Drum pattern must exist.");
+
+    Object.assign(editor, createPatternDataEditorProps(pattern.pattern));
+    editor.cursorY = editor.records.length > 0 ? 0 : -1;
+    editor.lastSource = createSnapshot(editor);
+    return editor;
+  };
+
   export const createInitialBank = (): Bank => ({
     mappings: [],
     patterns: [],
     regulars: [],
   });
+
+  export const convHitInfo = (src: string): Hit => {
+    const items = src.split(".").map((value) => Number(value));
+    const [colIndex, recordIndex] = items;
+    const velocity = items.length >= 3 ? items[2] : 10;
+    return { colIndex, recordIndex, velocity };
+  };
+
+  export const formatHitItem = (hit: Hit) => {
+    const base = `${hit.colIndex}.${hit.recordIndex}`;
+    if (hit.velocity === 10) return base;
+    return `${base}.${hit.velocity}`;
+  };
+
+  export const createPatternData = (editor: Value): PatternData => {
+    const records = JSON.parse(JSON.stringify(editor.records)) as Record[];
+    const colDivs = JSON.parse(JSON.stringify(editor.colDivs)) as ColDiv[];
+    const hits = editor.hits
+      .filter((hit) => {
+        return (
+          hit.colIndex >= 0 &&
+          hit.recordIndex >= 0 &&
+          hit.recordIndex <= records.length - 1
+        );
+      })
+      .sort((a, b) => {
+        if (a.recordIndex !== b.recordIndex) return a.recordIndex - b.recordIndex;
+        return a.colIndex - b.colIndex;
+      })
+      .map(formatHitItem);
+
+    return {
+      records,
+      criteriaDiv: editor.criteriaDiv,
+      colDivs,
+      hits,
+    };
+  };
+
+  export const createSnapshot = (editor: Value) => {
+    return JSON.stringify(createPatternData(editor));
+  };
+
+  export const registPattern = (
+    category: PatternCategory,
+    pattern: PatternData,
+    bank: Bank,
+  ) => {
+    const src = JSON.stringify(pattern);
+    let savedPattern = bank.patterns.find((current) => {
+      return JSON.stringify(current.pattern) === src;
+    });
+
+    if (savedPattern == undefined) {
+      const maxNo = bank.patterns.reduce(
+        (max, current) => Math.max(max, current.no),
+        -1,
+      );
+      savedPattern = {
+        no: maxNo + 1,
+        pattern: JSON.parse(src),
+        category: JSON.parse(JSON.stringify(category)),
+      };
+      bank.patterns.push(savedPattern);
+    }
+
+    return savedPattern.no;
+  };
+
+  export const isRegular = (bank: Bank, patternNo: number) => {
+    return bank.regulars.some((regular) => regular.patternNo === patternNo);
+  };
+
+  export const deleteUnreferUnit = (track: ArrangeState.DrumTrack) => {
+    const drumBank = track.bank;
+    ArrangeState.deleteUnreferPattern(
+      "sndsPatt",
+      drumBank.patterns,
+      (pattern) => isRegular(drumBank, pattern.no),
+      track,
+    );
+  };
 
   const formatSixteenthDuration = (duration: number) => {
     switch (duration) {

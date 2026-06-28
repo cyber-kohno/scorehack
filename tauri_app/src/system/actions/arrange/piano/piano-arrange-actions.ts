@@ -4,6 +4,7 @@ import createArrangeSelector from "../../../service/arrange/arrange-selector";
 import useScrollService from "../../../service/common/scroll-service";
 import Toast from "../../../service/common/toast-controller";
 import { createCommitDataAndRecalculate } from "../../../service/derived/recalculate-derived";
+import playbackPianoEditor from "../../../service/playback/arrange/playback-piano-editor";
 import previewArrangeNote from "../../../service/playback/arrange/preview-arrange-note";
 import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../../store/global-store";
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
@@ -56,6 +57,19 @@ const createContext = () => {
 };
 
 const createPianoArrangeActions = () => {
+    const playbackPattern = () => {
+        const result = playbackPianoEditor();
+        if (result.ok || result.reason !== "inst-not-set") return;
+
+        Toast.create({
+            ...ToastState.createInitial(),
+            x: 24,
+            y: 84,
+            width: 300,
+            text: "Instrument is not assigned.",
+        });
+    };
+
     const adjustFinderBackingScroll = (ctx: ReturnType<typeof createContext>) => {
         const finder = ctx.arrange.finder;
         if (finder == undefined) return;
@@ -322,6 +336,7 @@ const createPianoArrangeActions = () => {
         moveBackingRecordCursor,
         moveVoicingCursor,
         openFinderFromEditor,
+        playbackPattern,
         setBackingColDiv,
         shiftControl,
         shiftLayer,
