@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="220" viewBox="0 0 760 220">
+  <rect width="760" height="220" fill="#eef4f6"/>
+
+  <style>
+    .cell {
+      fill: #cce4e4;
+      stroke: #48a9ff;
+      stroke-width: 2;
+      rx: 4;
+    }
+    .label {
+      fill: #17384a;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      text-anchor: middle;
+    }
+    .kind {
+      fill: #4b6572;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      text-anchor: middle;
+    }
+    .kick {
+      fill: #1f6f8b;
+    }
+    .snare {
+      fill: #d94848;
+      stroke: #d94848;
+    }
+    .hat {
+      stroke: #3047c8;
+      fill: none;
+      stroke-width: 5;
+      stroke-linecap: round;
+    }
+    .tom {
+      stroke: #7a4db3;
+      fill: none;
+      stroke-width: 5;
+    }
+    .crash {
+      stroke: #d89b18;
+      fill: none;
+      stroke-width: 6;
+      stroke-linecap: round;
+    }
+    .ride {
+      stroke: #16845e;
+      fill: none;
+      stroke-width: 4.5;
+      stroke-linecap: round;
+    }
+  </style>
+
+  <g transform="translate(20 20)">
+    <rect class="cell" x="0" y="0" width="88" height="88"/>
+    <circle class="kick" cx="44" cy="44" r="15"/>
+    <text class="label" x="44" y="122">kick</text>
+    <text class="kind" x="44" y="142">dot</text>
+  </g>
+
+  <g transform="translate(128 20)">
+    <rect class="cell" x="0" y="0" width="88" height="88"/>
+    <circle class="snare" cx="44" cy="44" r="15"/>
+    <line class="snare" x1="29" y1="44" x2="59" y2="44" stroke-width="5" stroke-linecap="round"/>
+    <text class="label" x="44" y="122">snare</text>
+    <text class="kind" x="44" y="142">dot-line</text>
+  </g>
+
+  <g transform="translate(236 20)">
+    <rect class="cell" x="0" y="0" width="88" height="88"/>
+    <line class="hat" x1="31" y1="31" x2="57" y2="57"/>
+    <line class="hat" x1="57" y1="31" x2="31" y2="57"/>
+    <text class="label" x="44" y="122">closedHat</text>
+    <text class="kind" x="44" y="142">cross</text>
+  </g>
+
+  <g transform="translate(344 20)">
+    <rect class="cell" x="0" y="0" width="88" height="88"/>
+    <circle class="hat" cx="44" cy="44" r="22" stroke-width="4"/>
+    <line class="hat" x1="31" y1="31" x2="57" y2="57"/>
+    <line class="hat" x1="57" y1="31" x2="31" y2="57"/>
+    <text class="label" x="44" y="122">openHat</text>
+    <text class="kind" x="44" y="142">circle-cross</text>
+  </g>
+
+  <g transform="translate(452 20)">
+    <rect class="cell" x="0" y="0" width="88" height="88"/>
+    <circle class="tom" cx="44" cy="44" r="18"/>
+    <text class="label" x="44" y="122">tom</text>
+    <text class="kind" x="44" y="142">circle</text>
+  </g>
+
+  <g transform="translate(560 20)">
+    <rect class="cell" x="0" y="0" width="88" height="88"/>
+    <line class="crash" x1="25" y1="25" x2="63" y2="63"/>
+    <line class="crash" x1="63" y1="25" x2="25" y2="63"/>
+    <text class="label" x="44" y="122">crash</text>
+    <text class="kind" x="44" y="142">large-cross</text>
+  </g>
+
+  <g transform="translate(668 20)">
+    <rect class="cell" x="0" y="0" width="72" height="88"/>
+    <circle class="ride" cx="36" cy="44" r="20"/>
+    <line class="ride" x1="24" y1="32" x2="48" y2="56"/>
+    <line class="ride" x1="48" y1="32" x2="24" y2="56"/>
+    <text class="label" x="36" y="122">ride</text>
+    <text class="kind" x="36" y="142">circle-cross</text>
+  </g>
+</svg>

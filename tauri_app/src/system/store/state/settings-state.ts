@@ -62,7 +62,11 @@ namespace SettingsState {
         name: string;
     };
 
-    export type Preset = PianoPreset | GuitarPreset;
+    export type DrumPreset = ArrangeState.DrumTrackBank & {
+        name: string;
+    };
+
+    export type Preset = PianoPreset | GuitarPreset | DrumPreset;
 
     export type Library = {
         presets: Preset[];

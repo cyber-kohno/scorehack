@@ -29,7 +29,7 @@ namespace RefState {
             mapping: {
                 cells: {
                     recordIndex: number;
-                    column: "key" | "display" | "sound";
+                    column: "key" | "display" | "sound" | "mark";
                     ref: HTMLElement;
                 }[];
             };

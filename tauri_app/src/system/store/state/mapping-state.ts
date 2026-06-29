@@ -1,7 +1,7 @@
 namespace MappingState {
-    export type Column = "key" | "display" | "sound";
+    export type Column = "key" | "display" | "sound" | "mark";
 
-    export const Columns: Column[] = ["key", "display", "sound"];
+    export const Columns: Column[] = ["key", "display", "sound", "mark"];
 
     export type Value = {
         focus: {

@@ -1,8 +1,10 @@
 import createLibraryActions from "../actions/library/library-actions";
+import createMappingActions from "../actions/library/mapping-actions";
 import createTerminalActions from "../actions/terminal/terminal-actions";
 
 const useInputLibrary = () => {
     const actions = createLibraryActions();
+    const mappingActions = createMappingActions();
     const terminalActions = createTerminalActions();
 
     const control = (eventKey: string, option: { shiftKey?: boolean } = {}) => {
@@ -13,6 +15,10 @@ const useInputLibrary = () => {
                     return;
                 case "ArrowRight":
                     actions.switchToFinder();
+                    return;
+                case "M":
+                case "m":
+                    mappingActions.open();
                     return;
             }
         }

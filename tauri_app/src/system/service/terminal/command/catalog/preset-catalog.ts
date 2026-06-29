@@ -2,6 +2,7 @@ import TerminalCommand from "../../terminal-command";
 import { openLibraryFilePath, saveLibraryFilePath } from "../../../../infra/tauri/dialog";
 import type SettingsState from "../../../../store/state/settings-state";
 import type PianoEditorState from "../../../../store/state/data/arrange/piano/piano-editor-state";
+import type DrumEditorState from "../../../../store/state/data/arrange/drum/drum-editor-state";
 import CompressedJsonFile from "../../../common/compressed-json-file";
 import type ArrangeState from "../../../../store/state/data/arrange/arrange-state";
 
@@ -36,6 +37,17 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     return {
       backingPatterns: clone(backingPatterns),
       soundsPatterns: clone(soundsPatterns),
+      regulars: clone(bank.regulars),
+    };
+  };
+
+  const createRegularDrumBank = (bank: DrumEditorState.Bank): DrumEditorState.Bank => {
+    const patternNos = new Set(bank.regulars.map(regular => regular.patternNo));
+    const patterns = bank.patterns.filter(pattern => patternNos.has(pattern.no));
+
+    return {
+      mappings: clone(bank.mappings),
+      patterns: clone(patterns),
       regulars: clone(bank.regulars),
     };
   };
@@ -112,23 +124,61 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     });
   };
 
+  const addDrumPattern = (
+    source: DrumEditorState.Pattern,
+    targetLib: DrumEditorState.Bank,
+  ) => {
+    const sourcePattern = JSON.stringify(source.pattern);
+    const existing = targetLib.patterns.find(pattern => {
+      return JSON.stringify(pattern.pattern) === sourcePattern;
+    });
+    if (existing != undefined) return existing.no;
+
+    const no = nextNo(targetLib.patterns);
+    targetLib.patterns.push({
+      no,
+      pattern: clone(source.pattern),
+      category: clone(source.category),
+    });
+    return no;
+  };
+
+  const addDrumRegular = (
+    regular: DrumEditorState.Regular,
+    targetLib: DrumEditorState.Bank,
+  ) => {
+    if (targetLib.regulars.some(item => item.patternNo === regular.patternNo)) return;
+    targetLib.regulars.push(clone(regular));
+  };
+
   const createPresetFromActiveTrack = (name: string): SettingsState.Preset | null => {
     const track = data.arrange.tracks[control.outline.trackIndex];
     if (track == undefined) throw new Error();
-    if (track.method !== "piano") {
-      logger.outputError("Preset registration is currently available for piano tracks only.");
-      return null;
+    switch (track.method) {
+      case "piano":
+        if (track.bank.regulars.length === 0) {
+          logger.outputError("No regular patterns are registered in the active track library.");
+          return null;
+        }
+        return {
+          name,
+          method: "piano",
+          bank: createRegularPianoBank(track.bank),
+        };
+      case "drum":
+        if (track.bank.regulars.length === 0) {
+          logger.outputError("No regular patterns are registered in the active track library.");
+          return null;
+        }
+        return {
+          name,
+          method: "drum",
+          bank: createRegularDrumBank(track.bank),
+        };
+      case "guitar":
+        logger.outputError("Preset registration is currently available for piano and drum tracks only.");
+        return null;
     }
-    if (track.bank.regulars.length === 0) {
-      logger.outputError("No regular patterns are registered in the active track library.");
-      return null;
-    }
-
-    return {
-      name,
-      method: "piano",
-      bank: createRegularPianoBank(track.bank),
-    };
   };
 
   const regist = (name: string) => {
@@ -179,6 +229,8 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
         return preset.bank.regulars.reduce((total, cur) => total + cur.soundsNos.length, 0);
       case "guitar":
         return preset.bank.voicingPatterns.length;
+      case "drum":
+        return preset.bank.mappings.length;
     }
   };
 
@@ -188,6 +240,8 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
         return preset.bank.backingPatterns.length;
       case "guitar":
         return 1;
+      case "drum":
+        return preset.bank.patterns.length;
     }
   };
 
@@ -251,6 +305,42 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     });
   };
 
+  const canApplyDrumMappings = (
+    preset: SettingsState.DrumPreset,
+    targetLib: DrumEditorState.Bank,
+  ) => {
+    if (targetLib.mappings.length === 0) return true;
+    return JSON.stringify(targetLib.mappings) === JSON.stringify(preset.bank.mappings);
+  };
+
+  const applyDrumPreset = (
+    preset: SettingsState.DrumPreset,
+    targetLib: DrumEditorState.Bank,
+  ) => {
+    if (!canApplyDrumMappings(preset, targetLib)) {
+      logger.outputError("Drum preset mappings do not match the active track library.");
+      return false;
+    }
+
+    if (targetLib.mappings.length === 0) {
+      targetLib.mappings = clone(preset.bank.mappings);
+    }
+
+    preset.bank.regulars.forEach(regular => {
+      const pattern = preset.bank.patterns.find(pattern => {
+        return pattern.no === regular.patternNo;
+      });
+      if (pattern == undefined) throw new Error();
+
+      const patternNo = addDrumPattern(pattern, targetLib);
+      addDrumRegular({
+        patternNo,
+        sortNo: regular.sortNo,
+      }, targetLib);
+    });
+    return true;
+  };
+
   const apply = (name: string) => {
     const preset = findPreset(name);
     if (preset == undefined) {
@@ -273,6 +363,10 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       case "guitar":
         logger.outputError("Guitar library preset apply is not implemented yet.");
         return;
+      case "drum":
+        if (track.method !== "drum") throw new Error();
+        if (!applyDrumPreset(preset, track.bank)) return;
+        break;
     }
 
     ctx.commit.data();
@@ -299,8 +393,14 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
           bank: clone(track.bank),
         };
       case "drum":
-        logger.outputError("Drum library file export is not implemented yet.");
-        throw new Error("Drum library file export is not implemented yet.");
+        if (track.bank.regulars.length === 0) {
+          logger.outputError("No regular patterns are registered in the active track library.");
+          throw new Error("No regular patterns are registered in the active track library.");
+        }
+        return {
+          method: "drum",
+          bank: createRegularDrumBank(track.bank),
+        };
     }
   };
 
@@ -320,8 +420,9 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
         logger.outputError("Guitar library file import is not implemented yet.");
         return false;
       case "drum":
-        logger.outputError("Drum library file import is not implemented yet.");
-        return false;
+        if (track.method !== "drum") throw new Error();
+        if (!applyDrumPreset({ name: "", method: "drum", bank: libraryFile.bank }, track.bank)) return false;
+        break;
     }
 
     ctx.commit.data();

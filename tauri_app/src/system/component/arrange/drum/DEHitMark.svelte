@@ -1,16 +1,23 @@
-<div class="mark"></div>
+<script lang="ts">
+  import DrumHitIcon from "../../common/DrumHitIcon.svelte";
+  import type DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
+
+  export let kind: DrumEditorState.MarkKind = "dot";
+</script>
+
+<div class="mark">
+  <DrumHitIcon {kind} size={18} />
+</div>
 
 <style>
   .mark {
     display: inline-block;
     position: absolute;
     z-index: 3;
-    left: 2px;
-    top: 5px;
-    width: 4px;
-    height: calc(100% - 10px);
-    border-radius: 2px;
-    background-color: rgba(82, 255, 110, 0.9);
-    box-shadow: 0 0 4px rgba(82, 255, 110, 0.58);
+    left: 1px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
   }
 </style>

@@ -3,7 +3,9 @@
   import { get } from "svelte/store";
   import TonalityTheory from "../../../domain/theory/tonality-theory";
   import { controlStore, dataStore, mappingStore, refStore } from "../../../store/global-store";
+  import DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
   import MappingState from "../../../store/state/mapping-state";
+  import DrumHitIcon from "../../common/DrumHitIcon.svelte";
 
   let cellRefs: HTMLElement[][] = [];
 
@@ -40,6 +42,7 @@
     key: "Key",
     display: "Display",
     sound: "Sound",
+    mark: "Mark",
   };
 
   const isFocus = (recordIndex: number, column: MappingState.Column) => {
@@ -54,14 +57,18 @@
   };
 
   const isPlaceholder = (
-    record: { key: string; name?: string; pitch: number },
+    record: DrumEditorState.Mapping,
     column: MappingState.Column,
   ) => {
     return column === "display" && (record.name ?? "").length === 0;
   };
 
+  const getMarkKind = (record: DrumEditorState.Mapping) => {
+    return record.markKind ?? DrumEditorState.DefaultMarkKind;
+  };
+
   const getValue = (
-    record: { key: string; name?: string; pitch: number },
+    record: DrumEditorState.Mapping,
     column: MappingState.Column,
   ) => {
     switch (column) {
@@ -72,6 +79,7 @@
       case "sound": return record.pitch === -1
         ? ""
         : TonalityTheory.getKey12FullName(record.pitch);
+      case "mark": return "";
     }
   };
 
@@ -105,10 +113,17 @@
                 {#each MappingState.Columns as column}
                   <div
                     class:focus={isFocus(recordIndex, column)}
+                    class:mark-cell={column === "mark"}
                     class:placeholder={isPlaceholder(record, column)}
                     class="cell"
                     bind:this={rowRefs[MappingState.Columns.indexOf(column)]}
-                  >{getValue(record, column)}</div>
+                  >
+                    {#if column === "mark"}
+                      <DrumHitIcon kind={getMarkKind(record)} size={22} />
+                    {:else}
+                      {getValue(record, column)}
+                    {/if}
+                  </div>
                 {/each}
               </div>
             {/each}
@@ -134,7 +149,7 @@
     position: absolute;
     left: 12px;
     top: 12px;
-    width: 520px;
+    width: 600px;
     height: 420px;
     box-sizing: border-box;
     border: 1px solid rgba(216, 236, 246, 0.72);
@@ -187,7 +202,7 @@
     position: relative;
     width: 100%;
     height: 30px;
-    grid-template-columns: 1fr 1.4fr 1fr;
+    grid-template-columns: 1fr 1.4fr 1fr 0.7fr;
     box-sizing: border-box;
   }
 
@@ -225,6 +240,11 @@
     font-weight: 700;
     line-height: 32px;
     text-align: center;
+  }
+
+  .mark-cell {
+    text-align: center;
+    line-height: 28px;
   }
 
   .focus {

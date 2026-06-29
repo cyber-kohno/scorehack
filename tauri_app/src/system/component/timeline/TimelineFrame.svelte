@@ -88,13 +88,6 @@
     height: 100%;
     background-color: #c6dee1;
     vertical-align: top;
-    transition:
-      filter 120ms ease,
-      opacity 120ms ease;
-  }
-  .wrap[data-isArrangeEditorActive="true"] {
-    filter: blur(3px) saturate(0.85) brightness(1.08);
-    opacity: 0.78;
   }
   .header {
     display: inline-block;

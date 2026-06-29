@@ -7,10 +7,29 @@ namespace DrumEditorState {
   export type Control = "criteria" | "col" | "record" | "hits";
   export type CriteriaDiv = 1 | 2 | 3 | 4 | 6;
   export type SplitDiv = 2 | 3 | 4;
+  export type MarkKind =
+    | "dot"
+    | "dot-line"
+    | "cross"
+    | "circle-cross"
+    | "circle"
+    | "large-cross";
+
+  export const MarkKinds: MarkKind[] = [
+    "dot",
+    "dot-line",
+    "cross",
+    "circle-cross",
+    "circle",
+    "large-cross",
+  ];
+
+  export const DefaultMarkKind: MarkKind = "dot";
 
   export type Mapping = {
     key: string;
     pitch: number;
+    markKind: MarkKind;
     name?: string;
   };
 

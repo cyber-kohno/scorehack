@@ -2,7 +2,6 @@ import { get } from "svelte/store";
 import InputState from "../store/state/input-state";
 import { actionMenuStore, confirmDialogStore, controlStore, floatingSelectStore, floatingTextInputStore, inputStore, libraryStore, mappingStore, playbackStore, terminalStore, trackManagerStore } from "../store/global-store";
 import createTrackManagerActions from "../actions/track/track-manager-actions";
-import createMappingActions from "../actions/library/mapping-actions";
 import useInputActionMenu from "./input-action-menu";
 import useInputFloatingSelect from "./input-floating-select";
 import useInputFloatingTextInput from "./input-floating-text-input";
@@ -19,7 +18,6 @@ import ConfirmDialog from "../service/common/confirm-dialog-controller";
 const useInputRoot = () => {
     const terminalActions = createTerminalActions();
     const trackManagerActions = createTrackManagerActions();
-    const mappingActions = createMappingActions();
 
     const inputOutline = useInputOutline();
     const inputMelody = useInputMelody();
@@ -289,9 +287,6 @@ const useInputRoot = () => {
             if (get(playbackStore).timerKeys != null) return;
 
             switch (eventKey.toLowerCase()) {
-                case "m": {
-                    mappingActions.open();
-                } break;
                 case "r": {
                     trackManagerActions.toggle();
                 } break;

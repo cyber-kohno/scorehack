@@ -37,6 +37,7 @@ const useInputMapping = () => {
                 actions.openKeyInput();
                 actions.openDisplayInput();
                 actions.openSoundInput();
+                actions.openMarkKindSelect();
                 break;
             case "Delete":
                 actions.deleteRecord();

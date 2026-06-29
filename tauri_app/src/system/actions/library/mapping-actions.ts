@@ -10,6 +10,7 @@ import type FloatingSelectState from "../../store/state/floating-select-state";
 import InputState from "../../store/state/input-state";
 import MappingState from "../../store/state/mapping-state";
 import ToastState from "../../store/state/toast-state";
+import DrumEditorState from "../../store/state/data/arrange/drum/drum-editor-state";
 
 const createMappingActions = () => {
     const createContext = () => {
@@ -158,6 +159,7 @@ const createMappingActions = () => {
         track.bank.mappings.splice(insertIndex, 0, {
             key: createDefaultKey(),
             pitch: -1,
+            markKind: DrumEditorState.DefaultMarkKind,
         });
         mapping.focus.recordIndex = insertIndex;
         ctx.commitData();
@@ -375,6 +377,59 @@ const createMappingActions = () => {
         });
     };
 
+    const setMarkKind = (
+        recordIndex: number,
+        markKind: DrumEditorState.MarkKind,
+    ) => {
+        const ctx = createContext();
+        const track = getActiveDrumTrack(ctx);
+        if (track == undefined) return;
+
+        const record = track.bank.mappings[recordIndex];
+        if (record == undefined) return;
+        if (!DrumEditorState.MarkKinds.includes(markKind)) return;
+
+        record.markKind = markKind;
+        ctx.commitData();
+    };
+
+    const openMarkKindSelect = () => {
+        const ctx = createContext();
+        const mapping = ctx.mapping;
+        const track = getActiveDrumTrack(ctx);
+        if (mapping == null || track == undefined) return;
+        if (mapping.focus.column !== "mark") return;
+
+        const recordIndex = mapping.focus.recordIndex;
+        const record = track.bank.mappings[recordIndex];
+        if (record == undefined) return;
+
+        const cellRef = ctx.ref.library.mapping.cells.find(cell => {
+            return cell.recordIndex === recordIndex && cell.column === "mark";
+        })?.ref;
+        if (cellRef == undefined) return;
+
+        const rect = cellRef.getBoundingClientRect();
+        FloatingSelect.open({
+            value: record.markKind ?? DrumEditorState.DefaultMarkKind,
+            filter: "",
+            cursor: 0,
+            focusIndex: 0,
+            left: rect.left,
+            top: rect.bottom + 6,
+            width: Math.max(150, rect.width),
+            height: 180,
+            items: DrumEditorState.MarkKinds.map(markKind => ({
+                value: markKind,
+                label: markKind,
+            })),
+            apply: value => {
+                if (!DrumEditorState.MarkKinds.includes(value as DrumEditorState.MarkKind)) return;
+                setMarkKind(recordIndex, value as DrumEditorState.MarkKind);
+            },
+        });
+    };
+
     const previewSound = () => {
         const ctx = createContext();
         const mapping = ctx.mapping;
@@ -405,6 +460,7 @@ const createMappingActions = () => {
         moveRecord,
         openDisplayInput,
         openKeyInput,
+        openMarkKindSelect,
         openSoundInput,
         open,
         previewSound,

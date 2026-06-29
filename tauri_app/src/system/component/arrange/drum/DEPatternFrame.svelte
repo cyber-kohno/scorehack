@@ -10,6 +10,8 @@
 
   $: selector = createArrangeSelector({ control: $controlStore, data: $dataStore });
   $: arrange = selector.getArrange();
+  $: track = selector.getCurTrack();
+  $: mappings = track.method === "drum" ? track.bank.mappings : [];
   $: editor = selector.getDrumEditor();
   $: criteriaDiv = DrumEditorState.getEffectiveCriteriaDiv(
     editor.criteriaDiv,
@@ -34,6 +36,12 @@
     }));
   });
   $: hitKeys = new Set(editor.hits.map((hit) => `${hit.colIndex}.${hit.recordIndex}`));
+  $: mappingMarkKinds = new Map(
+    editor.records.map((record, recordIndex) => {
+      const mapping = mappings.find(item => item.key === record.key);
+      return [recordIndex, mapping?.markKind ?? DrumEditorState.DefaultMarkKind];
+    }),
+  );
   $: currentHit = editor.hits.find((hit) => (
     hit.colIndex === editor.cursorX && hit.recordIndex === editor.cursorY
   ));
@@ -64,7 +72,7 @@
           <div class="cell" style:width={`${cell.width}px`}>
             <div class="inner"></div>
             {#if hitKeys.has(`${cellIndex}.${recordIndex}`)}
-              <DEHitMark />
+              <DEHitMark kind={mappingMarkKinds.get(recordIndex) ?? DrumEditorState.DefaultMarkKind} />
             {/if}
             {#if editor.control === "hits" && editor.phase === "edit" && editor.cursorX === cellIndex && editor.cursorY === recordIndex}
               <div class="focus"></div>
