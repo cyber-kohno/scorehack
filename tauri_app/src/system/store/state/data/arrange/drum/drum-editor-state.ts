@@ -226,6 +226,22 @@ namespace DrumEditorState {
     );
   };
 
+  export const getArrangePatternFromRelation = (
+    chordSeq: number,
+    track: ArrangeState.DrumTrack,
+  ): Unit | undefined => {
+    const relation = track.relations.find((r) => r.chordSeq === chordSeq);
+    if (relation == undefined || relation.sndsPatt === -1) return undefined;
+
+    const pattern = track.bank.patterns.find((patt) => patt.no === relation.sndsPatt);
+    if (pattern == undefined) throw new Error("Drum pattern must exist.");
+
+    return {
+      mappings: track.bank.mappings,
+      pattern: pattern.pattern,
+    };
+  };
+
   const formatSixteenthDuration = (duration: number) => {
     switch (duration) {
       case 6: return "4n.";

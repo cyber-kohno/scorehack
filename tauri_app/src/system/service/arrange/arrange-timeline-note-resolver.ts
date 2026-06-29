@@ -2,19 +2,32 @@ import RhythmTheory from "../../domain/theory/rhythm-theory";
 import ArrangeState from "../../store/state/data/arrange/arrange-state";
 import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
+import DrumEditorState from "../../store/state/data/arrange/drum/drum-editor-state";
 import MelodyState from "../../store/state/data/melody-state";
 import type DerivedState from "../../store/state/derived-state";
 import GuitarArrangePatternNote from "../playback/arrange/guitar-arrange-pattern-note";
 import PianoArrangePatternNote from "../playback/arrange/piano-arrange-pattern-note";
+import DrumArrangePatternNote from "../playback/arrange/drum-arrange-pattern-note";
 
 namespace ArrangeTimelineNoteResolver {
-    export type TimelineNote = {
+    type TimelineNoteBase = {
         trackIndex: number;
         noteIndex: number;
-        method: ArrangeState.ArrangeMedhod;
         isMute: boolean;
         note: MelodyState.Note;
     };
+
+    export type SustainNote = TimelineNoteBase & {
+        kind: "sustain";
+        method: "piano" | "guitar";
+    };
+
+    export type HitNote = TimelineNoteBase & {
+        kind: "hit";
+        method: "drum";
+    };
+
+    export type TimelineNote = SustainNote | HitNote;
 
     export const resolveChordTrackNotes = (
         track: ArrangeState.Track,
@@ -50,6 +63,7 @@ namespace ArrangeTimelineNoteResolver {
                     { sustainBeat: chordCache.lengthBeatNote },
                 ).forEach((note) => {
                     notes.push({
+                        kind: "sustain",
                         trackIndex,
                         noteIndex,
                         method: track.method,
@@ -74,6 +88,32 @@ namespace ArrangeTimelineNoteResolver {
                     },
                 ).forEach((note) => {
                     notes.push({
+                        kind: "sustain",
+                        trackIndex,
+                        noteIndex,
+                        method: track.method,
+                        isMute: track.isMute,
+                        note: MelodyState.calcAddBeat(note, startBeat),
+                    });
+                    noteIndex++;
+                });
+            } break;
+            case "drum": {
+                const arrPattern = DrumEditorState.getArrangePatternFromRelation(
+                    chordCache.chordSeq,
+                    track,
+                );
+                if (arrPattern == undefined) return notes;
+
+                DrumArrangePatternNote.createNotes(
+                    arrPattern,
+                    {
+                        beat: chordCache.beat,
+                        ts: baseCache.scoreBase.rhythm.ts,
+                    },
+                ).forEach((note) => {
+                    notes.push({
+                        kind: "hit",
                         trackIndex,
                         noteIndex,
                         method: track.method,

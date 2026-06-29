@@ -11,6 +11,9 @@ import ArrangeState from "../../../store/state/data/arrange/arrange-state";
 import PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import GuitarArrangePatternNote from "../arrange/guitar-arrange-pattern-note";
 import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
+import DrumArrangePatternNote from "../arrange/drum-arrange-pattern-note";
+import DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
+import TonalityTheory from "../../../domain/theory/tonality-theory";
 import FilePathRef from "../../../infra/file/file-path-ref";
 import { readBinaryFile } from "../../../infra/tauri/fs";
 import stopPlaybackTimeline from "./stop-playback-timeline";
@@ -69,6 +72,9 @@ const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
             }
         }
     })();
+
+    // 開始の拍から時間を取得
+    const startTime = getTimeFromPosBeat(baseCaches, timelineStart, settings.playback.swing);
 
     const trackPlayList: PlaybackCacheState.TrackPlayer[] = [];
     const findScoreTrackPlayer = (track: MelodyState.ScoreTrack) => {
@@ -265,6 +271,56 @@ const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
                         });
                     }
                     break;
+                case "drum":
+                    {
+                        chordCaches.forEach((chordCache) => {
+                            const chordSeq = chordCache.chordSeq;
+                            const arrPattern = DrumEditorState.getArrangePatternFromRelation(
+                                chordSeq,
+                                track,
+                            );
+                            if (arrPattern == undefined) return 1;
+                            const baseCache = baseCaches[chordCache.baseSeq];
+
+                            if (chordCache.startBeat < outlineStart) return 1;
+
+                            const notes = DrumArrangePatternNote.createNotes(
+                                arrPattern,
+                                {
+                                    beat: chordCache.beat,
+                                    ts: baseCache.scoreBase.rhythm.ts,
+                                },
+                            );
+
+                            const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(
+                                baseCache.scoreBase.rhythm.ts,
+                            );
+                            const beatRate = beatDiv16Cnt / 4;
+                            const startBeat =
+                                chordCache.startBeat * beatRate +
+                                (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
+
+                            notes.forEach((note) => {
+                                const targetNote = MelodyState.calcAddBeat(note, startBeat);
+                                const side = MelodyState.calcBeatSide(targetNote);
+                                const startMs = getTimeFromPosBeat(
+                                    baseCaches,
+                                    side.pos,
+                                    settings.playback.swing,
+                                ) - startTime;
+                                if (startMs < 0) return 1;
+
+                                notePlayers.push({
+                                    pitchName: TonalityTheory.getKey12FullName(note.pitch),
+                                    gain: 5 * (track.volume / 10) * (note.velocity / 10),
+                                    startMs,
+                                    sustainMs: 0,
+                                    target: "",
+                                });
+                            });
+                        });
+                    }
+                    break;
             }
         });
     }
@@ -274,9 +330,6 @@ const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
 
     const getTimerKeys = () => playback.timerKeys as number[];
     const getIntervalKeys = () => playback.intervalKeys as number[];
-
-    // 開始の拍から時間を取得
-    const startTime = getTimeFromPosBeat(baseCaches, timelineStart, settings.playback.swing);
 
     const endTime = (() => {
         const tailChordCache = chordCaches[chordCaches.length - 1];
@@ -293,9 +346,11 @@ const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
             // console.log(`pitch:${np.pitchName}, ms:${np.startMs}, sus:${np.sustainMs}`);
             const key = setTimeout(() => {
                 // console.log(tp);
-                // ミリ秒をサウンドフォントの時間基準（秒）に合わせる
-                const susSec = np.sustainMs / 1000;
-                tp.sf.play(np.pitchName, 0, { gain: np.gain, duration: susSec });
+                const option = np.sustainMs > 0
+                    ? { gain: np.gain, duration: np.sustainMs / 1000 }
+                    : { gain: np.gain };
+                tp.sf.play(np.pitchName, 0, option);
+                if (np.target === "") return;
                 const [refTrIdx, refNtIndx] = np.target
                     .split(".")
                     .map((t) => Number(t));

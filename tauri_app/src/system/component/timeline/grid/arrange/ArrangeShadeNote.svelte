@@ -5,7 +5,7 @@
   import { controlStore, settingsStore } from "../../../../store/global-store";
   import type ArrangeTimelineNoteResolver from "../../../../service/arrange/arrange-timeline-note-resolver";
 
-  export let item: ArrangeTimelineNoteResolver.TimelineNote;
+  export let item: ArrangeTimelineNoteResolver.SustainNote;
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
   const COLOR_ARR = [
