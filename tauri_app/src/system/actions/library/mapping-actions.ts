@@ -411,7 +411,7 @@ const createMappingActions = () => {
 
         const rect = cellRef.getBoundingClientRect();
         FloatingSelect.open({
-            value: record.markKind ?? DrumEditorState.DefaultMarkKind,
+            value: record.markKind,
             filter: "",
             cursor: 0,
             focusIndex: 0,

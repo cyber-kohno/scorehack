@@ -64,7 +64,7 @@
   };
 
   const getMarkKind = (record: DrumEditorState.Mapping) => {
-    return record.markKind ?? DrumEditorState.DefaultMarkKind;
+    return record.markKind;
   };
 
   const getValue = (

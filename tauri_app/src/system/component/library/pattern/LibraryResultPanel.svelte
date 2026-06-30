@@ -50,7 +50,9 @@
   $: track = $dataStore.arrange.tracks[$controlStore.outline.trackIndex];
   $: finder = (() => {
     const library = $libraryStore;
-    if (library == null || track == undefined || track.method !== "piano") return null;
+    if (library == null || track == undefined) return null;
+    if (track.method !== "piano" && track.method !== "drum") return null;
+
     const condition = library.condition;
 
     const request: FinderState.SearchRequest = {
@@ -60,6 +62,15 @@
       eatTail: condition.eatTail,
       structCnt: createStructCount(library),
     };
+
+    if (track.method === "drum") {
+      return {
+        request,
+        cursor: library.focus.finder?.cursor ?? { backing: -1, sounds: -1 },
+        apply: { backing: -1, sounds: -1 },
+        list: [],
+      };
+    }
 
     return {
       request,
@@ -95,7 +106,7 @@
     />
     {#if track == undefined}
       <div class="msg">No arrange track found.</div>
-    {:else if track.method !== "piano"}
+    {:else if track.method !== "piano" && track.method !== "drum"}
       <div class="msg">Piano patterns are available for piano tracks only.</div>
     {:else if finder == null || finder.list.length === 0}
       <div class="msg">No matching presets found.</div>

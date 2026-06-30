@@ -98,7 +98,7 @@
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-    background-color: rgba(255, 255, 255, 0.32);
+    background-color: rgba(0, 0, 0, 0.32);
     color: #234250;
     font-size: 14px;
     font-weight: 700;
@@ -129,7 +129,7 @@
     margin: 0 0 0 1px;
     height: 100%;
     padding: 0;
-    background-color: rgba(60, 53, 128, 0.685);
+    background-color: rgba(194, 218, 226, 0.82);
     border-radius: 2px;
   }
 

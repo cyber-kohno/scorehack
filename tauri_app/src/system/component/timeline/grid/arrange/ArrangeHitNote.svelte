@@ -4,21 +4,13 @@
   import type RefState from "../../../../store/state/ref-state";
   import { controlStore, settingsStore } from "../../../../store/global-store";
   import type ArrangeTimelineNoteResolver from "../../../../service/arrange/arrange-timeline-note-resolver";
+  import DrumHitIcon from "../../../common/DrumHitIcon.svelte";
 
   export let item: ArrangeTimelineNoteResolver.HitNote;
   export let scrollLimitProps: RefState.ScrollLimitProps;
 
-  const COLOR_ARR = [
-    "#ff2f91",
-    "#ff4fb3",
-    "#d936ff",
-    "#ff6c9f",
-    "#e91e83",
-    "#ff3fcf",
-  ];
-  const SIZE = 10;
+  const SIZE = 18;
 
-  $: noteColor = COLOR_ARR[item.trackIndex % COLOR_ARR.length];
   $: note = item.note;
   $: [isDisp, left] = (() => {
     const beatSide = MelodyState.calcBeatSide(note);
@@ -33,7 +25,7 @@
 {#if isDisp}
   <div
     class="itemwrap"
-    style:left="{left - SIZE / 2}px"
+    style:left="{left - 1}px"
     data-muted={item.isMute}
     data-active={$controlStore.mode === "harmonize"}
   >
@@ -41,8 +33,9 @@
       class="hit"
       style:top="{Layout.getPitchTop(note.pitch) +
         (Layout.pitch.ITEM_HEIGHT - SIZE) / 2}px"
-      style:--note-color={noteColor}
-    ></div>
+    >
+      <DrumHitIcon kind={item.markKind} size={SIZE} />
+    </div>
   </div>
 {/if}
 
@@ -51,7 +44,7 @@
     display: inline-block;
     position: absolute;
     top: var(--pitch-top-margin);
-    width: 10px;
+    width: 18px;
     height: var(--pitch-frame-height);
     z-index: 3;
     box-sizing: border-box;
@@ -75,12 +68,9 @@
     display: inline-block;
     position: absolute;
     left: 0;
-    width: 10px;
-    height: 10px;
+    width: 18px;
+    height: 18px;
     z-index: 3;
     box-sizing: border-box;
-    border-radius: 50%;
-    background-color: color-mix(in srgb, var(--note-color) 86%, transparent);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--note-color) 48%, black);
   }
 </style>

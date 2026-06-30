@@ -25,6 +25,7 @@ namespace ArrangeTimelineNoteResolver {
     export type HitNote = TimelineNoteBase & {
         kind: "hit";
         method: "drum";
+        markKind: DrumEditorState.MarkKind;
     };
 
     export type TimelineNote = SustainNote | HitNote;
@@ -118,6 +119,7 @@ namespace ArrangeTimelineNoteResolver {
                         noteIndex,
                         method: track.method,
                         isMute: track.isMute,
+                        markKind: note.markKind,
                         note: MelodyState.calcAddBeat(note, startBeat),
                     });
                     noteIndex++;
