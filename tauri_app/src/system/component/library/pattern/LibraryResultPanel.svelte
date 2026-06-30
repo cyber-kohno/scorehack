@@ -7,6 +7,7 @@
   import { controlStore, dataStore, libraryStore, refStore } from "../../../store/global-store";
   import FinderConditionHeader from "../../arrange/finder/condition/FinderConditionHeader.svelte";
   import APFinderPresetItem from "../../arrange/finder/list/piano/APFinderPresetItem.svelte";
+  import LibraryDrumPatternItem from "./drum/LibraryDrumPatternItem.svelte";
 
   let listRef: HTMLElement | null = null;
   let recordRefs: HTMLElement[] = [];
@@ -48,13 +49,12 @@
   };
 
   $: track = $dataStore.arrange.tracks[$controlStore.outline.trackIndex];
-  $: finder = (() => {
+  $: pianoFinder = (() => {
     const library = $libraryStore;
     if (library == null || track == undefined) return null;
-    if (track.method !== "piano" && track.method !== "drum") return null;
+    if (track.method !== "piano") return null;
 
     const condition = library.condition;
-
     const request: FinderState.SearchRequest = {
       ts: condition.ts,
       beat: condition.beat,
@@ -62,15 +62,6 @@
       eatTail: condition.eatTail,
       structCnt: createStructCount(library),
     };
-
-    if (track.method === "drum") {
-      return {
-        request,
-        cursor: library.focus.finder?.cursor ?? { backing: -1, sounds: -1 },
-        apply: { backing: -1, sounds: -1 },
-        list: [],
-      };
-    }
 
     return {
       request,
@@ -84,15 +75,47 @@
     };
   })();
 
+  $: drumFinder = (() => {
+    const library = $libraryStore;
+    if (library == null || track == undefined) return null;
+    if (track.method !== "drum") return null;
+
+    const condition = library.condition;
+    const request: FinderState.SearchRequest = {
+      ts: condition.ts,
+      beat: condition.beat,
+      eatHead: condition.eatHead,
+      eatTail: condition.eatTail,
+      structCnt: 0,
+    };
+
+    return {
+      request,
+      cursor: library.focus.finder?.cursor.backing ?? -1,
+      list: FinderState.Drum.searchPatterns({
+        req: request,
+        arrTrack: track,
+      }),
+    };
+  })();
+
+  $: request = pianoFinder?.request ?? drumFinder?.request ?? null;
+  $: cursorIndex = pianoFinder?.cursor.backing ?? drumFinder?.cursor ?? -1;
+  $: listLength = pianoFinder?.list.length ?? drumFinder?.list.length ?? 0;
+  $: isDrumRegular = (patternNo: number) => {
+    return track?.method === "drum" && track.bank.regulars.some(regular => {
+      return regular.patternNo === patternNo;
+    });
+  };
+
   $: {
-    const length = finder?.list.length ?? 0;
-    tick().then(() => syncRecordRefs(length));
+    tick().then(() => syncRecordRefs(listLength));
   }
 </script>
 
 <div class="panel">
-  {#if finder != null && track != undefined}
-    <FinderConditionHeader request={finder.request} method={track.method} />
+  {#if request != null && track != undefined}
+    <FinderConditionHeader {request} method={track.method} />
   {:else}
     <div class="condition-placeholder"></div>
   {/if}
@@ -102,21 +125,36 @@
       dir={"y"}
       frameLength={300}
       frameWidth={10}
-      dependencies={[finder?.cursor.backing]}
+      dependencies={[cursorIndex]}
     />
     {#if track == undefined}
       <div class="msg">No arrange track found.</div>
     {:else if track.method !== "piano" && track.method !== "drum"}
       <div class="msg">Piano patterns are available for piano tracks only.</div>
-    {:else if finder == null || finder.list.length === 0}
+    {:else if listLength === 0}
       <div class="msg">No matching presets found.</div>
     {:else}
       <div class="list-inner" bind:this={listRef}>
-        {#each finder.list as preset, backingIndex}
-          <div class="record-ref" bind:this={recordRefs[backingIndex]}>
-            <APFinderPresetItem {finder} usageBkg={preset} {backingIndex} />
+        {#if track.method === "drum" && drumFinder != null}
+          <div class="drum-grid">
+            {#each drumFinder.list as item, patternIndex}
+              <div class="drum-cell record-ref" bind:this={recordRefs[patternIndex]}>
+                <LibraryDrumPatternItem
+                  finder={drumFinder}
+                  {item}
+                  index={patternIndex}
+                  isRegular={isDrumRegular(item.patternNo)}
+                />
+              </div>
+            {/each}
           </div>
-        {/each}
+        {:else if pianoFinder != null}
+          {#each pianoFinder.list as preset, backingIndex}
+            <div class="record-ref" bind:this={recordRefs[backingIndex]}>
+              <APFinderPresetItem finder={pianoFinder} usageBkg={preset} {backingIndex} />
+            </div>
+          {/each}
+        {/if}
       </div>
     {/if}
   </div>
@@ -161,6 +199,17 @@
     position: relative;
     width: 100%;
     height: 71px;
+  }
+
+  .drum-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    position: relative;
+    width: 100%;
+  }
+
+  .drum-cell {
+    width: 100%;
   }
 
   .msg {

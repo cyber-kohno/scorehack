@@ -307,6 +307,62 @@ const createDrumArrangeUpdater = (ctx: Context) => {
         };
     };
 
+    const applyLibrary = () => {
+        const origin = arrange.origin;
+        if (origin.type !== "library") throw new Error("Drum library apply requires library origin.");
+        if (origin.mode !== "edit-pattern" && origin.mode !== "add-pattern") {
+            throw new Error("Drum library apply requires drum library mode.");
+        }
+
+        const editor = getEditor();
+        const patternData = DrumEditorState.createPatternData(editor);
+        const category: DrumEditorState.PatternCategory = {
+            beat: arrange.target.beat.num,
+            tsGroup: [arrange.target.scoreBase.rhythm.ts],
+            eatHead: arrange.target.beat.eatHead,
+            eatTail: arrange.target.beat.eatTail,
+        };
+        const addPattern = () => {
+            const patternNo = track.bank.patterns.reduce((max, pattern) => {
+                return Math.max(max, pattern.no);
+            }, -1) + 1;
+            track.bank.patterns.push({
+                no: patternNo,
+                pattern: JSON.parse(JSON.stringify(patternData)),
+                category: JSON.parse(JSON.stringify(category)),
+            });
+            track.bank.regulars.push({
+                patternNo,
+                sortNo: -1,
+            });
+            return patternNo;
+        };
+
+        switch (origin.mode) {
+            case "edit-pattern": {
+                if (origin.patternNo === -1) throw new Error("Drum pattern must be selected.");
+                const pattern = track.bank.patterns.find(pattern => {
+                    return pattern.no === origin.patternNo;
+                });
+                if (pattern == undefined) throw new Error("Drum pattern must exist.");
+
+                pattern.pattern = patternData;
+                pattern.category = category;
+                return {
+                    patternNo: pattern.no,
+                    patternCount: track.bank.patterns.length,
+                };
+            }
+            case "add-pattern": {
+                const patternNo = addPattern();
+                return {
+                    patternNo,
+                    patternCount: track.bank.patterns.length,
+                };
+            }
+        }
+    };
+
     const applyArrange = () => {
         const result = registerCurrentPattern();
         const chordSeq = arrange.target.chordSeq;
@@ -328,6 +384,7 @@ const createDrumArrangeUpdater = (ctx: Context) => {
 
     return {
         applyArrange,
+        applyLibrary,
         applyCriteriaDiv,
         deleteRecord,
         insertRecord,

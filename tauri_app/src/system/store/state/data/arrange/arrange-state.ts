@@ -73,16 +73,27 @@ namespace ArrangeState {
     }
     | {
       type: "library";
-      mode: LibraryEditorMode;
+      mode: PianoLibraryEditorMode;
       backingNo: number;
       soundsNo: number;
+    }
+    | {
+      type: "library";
+      mode: DrumLibraryEditorMode;
+      patternNo: number;
     };
 
-  export type LibraryEditorMode =
+  export type LibraryEditorMode = PianoLibraryEditorMode | DrumLibraryEditorMode;
+
+  export type PianoLibraryEditorMode =
     | "edit-backing"
     | "edit-sounds"
     | "add-backing"
     | "add-sounds";
+
+  export type DrumLibraryEditorMode =
+    | "edit-pattern"
+    | "add-pattern";
 
   export type TargetBase = {
     scoreBase: ElementState.DataInit;

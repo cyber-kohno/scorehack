@@ -287,7 +287,14 @@ const createDrumArrangeActions = () => {
 
     const applyArrange = () => {
         const ctx = createContext();
-        const result = ctx.drumUpdater.applyArrange();
+        const result = (() => {
+            switch (ctx.arrange.origin.type) {
+                case "chord-block":
+                    return ctx.drumUpdater.applyArrange();
+                case "library":
+                    return ctx.drumUpdater.applyLibrary();
+            }
+        })();
         console.log("[drum arrange] pattern registered", result);
         ctx.control.outline.arrange = null;
         ctx.commitDataAndRecalculate();

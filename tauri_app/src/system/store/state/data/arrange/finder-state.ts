@@ -1,5 +1,6 @@
 import RhythmTheory from "../../../../domain/theory/rhythm-theory";
 import type ArrangeState from "./arrange-state";
+import type DrumEditorState from "./drum/drum-editor-state";
 import type PianoEditorState from "./piano/piano-editor-state";
 
 namespace FinderState {
@@ -43,6 +44,53 @@ namespace FinderState {
     export type Pattern = {
         backingNo: number;
         soundsNos: number[];
+    }
+
+    export namespace Drum {
+        export const ColumnCount = 3;
+
+        export type PatternItem = {
+            patternNo: number;
+        };
+
+        export type Finder = {
+            request: SearchRequest;
+            list: PatternItem[];
+            cursor: number;
+        };
+
+        export const searchPatterns = (args: {
+            req: SearchRequest;
+            arrTrack: ArrangeState.DrumTrack;
+        }) => {
+            const { req, arrTrack: track } = args;
+
+            return track.bank.patterns
+                .filter((pattern) => {
+                    const cond = pattern.category;
+                    const condEatHead = cond.eatHead ?? 0;
+                    const condEatTail = cond.eatTail ?? 0;
+
+                    return cond.tsGroup
+                        .map(ts => RhythmTheory.formatTS(ts))
+                        .includes(RhythmTheory.formatTS(req.ts)) &&
+                        cond.beat === req.beat &&
+                        condEatHead === req.eatHead &&
+                        condEatTail === req.eatTail;
+                })
+                .map((pattern): PatternItem => ({
+                    patternNo: pattern.no,
+                }));
+        };
+
+        export const getPatternFromNo = (
+            no: number,
+            bank: DrumEditorState.Bank,
+        ) => {
+            const pattern = bank.patterns.find(item => item.no === no);
+            if (pattern == undefined) throw new Error("Drum pattern must exist.");
+            return pattern;
+        };
     }
 
     export const getPianoBackingPatternFromNo = (no: number, bank: PianoEditorState.Bank) => {
