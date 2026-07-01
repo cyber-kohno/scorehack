@@ -57,6 +57,7 @@ namespace FinderState {
             request: SearchRequest;
             list: PatternItem[];
             cursor: number;
+            apply: number;
         };
 
         export const searchPatterns = (args: {

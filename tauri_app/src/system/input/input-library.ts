@@ -34,6 +34,15 @@ const useInputLibrary = () => {
         }
     };
 
+    const togglePanel = () => {
+        if (isFinderMode()) {
+            actions.switchToCondition();
+            return;
+        }
+
+        switchToFinder();
+    };
+
     const pianoFinderControl = (eventKey: string) => {
         switch (eventKey) {
             case "ArrowLeft": pianoActions.moveFinderVoicing(-1); break;
@@ -74,12 +83,6 @@ const useInputLibrary = () => {
     const control = (eventKey: string, option: { shiftKey?: boolean } = {}) => {
         if (option.shiftKey) {
             switch (eventKey) {
-                case "ArrowLeft":
-                    actions.switchToCondition();
-                    return;
-                case "ArrowRight":
-                    switchToFinder();
-                    return;
                 case "M":
                 case "m":
                     mappingActions.open();
@@ -93,6 +96,10 @@ const useInputLibrary = () => {
                 case "T":
                 case "t":
                     terminalActions.open();
+                    break;
+                case "R":
+                case "r":
+                    togglePanel();
                     break;
                 case "Escape":
                     actions.close();
@@ -127,6 +134,10 @@ const useInputLibrary = () => {
             case "T":
             case "t":
                 terminalActions.open();
+                break;
+            case "R":
+            case "r":
+                togglePanel();
                 break;
             case "Escape":
                 actions.close();

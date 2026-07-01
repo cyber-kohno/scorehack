@@ -1,6 +1,8 @@
 import Layout from "../../../layout/layout-constant";
+import { createDrumArrangeFinderFromTarget } from "../arrange-finder-factory";
 import type ArrangeState from "../../../store/state/data/arrange/arrange-state";
 import DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
+import FinderState from "../../../store/state/data/arrange/finder-state";
 
 type Context = {
     arrange: ArrangeState.EditorProps;
@@ -20,6 +22,11 @@ const createDrumArrangeUpdater = (ctx: Context) => {
     const getEditor = () => {
         if (arrange.editor == undefined) throw new Error("Drum editor must exist.");
         return arrange.editor as DrumEditorState.Value;
+    };
+
+    const getFinder = () => {
+        if (arrange.finder == undefined) throw new Error("Drum finder must exist.");
+        return arrange.finder as FinderState.Drum.Finder;
     };
 
     const getColCount = (editor: DrumEditorState.Value) => {
@@ -287,6 +294,24 @@ const createDrumArrangeUpdater = (ctx: Context) => {
         return true;
     };
 
+    const moveFinderPattern = (dir: -1 | 1 | -3 | 3) => {
+        const finder = getFinder();
+        if (finder.list.length === 0 || finder.cursor === -1) return false;
+
+        const next = finder.cursor + dir;
+        if (next < 0 || next > finder.list.length - 1) return false;
+
+        finder.cursor = next;
+        return true;
+    };
+
+    const openFinderFromEditor = () => {
+        arrange.finder = createDrumArrangeFinderFromTarget({
+            target: arrange.target,
+            arrTrack: track,
+        });
+    };
+
     const registerCurrentPattern = () => {
         const editor = getEditor();
         const patternData = DrumEditorState.createPatternData(editor);
@@ -382,18 +407,61 @@ const createDrumArrangeUpdater = (ctx: Context) => {
         return result;
     };
 
+    const applyFinderPattern = () => {
+        const finder = getFinder();
+        if (finder.cursor === -1) {
+            return { control: false, data: false, closeArrange: false };
+        }
+
+        const selected = finder.list[finder.cursor];
+        if (selected == undefined) throw new Error("Drum finder pattern must exist.");
+        const pattern = FinderState.Drum.getPatternFromNo(selected.patternNo, track.bank);
+
+        const applyToEditor = () => {
+            const editor = getEditor();
+            Object.assign(editor, DrumEditorState.createPatternDataEditorProps(pattern.pattern));
+            editor.cursorY = editor.records.length > 0 ? 0 : -1;
+            editor.lastSource = DrumEditorState.createSnapshot(editor);
+            delete arrange.finder;
+        };
+
+        if (arrange.editor != undefined) {
+            applyToEditor();
+            return { control: true, data: false, closeArrange: false };
+        }
+
+        const chordSeq = arrange.target.chordSeq;
+        const relation = track.relations.find(r => r.chordSeq === chordSeq);
+        if (relation == undefined) {
+            track.relations.push({
+                chordSeq,
+                bkgPatt: -1,
+                sndsPatt: selected.patternNo,
+            });
+        } else {
+            relation.bkgPatt = -1;
+            relation.sndsPatt = selected.patternNo;
+            DrumEditorState.deleteUnreferUnit(track);
+        }
+
+        return { control: true, data: true, closeArrange: true };
+    };
+
     return {
         applyArrange,
+        applyFinderPattern,
         applyLibrary,
         applyCriteriaDiv,
         deleteRecord,
         insertRecord,
         modifyHitVelocity,
+        moveFinderPattern,
         moveColCursor,
         movePatternColCursor,
         movePatternRecordCursor,
         moveRecordCursor,
         registerCurrentPattern,
+        openFinderFromEditor,
         setColDiv,
         setRecordKey,
         shiftControl,

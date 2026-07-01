@@ -7,7 +7,7 @@
   import { controlStore, dataStore, libraryStore, refStore } from "../../../store/global-store";
   import FinderConditionHeader from "../../arrange/finder/condition/FinderConditionHeader.svelte";
   import APFinderPresetItem from "../../arrange/finder/list/piano/APFinderPresetItem.svelte";
-  import LibraryDrumPatternItem from "./drum/LibraryDrumPatternItem.svelte";
+  import ADFinderPatternItem from "../../arrange/finder/list/drum/ADFinderPatternItem.svelte";
 
   let listRef: HTMLElement | null = null;
   let recordRefs: HTMLElement[] = [];
@@ -92,6 +92,7 @@
     return {
       request,
       cursor: library.focus.finder?.cursor.backing ?? -1,
+      apply: -1,
       list: FinderState.Drum.searchPatterns({
         req: request,
         arrTrack: track,
@@ -106,6 +107,12 @@
     return track?.method === "drum" && track.bank.regulars.some(regular => {
       return regular.patternNo === patternNo;
     });
+  };
+  $: getDrumPattern = (patternNo: number) => {
+    if (track?.method !== "drum") throw new Error("Drum track must exist.");
+    const pattern = track.bank.patterns.find(pattern => pattern.no === patternNo);
+    if (pattern == undefined) throw new Error("Drum pattern must exist.");
+    return pattern;
   };
 
   $: {
@@ -139,10 +146,12 @@
           <div class="drum-grid">
             {#each drumFinder.list as item, patternIndex}
               <div class="drum-cell record-ref" bind:this={recordRefs[patternIndex]}>
-                <LibraryDrumPatternItem
+                <ADFinderPatternItem
                   finder={drumFinder}
                   {item}
                   index={patternIndex}
+                  pattern={getDrumPattern(item.patternNo)}
+                  mappings={track.bank.mappings}
                   isRegular={isDrumRegular(item.patternNo)}
                 />
               </div>

@@ -76,6 +76,10 @@ const useInputDrumEditor = () => {
                 drumActions.applyArrange();
                 return;
             }
+            if (eventKey === "W" || eventKey === "w") {
+                drumActions.openFinderFromEditor();
+                return;
+            }
 
             switch (editor.control) {
                 case "criteria":

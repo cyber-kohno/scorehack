@@ -24,9 +24,6 @@ const useInputPianoEditor = () => {
             case " ":
               pianoActions.playbackPattern();
               break;
-            case "w":
-              pianoActions.openFinderFromEditor();
-              break;
           }
 
           const voicingControl = () => {
@@ -106,6 +103,10 @@ const useInputPianoEditor = () => {
       switch (eventKey) {
         case "Enter":
           pianoActions.applyArrange();
+          break;
+        case "W":
+        case "w":
+          pianoActions.openFinderFromEditor();
           break;
       }
       if (editor.backing == null) return;

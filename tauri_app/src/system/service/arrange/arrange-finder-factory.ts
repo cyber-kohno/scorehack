@@ -17,13 +17,20 @@ type PianoFinderSource = {
     arrTrack: ArrangeState.PianoTrack;
 };
 
+type DrumFinderSource = {
+    ts: RhythmTheory.TimeSignature;
+    beat: DerivedState.BeatCache;
+    chordSeq: number;
+    arrTrack: ArrangeState.DrumTrack;
+};
+
 /**
  * メソッドに応じたファインダーを生成して返す
  */
 export const createArrangeFinder = (props: ArrangeFinderProps) => {
     switch (props.arrTrack.method) {
-        case "piano":
-            return createPianoArrangeFinder(props);
+        case "piano": return createPianoArrangeFinder(props);
+        case "drum": return createDrumArrangeFinder(props);
     }
 };
 
@@ -45,6 +52,18 @@ export const createPianoArrangeFinder = (props: ArrangeFinderProps) => {
     });
 };
 
+export const createDrumArrangeFinder = (props: ArrangeFinderProps) => {
+    const { ts, chordCache: chord, arrTrack } = props;
+    if (arrTrack.method !== "drum") throw new Error();
+
+    return createDrumArrangeFinderFromSource({
+        ts,
+        beat: chord.beat,
+        chordSeq: chord.chordSeq,
+        arrTrack,
+    });
+};
+
 export const createPianoArrangeFinderFromTarget = (props: {
     target: ArrangeState.Target;
     arrTrack: ArrangeState.PianoTrack;
@@ -55,6 +74,20 @@ export const createPianoArrangeFinderFromTarget = (props: {
         ts: target.scoreBase.rhythm.ts,
         beat: target.beat,
         compiledChord: target.compiledChord,
+        chordSeq: target.chordSeq,
+        arrTrack,
+    });
+};
+
+export const createDrumArrangeFinderFromTarget = (props: {
+    target: ArrangeState.TargetBase;
+    arrTrack: ArrangeState.DrumTrack;
+}) => {
+    const { target, arrTrack } = props;
+
+    return createDrumArrangeFinderFromSource({
+        ts: target.scoreBase.rhythm.ts,
+        beat: target.beat,
         chordSeq: target.chordSeq,
         arrTrack,
     });
@@ -94,6 +127,40 @@ const createPianoArrangeFinderFromSource = (props: PianoFinderSource) => {
             if (sndPatt === -1) throw new Error();
             finder.cursor.backing = finder.apply.backing = bkgPatt;
             finder.cursor.sounds = finder.apply.sounds = sndPatt;
+        }
+    }
+
+    return finder;
+};
+
+const createDrumArrangeFinderFromSource = (props: DrumFinderSource) => {
+    const { ts, beat, chordSeq, arrTrack } = props;
+    const req: FinderState.SearchRequest = {
+        beat: beat.num,
+        eatHead: beat.eatHead,
+        eatTail: beat.eatTail,
+        structCnt: 0,
+        ts,
+    };
+
+    const list = FinderState.Drum.searchPatterns({
+        req,
+        arrTrack,
+    });
+    const finder: FinderState.Drum.Finder = {
+        cursor: list.length === 0 ? -1 : 0,
+        apply: -1,
+        request: req,
+        list,
+    };
+
+    if (finder.list.length > 0) {
+        const relation = arrTrack.relations.find(r => r.chordSeq === chordSeq);
+        if (relation != undefined && relation.sndsPatt !== -1) {
+            const patternIndex = finder.list.findIndex(item => item.patternNo === relation.sndsPatt);
+            if (patternIndex !== -1) {
+                finder.cursor = finder.apply = patternIndex;
+            }
         }
     }
 
