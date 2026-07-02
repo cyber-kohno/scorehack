@@ -9,6 +9,10 @@ type Context = {
     track: ArrangeState.Track;
 };
 
+export type ApplyLibraryResult =
+    | { ok: true; patternNo: number; patternCount: number }
+    | { ok: false; message: string };
+
 const createDrumArrangeUpdater = (ctx: Context) => {
     const arrange = (() => {
         if (ctx.arrange.method !== "drum") throw new Error("Drum arrange updater requires drum arrange.");
@@ -332,7 +336,7 @@ const createDrumArrangeUpdater = (ctx: Context) => {
         };
     };
 
-    const applyLibrary = () => {
+    const applyLibrary = (): ApplyLibraryResult => {
         const origin = arrange.origin;
         if (origin.type !== "library") throw new Error("Drum library apply requires library origin.");
         if (origin.mode !== "edit-pattern" && origin.mode !== "add-pattern") {
@@ -362,6 +366,16 @@ const createDrumArrangeUpdater = (ctx: Context) => {
             });
             return patternNo;
         };
+        const hasSamePatternInRegular = () => {
+            const patternSrc = JSON.stringify(patternData);
+            return track.bank.regulars.some((regular) => {
+                const pattern = track.bank.patterns.find(pattern => {
+                    return pattern.no === regular.patternNo;
+                });
+                if (pattern == undefined) throw new Error("Drum pattern must exist.");
+                return JSON.stringify(pattern.pattern) === patternSrc;
+            });
+        };
 
         switch (origin.mode) {
             case "edit-pattern": {
@@ -374,13 +388,22 @@ const createDrumArrangeUpdater = (ctx: Context) => {
                 pattern.pattern = patternData;
                 pattern.category = category;
                 return {
+                    ok: true,
                     patternNo: pattern.no,
                     patternCount: track.bank.patterns.length,
                 };
             }
             case "add-pattern": {
+                if (hasSamePatternInRegular()) {
+                    return {
+                        ok: false,
+                        message: "This drum pattern already exists.",
+                    };
+                }
+
                 const patternNo = addPattern();
                 return {
+                    ok: true,
                     patternNo,
                     patternCount: track.bank.patterns.length,
                 };

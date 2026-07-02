@@ -322,10 +322,23 @@ const createDrumArrangeActions = () => {
             switch (ctx.arrange.origin.type) {
                 case "chord-block":
                     return ctx.drumUpdater.applyArrange();
-                case "library":
-                    return ctx.drumUpdater.applyLibrary();
+                case "library": {
+                    const result = ctx.drumUpdater.applyLibrary();
+                    if (result.ok === false) {
+                        Toast.create({
+                            ...ToastState.createInitial(),
+                            x: 24,
+                            y: 84,
+                            width: 360,
+                            text: result.message,
+                        });
+                        return null;
+                    }
+                    return result;
+                }
             }
         })();
+        if (result == null) return;
         console.log("[drum arrange] pattern registered", result);
         ctx.control.outline.arrange = null;
         ctx.commitDataAndRecalculate();

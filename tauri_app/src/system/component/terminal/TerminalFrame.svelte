@@ -11,6 +11,7 @@
   $: terminalSelector = terminal == null ? null : useTerminalSelector({ terminal });
 
   $: helper = terminal?.helper;
+  $: prompt = terminal?.prompt;
 
   $: [commandLeft, commandRight] = terminalSelector?.splitCommand() ?? ["", ""];
 
@@ -50,12 +51,23 @@
         <TerminalOutput {output} />
       {/each}
     </div>
-    {#if terminal != null && !terminal.wait}
+    {#if prompt != null}
+      <div class="prompt">
+        <div class="prompt-message">{prompt.message}</div>
+        {#each prompt.choices as choice, index}
+          <div class:prompt-focus={prompt.focus === index} class="prompt-choice">
+            <span class="prompt-cursor">{prompt.focus === index ? ">" : " "}</span>
+            <span>{choice.label}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
+    {#if terminal != null && !terminal.wait && prompt == null}
       <div class="command">
         <span class="target">{"$" + terminal.target + ">"}</span>
         <span>{commandLeft}</span><CommandCursor /><span>{commandRight}</span>
       </div>
-    {:else if terminal != null}
+    {:else if terminal != null && prompt == null}
       <!-- 待機中はカーソルの点滅のみ表示 -->
       <div class="command">
         <span><CommandCursor /></span>
@@ -64,7 +76,7 @@
     <div class="lastmargin"></div>
   </div>
 </div>
-{#if helper != null}
+{#if helper != null && prompt == null}
   <HelperFrame {helper} />
 {/if}
 
@@ -121,6 +133,47 @@
   }
   .target {
     color: yellow;
+  }
+
+  .prompt {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    padding: 4px 0;
+    box-sizing: border-box;
+    background-color: rgba(255, 255, 255, 0.13);
+    color: rgba(255, 255, 225, 0.9);
+    font-size: 18px;
+    line-height: 22px;
+  }
+
+  .prompt-message {
+    display: block;
+    height: 24px;
+    padding-left: 4px;
+    box-sizing: border-box;
+    color: rgba(255, 255, 210, 0.92);
+    font-weight: 600;
+  }
+
+  .prompt-choice {
+    display: block;
+    height: 24px;
+    padding-left: 4px;
+    box-sizing: border-box;
+    color: rgba(230, 248, 255, 0.72);
+  }
+
+  .prompt-choice.prompt-focus {
+    background-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-weight: 700;
+  }
+
+  .prompt-cursor {
+    display: inline-block;
+    width: 18px;
+    color: #f6e96b;
   }
 
   .lastmargin {

@@ -19,6 +19,7 @@ const createInitialTerminal = (): TerminalState.Value => ({
     focus: 0,
     availableFuncs: [],
     helper: null,
+    prompt: null,
 });
 
 const createContext = () => {
@@ -76,6 +77,40 @@ const createTerminalActions = () => {
     const rebuildAvailableFunctions = (ctx: ReturnType<typeof createContext>) => {
         ctx.terminalUpdater.updateTarget();
         createCommandRegistry(ctx).buildAvailableFunctions();
+    };
+
+    const hasPrompt = () => {
+        const ctx = createContext();
+        return ctx.terminal.prompt != null;
+    };
+
+    const movePromptFocus = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const prompt = ctx.terminal.prompt;
+        if (prompt == null || prompt.choices.length === 0) return;
+
+        prompt.focus = Math.max(0, Math.min(prompt.focus + dir, prompt.choices.length - 1));
+        ctx.commitTerminal();
+    };
+
+    const applyPrompt = () => {
+        const ctx = createContext();
+        const prompt = ctx.terminal.prompt;
+        if (prompt == null) return;
+
+        const choice = prompt.choices[prompt.focus];
+        ctx.terminal.prompt = null;
+        if (choice != undefined) prompt.apply(choice.value);
+        ctx.commitTerminal();
+    };
+
+    const closePrompt = () => {
+        const ctx = createContext();
+        if (ctx.terminal.prompt == null) return;
+
+        ctx.terminal.prompt = null;
+        ctx.logger.outputInfo("Prompt canceled.");
+        ctx.commitTerminal();
     };
 
     const open = () => {
@@ -182,12 +217,16 @@ const createTerminalActions = () => {
 
     return {
         applyHelper,
+        applyPrompt,
         close,
         closeHelper,
+        closePrompt,
         hasHelper,
+        hasPrompt,
         inputChar,
         moveFocus,
         moveHelperFocus,
+        movePromptFocus,
         open,
         registCommand,
         removeCommand,

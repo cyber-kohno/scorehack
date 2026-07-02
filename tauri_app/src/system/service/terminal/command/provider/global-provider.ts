@@ -59,6 +59,36 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
       createShortcutCatalog(ctx),
       {
         ...defaultProps,
+        funcKey: "test",
+        usage: "Show a test prompt.",
+        args: [],
+        callback: () => {
+          terminal.prompt = {
+            message: "Select test action:",
+            focus: 0,
+            choices: [
+              { label: "First choice", value: "first" },
+              { label: "Second choice", value: "second" },
+              { label: "Third choice", value: "third" },
+            ],
+            apply: (value) => {
+              switch (value) {
+                case "first":
+                  logger.outputInfo("Selected: First choice");
+                  break;
+                case "second":
+                  logger.outputInfo("Selected: Second choice");
+                  break;
+                case "third":
+                  logger.outputInfo("Selected: Third choice");
+                  break;
+              }
+            },
+          };
+        },
+      },
+      {
+        ...defaultProps,
         funcKey: "restart",
         usage: "Restart the application process.",
         args: [],

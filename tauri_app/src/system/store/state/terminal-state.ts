@@ -10,6 +10,7 @@ namespace TerminalState {
         wait: boolean;
         availableFuncs: TerminalCommand.Props[];
         helper: HelperProps | null;
+        prompt: PromptProps | null;
     }
 
     export type HelperProps = {
@@ -23,6 +24,18 @@ namespace TerminalState {
             keyword: '',
             focus: 0
         }
+    };
+
+    export type PromptChoice = {
+        label: string;
+        value: string;
+    };
+
+    export type PromptProps = {
+        message: string;
+        choices: PromptChoice[];
+        focus: number;
+        apply: (value: string) => void;
     };
 
     export type BlockType = 'record' | 'table';

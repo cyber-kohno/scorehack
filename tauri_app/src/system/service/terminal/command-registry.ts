@@ -40,7 +40,6 @@ const createCommandRegistry = (ctx: TerminalCommand.Context) => {
             case "harmonize": {
                 const harmonizeSector = sectors[1] as ElementState.ElementType | "arrange" | "library";
                 if (harmonizeSector === "library") {
-                    add(harmonizeProvider.commands(), "harmonize");
                     add(libraryProvider.commands(), "library");
                 } else if (harmonizeSector !== "arrange") {
                     add(harmonizeProvider.commands(), "harmonize");

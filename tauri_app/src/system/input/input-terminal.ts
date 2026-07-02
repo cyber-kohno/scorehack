@@ -6,6 +6,15 @@ const useInputTerminal = () => {
     const terminalActions = createTerminalActions();
 
     const control = (eventKey: string) => {
+        if (terminalActions.hasPrompt()) {
+            switch (eventKey) {
+                case "ArrowUp": terminalActions.movePromptFocus(-1); break;
+                case "ArrowDown": terminalActions.movePromptFocus(1); break;
+                case "Enter": terminalActions.applyPrompt(); break;
+                case "Escape": terminalActions.closePrompt(); break;
+            }
+            return;
+        }
 
         switch (eventKey) {
             case 'Backspace': terminalActions.removeCommand(); break;

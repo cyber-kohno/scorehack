@@ -39,6 +39,23 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
     });
   };
 
+  const hasArrangeData = (track: ArrangeState.Track) => {
+    if (track.relations.length > 0) return true;
+
+    switch (track.method) {
+      case "piano":
+        return track.bank.backingPatterns.length > 0 ||
+          track.bank.soundsPatterns.length > 0 ||
+          track.bank.regulars.length > 0;
+      case "guitar":
+        return track.bank.voicingPatterns.length > 0;
+      case "drum":
+        return track.bank.mappings.length > 0 ||
+          track.bank.patterns.length > 0 ||
+          track.bank.regulars.length > 0;
+    }
+  };
+
   const commands = (): TerminalCommand.Props[] => {
     const defaultProps = TerminalCommand.createDefaultProps("harmonize");
     return [
@@ -72,23 +89,46 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
             return;
           }
 
-          const nextTrack = (() => {
+          const changeMethod = () => {
+            const nextTrack = (() => {
             switch (method) {
               case "piano": return ArrangeState.createPianoTrackInitial(track.name);
               case "guitar": return ArrangeState.createGuitarTrackInitial(track.name);
               case "drum": return ArrangeState.createDrumTrackInitial(track.name);
             }
-          })();
-          nextTrack.instRef = track.instRef;
-          nextTrack.volume = track.volume;
-          nextTrack.isMute = track.isMute;
-          data.arrange.tracks[trackIndex] = nextTrack;
-          control.outline.arrange = null;
+            })();
+            nextTrack.instRef = track.instRef;
+            nextTrack.volume = track.volume;
+            nextTrack.isMute = track.isMute;
+            data.arrange.tracks[trackIndex] = nextTrack;
+            control.outline.arrange = null;
 
-          ctx.commit.control();
-          ctx.commit.dataAndRecalculate();
-          logger.outputInfo(`Changed arrange method. [${prev} -> ${method}]`);
-          listHarmonizeTracks();
+            ctx.commit.control();
+            ctx.commit.dataAndRecalculate();
+            logger.outputInfo(`Changed arrange method. [${prev} -> ${method}]`);
+            listHarmonizeTracks();
+          };
+
+          if (!hasArrangeData(track)) {
+            changeMethod();
+            return;
+          }
+
+          terminal.prompt = {
+            message: "Changing method will delete all arrange data for this track. Continue?",
+            focus: 0,
+            choices: [
+              { label: "Cancel", value: "cancel" },
+              { label: `Change method to ${method}`, value: "change" },
+            ],
+            apply: (value) => {
+              if (value !== "change") {
+                logger.outputInfo("Method change canceled.");
+                return;
+              }
+              changeMethod();
+            },
+          };
         },
       },
       {
