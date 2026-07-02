@@ -9,6 +9,7 @@ import previewArrangeNote from "../../../service/playback/arrange/preview-arrang
 import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../../store/global-store";
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import ToastState from "../../../store/state/toast-state";
+import startEditorPreviewProgress from "../common/editor-preview-progress";
 
 const FINDER_BACKING_RECORD_HEIGHT = 71;
 const FINDER_VOICING_CELL_WIDTH = 109;
@@ -59,7 +60,11 @@ const createContext = () => {
 const createPianoArrangeActions = () => {
     const playbackPattern = () => {
         const result = playbackPianoEditor();
-        if (result.ok || result.reason !== "inst-not-set") return;
+        if (result.ok) {
+            startEditorPreviewProgress(result.durationMs);
+            return;
+        }
+        if (result.reason !== "inst-not-set") return;
 
         Toast.create({
             ...ToastState.createInitial(),

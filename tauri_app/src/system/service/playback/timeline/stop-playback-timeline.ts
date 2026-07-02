@@ -1,5 +1,6 @@
 import { get } from "svelte/store";
 import { controlStore, dataStore, derivedStore, playbackStore } from "../../../store/global-store";
+import Progress from "../../common/progress-controller";
 import createMelodyUpdater from "../../melody/melody-updater";
 
 const stopPlaybackTimeline = () => {
@@ -36,6 +37,7 @@ const stopPlaybackTimeline = () => {
         if (audio.objectUrl != undefined) URL.revokeObjectURL(audio.objectUrl);
     });
     playback.audios.length = 0;
+    Progress.close();
 
     // メロディモード時はカーソルを同期
     if (control.mode === "melody") {

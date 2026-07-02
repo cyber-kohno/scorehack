@@ -106,7 +106,7 @@ const createLibraryDrumActions = () => {
     };
 
     const openEditor = (
-        mode: ArrangeState.DrumLibraryEditorMode = "edit-pattern",
+        modeOption?: ArrangeState.DrumLibraryEditorMode,
         option: { copySource?: boolean } = {},
     ) => {
         const ctx = createContext();
@@ -118,6 +118,8 @@ const createLibraryDrumActions = () => {
 
         const list = searchPatterns(ctx, library);
         const selected = list[library.focus.finder.cursor.backing];
+        const mode: ArrangeState.DrumLibraryEditorMode = modeOption
+            ?? (selected == undefined ? "add-pattern" : "edit-pattern");
         if (selected == undefined && mode === "edit-pattern") return;
 
         const pattern = selected == undefined
@@ -165,7 +167,19 @@ const createLibraryDrumActions = () => {
         if (library == null || library.focus.finder == null) return;
 
         const cursor = library.focus.finder.cursor.backing;
-        if (cursor < 0) return;
+        const { action } = ActionMenuState.createFactory();
+        if (cursor < 0) {
+            const frame = ctx.ref.library.finder.frame;
+            const rect = frame?.getBoundingClientRect();
+            ActionMenu.openAt(
+                [
+                    action("Add", () => openEditor("add-pattern")),
+                ],
+                rect == undefined ? 24 : rect.left + 8,
+                rect == undefined ? 84 : rect.top + 36,
+            );
+            return;
+        }
 
         const recordRef = ctx.ref.library.finder.records.find(record => {
             return record.seq === cursor;
@@ -173,7 +187,6 @@ const createLibraryDrumActions = () => {
         if (recordRef == undefined) return;
 
         const rect = recordRef.getBoundingClientRect();
-        const { action } = ActionMenuState.createFactory();
         ActionMenu.openAt(
             [
                 action("Edit", () => openEditor("edit-pattern")),

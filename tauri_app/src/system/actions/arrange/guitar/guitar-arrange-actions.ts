@@ -7,6 +7,7 @@ import playbackGuitarEditor from "../../../service/playback/arrange/playback-gui
 import previewArrangeNote from "../../../service/playback/arrange/preview-arrange-note";
 import { controlStore, dataStore } from "../../../store/global-store";
 import ToastState from "../../../store/state/toast-state";
+import startEditorPreviewProgress from "../common/editor-preview-progress";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -33,7 +34,11 @@ const createContext = () => {
 const createGuitarArrangeActions = () => {
     const playbackPattern = () => {
         const result = playbackGuitarEditor();
-        if (result.ok || result.reason !== "inst-not-set") return;
+        if (result.ok) {
+            startEditorPreviewProgress(result.durationMs);
+            return;
+        }
+        if (result.reason !== "inst-not-set") return;
 
         Toast.create({
             ...ToastState.createInitial(),

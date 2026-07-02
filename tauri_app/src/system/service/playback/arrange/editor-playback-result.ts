@@ -1,9 +1,9 @@
 namespace EditorPlaybackResult {
     export type Value =
-        | { ok: true }
+        | { ok: true; durationMs: number }
         | { ok: false; reason: "ignored" | "inst-not-set" | "player-not-ready" };
 
-    export const ok = (): Value => ({ ok: true });
+    export const ok = (durationMs: number): Value => ({ ok: true, durationMs });
 
     export const ignored = (): Value => ({ ok: false, reason: "ignored" });
 

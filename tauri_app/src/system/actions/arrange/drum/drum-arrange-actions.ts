@@ -10,6 +10,7 @@ import { controlStore, dataStore, refStore } from "../../../store/global-store";
 import DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
 import type FloatingSelectState from "../../../store/state/floating-select-state";
 import ToastState from "../../../store/state/toast-state";
+import startEditorPreviewProgress from "../common/editor-preview-progress";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -40,7 +41,11 @@ const createContext = () => {
 const createDrumArrangeActions = () => {
     const playbackPattern = () => {
         const result = playbackDrumEditor();
-        if (result.ok || result.reason !== "inst-not-set") return;
+        if (result.ok) {
+            startEditorPreviewProgress(result.durationMs);
+            return;
+        }
+        if (result.reason !== "inst-not-set") return;
 
         Toast.create({
             ...ToastState.createInitial(),

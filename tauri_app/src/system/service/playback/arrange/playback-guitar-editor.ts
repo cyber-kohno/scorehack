@@ -84,7 +84,7 @@ const playbackGuitarEditor = () => {
     playback.timerKeys.push(endKey);
 
     playbackStore.set({ ...playback });
-    return EditorPlaybackResult.ok();
+    return EditorPlaybackResult.ok(endMs);
 };
 
 export default playbackGuitarEditor;

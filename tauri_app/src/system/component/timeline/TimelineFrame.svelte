@@ -3,7 +3,7 @@
   import BeatMeasureFrame from "./header/BeatMeasureFrame.svelte";
   import ChordListFrame from "./header/ChordListFrame.svelte";
   import ClipboardStatus from "./status/ClipboardStatus.svelte";
-  import ProgressInfo from "./header/ProgressInfo.svelte";
+  import OutlineInfoLayer from "./header/OutlineInfoLayer.svelte";
   import PitchListFrame from "./pitch/PitchListFrame.svelte";  import RefState from "../../store/state/ref-state";
   import PianoViewFrame from "./grid/PianoViewFrame.svelte";
   import ChordTheory from "../../domain/theory/chord-theory";
@@ -59,7 +59,7 @@
     <div class="active" bind:this={$refStore.header}>
       {#if scrollLimitProps != null}
         <ChordListFrame {scrollLimitProps} />
-        <ProgressInfo {scrollLimitProps} />
+        <OutlineInfoLayer {scrollLimitProps} />
         <BeatMeasureFrame {scrollLimitProps} />
       {/if}
     </div>

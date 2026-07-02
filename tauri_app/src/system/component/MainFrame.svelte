@@ -7,6 +7,7 @@
   import FloatingTextInputLayer from "./common/FloatingTextInputLayer.svelte";
   import LibraryDialog from "./library/LibraryDialog.svelte";
   import MappingDialog from "./library/mapping/MappingDialog.svelte";
+  import ProgressLayer from "./common/ProgressLayer.svelte";
   import RootHeader from "./header/RootHeader.svelte";
   import OutlineFrame from "./outline/OutlineFrame.svelte";
   import TerminalFrame from "./terminal/TerminalFrame.svelte";
@@ -63,6 +64,7 @@
     <ConfirmDialogLayer />
     <FloatingSelectLayer />
     <FloatingTextInputLayer />
+    <ProgressLayer />
     <ToastLayer />
 </div>
 

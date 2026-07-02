@@ -9,6 +9,7 @@ import DerivedState from "./state/derived-state";
 import RefState from "./state/ref-state";
 import SettingsState from "./state/settings-state";
 import ToastState from "./state/toast-state";
+import ProgressState from "./state/progress-state";
 import ConfirmDialogState from "./state/confirm-dialog-state";
 import ActionMenuState from "./state/action-menu-state";
 import FloatingSelectState from "./state/floating-select-state";
@@ -28,6 +29,7 @@ export const derivedStore = writable<DerivedState.Value>(DerivedState.createInit
 export const refStore = writable<RefState.Value>(RefState.createInitial());
 export const settingsStore = writable<SettingsState.Value>(SettingsState.createInitial());
 export const toastStore = writable<ToastState.Value | null>(null);
+export const progressStore = writable<ProgressState.Value | null>(null);
 export const confirmDialogStore = writable<ConfirmDialogState.Value | null>(null);
 export const actionMenuStore = writable<ActionMenuState.Value | null>(null);
 export const floatingSelectStore = writable<FloatingSelectState.Value | null>(null);
