@@ -1,12 +1,14 @@
 import { get } from "svelte/store";
 import createPianoArrangeUpdater from "../../../service/arrange/piano/piano-arrange-updater";
 import createArrangeSelector from "../../../service/arrange/arrange-selector";
+import ConfirmDialog from "../../../service/common/confirm-dialog-controller";
 import useScrollService from "../../../service/common/scroll-service";
 import Toast from "../../../service/common/toast-controller";
 import { createCommitDataAndRecalculate } from "../../../service/derived/recalculate-derived";
 import playbackPianoEditor from "../../../service/playback/arrange/playback-piano-editor";
 import previewArrangeNote from "../../../service/playback/arrange/preview-arrange-note";
 import { controlStore, dataStore, derivedStore, refStore, settingsStore, terminalStore } from "../../../store/global-store";
+import PianoBackingState from "../../../store/state/data/arrange/piano/piano-backing-state";
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import ToastState from "../../../store/state/toast-state";
 import startEditorPreviewProgress from "../common/editor-preview-progress";
@@ -182,6 +184,44 @@ const createPianoArrangeActions = () => {
         }
     };
 
+    const toggleBacking = () => {
+        const ctx = createContext();
+        const editor = ctx.arrange.editor as PianoEditorState.Value;
+        const backing = editor.backing;
+
+        if (backing == null) {
+            ctx.pianoUpdater.useBacking();
+            ctx.commitControl();
+            return;
+        }
+
+        const deleteBacking = () => {
+            ctx.pianoUpdater.deleteBacking();
+            ctx.commitControl();
+        };
+
+        if (PianoBackingState.isEmpty(backing)) {
+            deleteBacking();
+            return;
+        }
+
+        ConfirmDialog.open({
+            tone: "danger",
+            title: "Delete Backing",
+            messageLines: [
+                "The backing pattern will be deleted.",
+                "Continue?",
+            ],
+            choices: [
+                {
+                    label: "Delete",
+                    role: "proceed",
+                    callback: deleteBacking,
+                },
+            ],
+        });
+    };
+
     const shiftControl = updateControlWithArg<PianoEditorState.Control>((updater, next) => {
         updater.shiftControl(next);
     });
@@ -348,6 +388,7 @@ const createPianoArrangeActions = () => {
         toggleBackingColDot,
         toggleBackingNote,
         toggleBackingPedal,
+        toggleBacking,
         toggleVoicing,
     };
 };

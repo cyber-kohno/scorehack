@@ -305,6 +305,17 @@ namespace DrumEditorState {
     const totalSixteenth = beat.num * RhythmTheory.getBeatDiv16Count(ts) - beat.eatHead + beat.eatTail;
     return Math.max(0, Math.ceil((totalSixteenth * div) / RhythmTheory.getBeatDiv16Count(ts)));
   };
+
+  export const getPatternBeatLength = (
+    div: CriteriaDiv,
+    beat: DerivedState.BeatCache,
+    ts: RhythmTheory.TimeSignature,
+  ) => {
+    const criteriaDiv = getEffectiveCriteriaDiv(div, beat, ts);
+    const columnCount = getColumnCount(criteriaDiv, beat, ts);
+    const beatRate = RhythmTheory.getBeatDiv16Count(ts) / 4;
+    return (beatRate / criteriaDiv) * columnCount;
+  };
 }
 
 export default DrumEditorState;

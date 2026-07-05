@@ -240,7 +240,7 @@ const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
 
                             if (chordCache.startBeat < outlineStart) return 1;
 
-                            const notes = GuitarArrangePatternNote.createNotes(
+                            const notes = GuitarArrangePatternNote.createUnitNotes(
                                 arrPattern,
                                 {
                                     sustainBeat: chordCache.lengthBeatNote,

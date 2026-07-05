@@ -75,7 +75,7 @@ namespace OutlineMenuProvider {
                     ChordTheory.getDegreeChordName(displayDegree),
                     isSameDegreeChord(chordData.degree, storedDegree),
                 ),
-                () => outlineActions.setDegree(scaleIndex),
+                () => outlineActions.setDiatonicDegree(scaleIndex),
                 { keepOpen: true },
             );
         });

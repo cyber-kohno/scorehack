@@ -40,15 +40,20 @@ const playbackDrumEditor = () => {
             ts: arrange.target.scoreBase.rhythm.ts,
         },
     );
-    if (notes.length === 0) return EditorPlaybackResult.ignored();
 
     playback.timerKeys = [];
     playback.intervalKeys = [];
 
     const beatRate = RhythmTheory.getBeatDiv16Count(arrange.target.scoreBase.rhythm.ts) / 4;
     const msPerBeatNote = 60000 / (arrange.target.scoreBase.tempo * beatRate);
+    const patternDurationMs = DrumEditorState.getPatternBeatLength(
+        pattern.criteriaDiv,
+        arrange.target.beat,
+        arrange.target.scoreBase.rhythm.ts,
+    ) * msPerBeatNote;
+    if (notes.length === 0 && patternDurationMs === 0) return EditorPlaybackResult.ignored();
 
-    let endMs = 0;
+    let endMs = patternDurationMs;
     notes.forEach((note) => {
         const side = MelodyState.calcBeatSide(note);
         const startBeatNote = side.pos;

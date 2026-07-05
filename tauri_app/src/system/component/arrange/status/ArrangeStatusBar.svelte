@@ -1,5 +1,6 @@
 <script lang="ts">
   import type DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
+  import type GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
   import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
   import { controlStore } from "../../../store/global-store";
   import SideItemLabel from "./SideItemLabel.svelte";
@@ -20,6 +21,14 @@
   $: drumEditor = (() => {
     if (arrange.method !== "drum") return null;
     return arrange.editor as DrumEditorState.Value;
+  })();
+  $: guitarEditor = (() => {
+    if (arrange.method !== "guitar") return null;
+    return arrange.editor as GuitarEditorState.Value;
+  })();
+  $: guitarBacking = (() => {
+    if (!guitarEditor?.backing) return null;
+    return guitarEditor.backing;
   })();
 </script>
 
@@ -52,6 +61,18 @@
         margin="connect"
       />
     {/if}
+    <SideItemLabel
+      label={"Sustain"}
+      type="switch"
+      active={pianoBacking == null}
+      margin="next"
+    />
+    <SideItemLabel
+      label={"Backing"}
+      type="switch"
+      active={pianoBacking != null}
+      margin="connect"
+    />
   {/if}
   {#if drumEditor != null}
     <SideItemLabel
@@ -76,6 +97,40 @@
       label={"Pattern"}
       type="control"
       active={drumEditor.control === "hits"}
+      margin="connect"
+    />
+  {/if}
+  {#if guitarEditor != null}
+    <SideItemLabel
+      label={"Voicing"}
+      type="control"
+      active={guitarEditor.control === "voicing"}
+      margin="next"
+    />
+    {#if guitarEditor.backing != null}
+      <SideItemLabel
+        label={"Column"}
+        type="control"
+        active={guitarEditor.control === "col"}
+        margin="connect"
+      />
+      <SideItemLabel
+        label={"Pattern"}
+        type="control"
+        active={guitarEditor.control === "pattern"}
+        margin="connect"
+      />
+    {/if}
+    <SideItemLabel
+      label={"Sustain"}
+      type="switch"
+      active={guitarBacking == null}
+      margin="next"
+    />
+    <SideItemLabel
+      label={"Backing"}
+      type="switch"
+      active={guitarBacking != null}
       margin="connect"
     />
   {/if}

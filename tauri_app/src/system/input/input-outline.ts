@@ -35,6 +35,21 @@ const useInputOutline = () => {
     return arrange != null && arrange.finder != undefined;
   };
   const isOutlineRangeSelected = () => get(controlStore).outline.focusLock !== -1;
+  const getDigitScaleIndex = (eventKey: string) => {
+    const keys = ["1", "2", "3", "4", "5", "6", "7"];
+    const shiftedKeys = ["!", "\"", "#", "$", "%", "&", "'"];
+    const usShiftedKeys = ["!", "@", "#", "$", "%", "^", "&"];
+    const index = keys.indexOf(eventKey);
+    if (index !== -1) return index;
+
+    const shiftedIndex = shiftedKeys.indexOf(eventKey);
+    if (shiftedIndex !== -1) return shiftedIndex;
+
+    const usShiftedIndex = usShiftedKeys.indexOf(eventKey);
+    if (usShiftedIndex !== -1) return usShiftedIndex;
+
+    return -1;
+  };
 
   const control = (eventKey: string) => {
     if (isArrangeFinderActive()) {
@@ -80,7 +95,7 @@ const useInputOutline = () => {
       case "6":
       case "7": {
         const scaleIndex = Number(eventKey) - 1;
-        outlineActions.setDegree(scaleIndex);
+        outlineActions.setDiatonicDegree(scaleIndex);
       } break;
 
       case "b": outlineActions.openArrangeEditor(); break;
@@ -222,6 +237,12 @@ const useInputOutline = () => {
     };
 
     callbacks.holdShift = () => {
+      const scaleIndex = getDigitScaleIndex(eventKey);
+      if (scaleIndex !== -1) {
+        outlineActions.setDiatonicDegree(scaleIndex, true);
+        return;
+      }
+
       switch (eventKey) {
         case "W":
         case "w": outlineActions.applyDefaultVoicing(); break;

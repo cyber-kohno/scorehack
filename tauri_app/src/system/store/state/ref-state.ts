@@ -11,6 +11,7 @@ namespace RefState {
 
         arrange: {
             piano: PianoRefs;
+            guitar: GuitarRefs;
             drum: {
                 criteria?: HTMLElement;
                 cols: { colIndex: number, ref: HTMLElement }[];
@@ -47,6 +48,11 @@ namespace RefState {
         table?: HTMLElement;
         pedal?: HTMLElement;
     };
+    export type GuitarRefs = {
+        col?: HTMLElement;
+        measure?: HTMLElement;
+        pattern?: HTMLElement;
+    };
     export type RefTimerKey = {
         id: number;
         target: string;
@@ -59,7 +65,7 @@ namespace RefState {
         trackArr: [[]],
         noteRefs: [[]],
         timerKeys: [],
-        arrange: { piano: {}, drum: { cols: [], records: [] }, finder: { records: [] } },
+        arrange: { piano: {}, guitar: {}, drum: { cols: [], records: [] }, finder: { records: [] } },
         library: { finder: { records: [] }, mapping: { cells: [] } }
     });
 

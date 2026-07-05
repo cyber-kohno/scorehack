@@ -81,7 +81,7 @@ namespace ArrangeTimelineNoteResolver {
                 );
                 if (arrPattern == undefined) return notes;
 
-                GuitarArrangePatternNote.createNotes(
+                GuitarArrangePatternNote.createUnitNotes(
                     arrPattern,
                     {
                         sustainBeat: chordCache.lengthBeatNote,

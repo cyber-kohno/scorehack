@@ -4,6 +4,7 @@ import RhythmTheory from "../../../domain/theory/rhythm-theory";
 import { controlStore, dataStore, playbackStore, settingsStore } from "../../../store/global-store";
 import MelodyState from "../../../store/state/data/melody-state";
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
+import PianoBackingState from "../../../store/state/data/arrange/piano/piano-backing-state";
 import PlaybackState from "../../../store/state/playback-state";
 import EditorPlaybackResult from "./editor-playback-result";
 import PianoArrangePatternNote from "./piano-arrange-pattern-note";
@@ -41,14 +42,18 @@ const playbackPianoEditor = () => {
         (-arrange.target.beat.eatHead + arrange.target.beat.eatTail) / beatDiv16Cnt;
     const sustainBeat = beatSize * beatRate;
     const notes = PianoArrangePatternNote.createNotes(unit, chord, { sustainBeat });
-    if (notes.length === 0) return EditorPlaybackResult.ignored();
 
     playback.timerKeys = [];
     playback.intervalKeys = [];
 
     const msPerBeatNote = 60000 / (arrange.target.scoreBase.tempo * beatRate);
 
-    let endMs = 0;
+    const patternDurationMs = editor.backing == null
+        ? sustainBeat * msPerBeatNote
+        : PianoBackingState.getBeatNoteLength(editor.backing.layers) * msPerBeatNote;
+    if (notes.length === 0 && patternDurationMs === 0) return EditorPlaybackResult.ignored();
+
+    let endMs = patternDurationMs;
     notes.forEach((note) => {
         const side = MelodyState.calcBeatSide(note);
         const startBeatNote = side.pos;

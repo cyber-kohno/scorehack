@@ -1,4 +1,5 @@
 import Layout from "../../layout/layout-constant";
+import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import PianoBackingState from "../../store/state/data/arrange/piano/piano-backing-state";
 import MelodyState from "../../store/state/data/melody-state";
 import type ControlState from "../../store/state/control-state";
@@ -280,6 +281,30 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
         }
     }
 
+    const adjustGEBScrollCol = () => {
+        const getColWidth = (col: GuitarEditorState.Col) => {
+            return GuitarEditorState.getColWidthCriteriaBeatWidth(
+                col,
+                Layout.arrange.piano.DIV1_WIDTH
+            );
+        };
+        const backing = arrangeSelector.getGuitarEditor().backing;
+        const guitarRef = ref.arrange.guitar;
+        if (guitarRef.col && guitarRef.measure && guitarRef.pattern && backing != null) {
+            const width = guitarRef.col.getBoundingClientRect().width;
+
+            const currMiddle = backing.cols
+                .reduce((total, cur, i) => {
+                    const width = getColWidth(cur);
+                    if (i < backing.cursorX) total += width;
+                    else if (i === backing.cursorX) total += width / 2;
+                    return total;
+                }, 0);
+            const left = currMiddle - width / 2
+            smoothScrollLeft([guitarRef.col, guitarRef.measure, guitarRef.pattern], left);
+        }
+    }
+
     return {
         adjustGridScrollXFromOutline,
         adjustGridScrollYFromOutlineArrange,
@@ -291,6 +316,7 @@ const useScrollService = (ctx: Context = createDefaultContext()) => {
         adjustTerminalScroll,
         adjustHelperScroll,
         resetScoreTrackRef,
+        adjustGEBScrollCol,
         adjustPEBScrollCol
     };
 };

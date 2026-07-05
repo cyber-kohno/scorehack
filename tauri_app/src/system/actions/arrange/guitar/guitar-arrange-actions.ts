@@ -1,11 +1,13 @@
 import { get } from "svelte/store";
 import createGuitarArrangeUpdater from "../../../service/arrange/guitar/guitar-arrange-updater";
 import createArrangeSelector from "../../../service/arrange/arrange-selector";
+import useScrollService from "../../../service/common/scroll-service";
 import Toast from "../../../service/common/toast-controller";
 import { createCommitDataAndRecalculate } from "../../../service/derived/recalculate-derived";
 import playbackGuitarEditor from "../../../service/playback/arrange/playback-guitar-editor";
 import previewArrangeNote from "../../../service/playback/arrange/preview-arrange-note";
 import { controlStore, dataStore } from "../../../store/global-store";
+import type GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
 import ToastState from "../../../store/state/toast-state";
 import startEditorPreviewProgress from "../common/editor-preview-progress";
 
@@ -95,6 +97,47 @@ const createGuitarArrangeActions = () => {
         updater.muteString();
     });
 
+    const moveBackingColCursor = (dir: -1 | 1) => {
+        const ctx = createContext();
+        const moved = ctx.guitarUpdater.moveBackingColCursor(dir);
+        if (!moved) return;
+
+        ctx.commitControl();
+        useScrollService().adjustGEBScrollCol();
+    };
+
+    const insertBackingCol = updateControl(updater => {
+        return updater.insertBackingCol();
+    });
+
+    const deleteBackingCol = updateControl(updater => {
+        return updater.deleteBackingCol();
+    });
+
+    const setBackingColDiv = updateControlWithArg<number>((updater, div) => {
+        return updater.setBackingColDiv(div);
+    });
+
+    const toggleBackingColDot = updateControl(updater => {
+        return updater.toggleBackingColDot();
+    });
+
+    const shiftTechnique = updateControlWithArg<-1 | 1>((updater, dir) => {
+        return updater.shiftTechnique(dir);
+    });
+
+    const setTechnique = updateControlWithArg<GuitarEditorState.Technique | "none">((updater, technique) => {
+        return updater.setTechnique(technique);
+    });
+
+    const shiftControl = updateControlWithArg<GuitarEditorState.Control>((updater, next) => {
+        return updater.shiftControl(next);
+    });
+
+    const toggleBacking = updateControl(updater => {
+        return updater.toggleBacking();
+    });
+
     const applyArrange = () => {
         const ctx = createContext();
 
@@ -106,9 +149,18 @@ const createGuitarArrangeActions = () => {
 
     return {
         applyArrange,
+        deleteBackingCol,
+        insertBackingCol,
         moveCursor,
+        moveBackingColCursor,
         muteString,
         playbackPattern,
+        setBackingColDiv,
+        setTechnique,
+        shiftControl,
+        shiftTechnique,
+        toggleBacking,
+        toggleBackingColDot,
         toggleFret,
     };
 };

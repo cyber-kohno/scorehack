@@ -33,6 +33,8 @@ const useInputPianoEditor = () => {
               case "ArrowLeft": pianoActions.moveVoicingCursor({ x: -1 }); break;
               case "ArrowRight": pianoActions.moveVoicingCursor({ x: 1 }); break;
               case "a": pianoActions.toggleVoicing(); break;
+              case "R":
+              case "r": pianoActions.toggleBacking(); break;
             }
           };
 

@@ -34,6 +34,12 @@
   .wrap[data-type="control"][data-active="true"] {
     background-color: rgb(99, 127, 176);
   }
+  .wrap[data-type="switch"] {
+    background-color: rgb(156, 174, 171);
+  }
+  .wrap[data-type="switch"][data-active="true"] {
+    background-color: rgb(73, 146, 129);
+  }
   .wrap[data-margin="connect"] {
     margin: 2px 0 0 0;
   }

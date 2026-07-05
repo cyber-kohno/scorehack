@@ -165,6 +165,23 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         // PBEditor.initCursor(editor);
     };
 
+    const useBacking = () => {
+        const pianoEditor = getPianoEditor();
+        if (pianoEditor.backing != null) return false;
+
+        pianoEditor.backing = PianoBackingState.createInitialBackingProps();
+        return true;
+    };
+
+    const deleteBacking = () => {
+        const pianoEditor = getPianoEditor();
+        if (pianoEditor.backing == null) return false;
+
+        pianoEditor.backing = null;
+        pianoEditor.control = "voicing";
+        return true;
+    };
+
     const shiftLayer = () => {
         const pianoEditor = getPianoEditor();
         const backing = pianoEditor.backing;
@@ -707,6 +724,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         applyChordBlock,
         applyFinderPattern,
         applyLibrary,
+        deleteBacking,
         moveFinderBacking,
         moveFinderVoicing,
         moveVoicingCursor,
@@ -726,6 +744,7 @@ const createPianoArrangeUpdater = (ctx: Context) => {
         toggleBackingNote,
         toggleBackingPedal,
         toggleVoicing,
+        useBacking,
     };
 };
 

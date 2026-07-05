@@ -6,7 +6,7 @@ namespace ChordTheory {
         // 3和音（トライアド）
         '', 'm', 'sus4', 'sus2', 'dim', 'aug', 'm-5',
         // 4和音（テトラド）
-        '7', 'm7', 'M7', 'mmaj7', '7sus4', 'dim7', 'aug7', '6', 'm6', 'add9', 'madd9',
+        '7', 'm7', 'M7', 'mmaj7', 'm7-5', '7sus4', 'dim7', 'aug7', '6', 'm6', 'add9', 'madd9',
         // 5和音（9th系）
         '9', 'm9', 'M9',
         // 6和音（11th系）
@@ -21,7 +21,7 @@ namespace ChordTheory {
         // 3和音（トライアド）
         ['', 'm', 'sus4', 'sus2', 'dim', 'aug', 'm-5'],
         // 4和音（テトラド）
-        ['7', 'M7', 'm7', 'mmaj7', '7sus4', 'dim7', 'aug7', '6', 'm6', 'add9', 'madd9'],
+        ['7', 'M7', 'm7', 'mmaj7', 'm7-5', '7sus4', 'dim7', 'aug7', '6', 'm6', 'add9', 'madd9'],
         // 5和音（9th系）
         ['9', 'm9', 'M9'],
         // 6和音（11th系）
@@ -111,8 +111,39 @@ namespace ChordTheory {
         { index: 6, semitone: -1, symbol: '' },
     ];
 
-    export const getDiatonicDegreeChord = (scale: Scale, scaleIndex: number): DegreeChord => {
-        const list = scale === 'major' ? MAJOR_SCALE_DEGREE_CHORDS : MINOR_SCALE_DEGREE_CHORDS;
+    export const MAJOR_SCALE_DEGREE_7TH_CHORDS: DegreeChord[] = [
+        { index: 0, symbol: 'M7' },
+        { index: 1, symbol: 'm7' },
+        { index: 2, symbol: 'm7' },
+        { index: 3, symbol: 'M7' },
+        { index: 4, symbol: '7' },
+        { index: 5, symbol: 'm7' },
+        { index: 6, symbol: 'm7-5' },
+    ];
+
+    export const MINOR_SCALE_DEGREE_7TH_CHORDS: DegreeChord[] = [
+        { index: 0, symbol: 'm7' },
+        { index: 1, symbol: 'm7-5' },
+        { index: 2, semitone: -1, symbol: 'M7' },
+        { index: 3, symbol: 'm7' },
+        { index: 4, symbol: '7' },
+        { index: 5, semitone: -1, symbol: 'M7' },
+        { index: 6, semitone: -1, symbol: '7' },
+    ];
+
+    export const getDiatonicDegreeChord = (
+        scale: Scale,
+        scaleIndex: number,
+        withSeventh: boolean = false,
+    ): DegreeChord => {
+        const list = (() => {
+            if (scale === 'major') return withSeventh
+                ? MAJOR_SCALE_DEGREE_7TH_CHORDS
+                : MAJOR_SCALE_DEGREE_CHORDS;
+            return withSeventh
+                ? MINOR_SCALE_DEGREE_7TH_CHORDS
+                : MINOR_SCALE_DEGREE_CHORDS;
+        })();
         const degreeChord = list[scaleIndex];
         if (degreeChord == undefined) throw new Error(`scaleIndex is out of range. [${scaleIndex}]`);
         return JSON.parse(JSON.stringify(degreeChord));
@@ -232,6 +263,10 @@ namespace ChordTheory {
             case 'mmaj7': return {
                 structs: ['p1', 'm3', 'p5', 'M7'],
                 lower: 'm'
+            };
+            case 'm7-5': return {
+                structs: ['p1', 'm3', 'd5', 'm7'],
+                lower: 'm-5'
             };
             case '7sus4': return {
                 structs: ['p1', 'p4', 'p5', 'm7'],

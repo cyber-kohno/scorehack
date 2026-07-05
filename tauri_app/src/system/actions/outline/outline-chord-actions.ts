@@ -49,7 +49,7 @@ const createOutlineChordActions = (
         return (nextBeat - currentBeat) * beatRate;
     };
 
-    const setDegree = (scaleIndex: number) => {
+    const setDiatonicDegree = (scaleIndex: number, withSeventh: boolean = false) => {
         const ctx = createContext();
         const element = ctx.outlineSelector.getCurrentElement();
 
@@ -59,7 +59,7 @@ const createOutlineChordActions = (
         const afterChordData = cloneChordData(beforeChordData);
         const tonality = ctx.derivedSelector.getCurBase().scoreBase.tonality;
         const displayTonality = DegreeBasis.getDisplayTonality(tonality, ctx.settings.notation.degreeBasis);
-        const degree = ChordTheory.getDiatonicDegreeChord(displayTonality.scale, scaleIndex);
+        const degree = ChordTheory.getDiatonicDegreeChord(displayTonality.scale, scaleIndex, withSeventh);
         afterChordData.degree = DegreeBasis.toStoredDegree(degree, tonality, ctx.settings.notation.degreeBasis);
 
         ctx.outlineUpdater.setChordData(afterChordData);
@@ -272,7 +272,7 @@ const createOutlineChordActions = (
     };
 
     return {
-        setDegree,
+        setDiatonicDegree,
         modSymbol,
         modRoot,
         modBeat,

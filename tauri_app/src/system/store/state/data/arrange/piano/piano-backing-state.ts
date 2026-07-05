@@ -42,6 +42,10 @@ namespace PianoBackingState {
         return [{ cols: [], items: [] }, { cols: [], items: [] }]
     }
 
+    export const isEmpty = (backing: EditorProps | DataProps) => {
+        return backing.recordNum === 0 && backing.layers.every(layer => layer.cols.length === 0);
+    };
+
     export const convRemoveOptionNotes = (items: string[]) => {
         return items.map((item) => {
             const note = convNotesInfo(item);

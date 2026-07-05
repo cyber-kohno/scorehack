@@ -115,8 +115,8 @@ const createTerminalUpdater = (ctx: Context) => {
         const keyword = orderItems[orderItems.length - 1];
         list = list.filter(item => item.indexOf(keyword) !== -1);
         if (list.length > 0) {
-            // 候補と完全一致した場合表示しない
-            if (list[0] === keyword) return;
+            // 候補と完全一致した候補しかない場合表示しない
+            if (list.length === 1 && list[0] === keyword) return;
 
             terminal.helper = TerminalState.createHelperInitial();
             terminal.helper.list = list;

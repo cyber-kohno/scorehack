@@ -4,6 +4,7 @@
   import createArrangeSelector from "../../../service/arrange/arrange-selector";
   import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
   import { controlStore, dataStore } from "../../../store/global-store";
+  import GEBackingFrame from "./GEBackingFrame.svelte";
 
   const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
@@ -30,11 +31,13 @@
   const isChordTone = (midi: number) => {
     return pitchClasses.includes(((midi % 12) + 12) % 12);
   };
+
+  $: isVoicingFocus = editor.control === "voicing";
 </script>
 
 <div class="wrap">
   <ChordInfoHeader />
-  <FocusableContent isFocus={true}>
+  <FocusableContent isFocus={isVoicingFocus}>
     <div class="fretboard">
       <div class="row header">
         <div class="string-label">String</div>
@@ -51,7 +54,7 @@
             <span>{string.openNote}</span>
           </div>
           <div
-            class:current={editor.cursorString === stringIndex && editor.frets[stringIndex] === null}
+            class:current={isVoicingFocus && editor.cursorString === stringIndex && editor.frets[stringIndex] === null}
             class:selected={editor.frets[stringIndex] === null}
             class="mute-cell"
           >
@@ -64,7 +67,7 @@
             <div
               class:enabled
               class:selected={editor.frets[stringIndex] === fret}
-              class:current={editor.cursorString === stringIndex && editor.cursorFret === fret}
+              class:current={isVoicingFocus && editor.cursorString === stringIndex && editor.cursorFret === fret}
               class="fret-cell"
             >
               {getNoteName(midi)}
@@ -74,15 +77,19 @@
       {/each}
     </div>
   </FocusableContent>
+  {#if editor.backing != null}
+    <GEBackingFrame />
+  {/if}
 </div>
 
 <style>
   .wrap {
-    display: inline-block;
+    display: block;
     position: relative;
-    width: 100%;
+    width: 734px;
     height: 100%;
     background-color: #d8ece1;
+    overflow: hidden;
   }
 
   .fretboard {

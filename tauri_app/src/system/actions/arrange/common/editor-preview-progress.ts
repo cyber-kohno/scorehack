@@ -1,15 +1,15 @@
 import Progress from "../../../service/common/progress-controller";
 import ProgressState from "../../../store/state/progress-state";
 
-const STEP_COUNT = 100;
-const MIN_INTERVAL_MS = 16;
+const INTERVAL_MS = 16;
 const DEFAULT_X = 238;
 const DEFAULT_Y = 34;
 const DEFAULT_WIDTH = 500;
 const DEFAULT_HEIGHT = 15;
 
 const startEditorPreviewProgress = (durationMs: number) => {
-    const intervalMs = Math.max(MIN_INTERVAL_MS, durationMs / STEP_COUNT);
+    const total = Math.max(1, Math.ceil(durationMs / INTERVAL_MS));
+    const intervalMs = durationMs / total;
     let timer: ReturnType<typeof setInterval> | null = null;
 
     const close = () => {
@@ -25,7 +25,7 @@ const startEditorPreviewProgress = (durationMs: number) => {
         y: DEFAULT_Y,
         width: DEFAULT_WIDTH,
         height: DEFAULT_HEIGHT,
-        total: STEP_COUNT,
+        total,
         value: 0,
         onDestroy: close,
     });
@@ -35,7 +35,7 @@ const startEditorPreviewProgress = (durationMs: number) => {
         stepCount++;
         Progress.step();
 
-        if (stepCount >= STEP_COUNT) {
+        if (stepCount >= total) {
             Progress.close();
         }
     }, intervalMs);

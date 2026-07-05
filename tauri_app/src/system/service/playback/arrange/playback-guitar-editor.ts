@@ -34,14 +34,21 @@ const playbackGuitarEditor = () => {
         arrange.target.beat.num +
         (-arrange.target.beat.eatHead + arrange.target.beat.eatTail) / beatDiv16Cnt;
     const sustainBeat = beatSize * beatRate;
-    const notes = GuitarArrangePatternNote.createNotes(
-        { frets: editor.frets },
-        {
-            sustainBeat,
-            stroke: GuitarEditorState.createDefaultStrokeProps(),
-        },
-    );
-    if (notes.length === 0) return EditorPlaybackResult.ignored();
+    const unit = { frets: editor.frets };
+    const stroke = GuitarEditorState.createDefaultStrokeProps();
+    const notes = editor.backing == null
+        ? GuitarArrangePatternNote.createNotes(
+            unit,
+            {
+                sustainBeat,
+                stroke,
+            },
+        )
+        : GuitarArrangePatternNote.createBackingNotes(
+            unit,
+            editor.backing,
+            { stroke },
+        );
 
     playback.timerKeys = [];
     playback.intervalKeys = [];
@@ -49,7 +56,12 @@ const playbackGuitarEditor = () => {
     const tempo = arrange.target.scoreBase.tempo * beatRate;
     const msPerQuarter = 60000 / tempo;
 
-    let endMs = 0;
+    const patternDurationMs = editor.backing == null
+        ? sustainBeat * msPerQuarter
+        : GuitarEditorState.getBackingBeatLength(editor.backing.cols) * msPerQuarter;
+    if (notes.length === 0 && patternDurationMs === 0) return EditorPlaybackResult.ignored();
+
+    let endMs = patternDurationMs;
     notes.forEach((note) => {
         const side = MelodyState.calcBeatSide(note);
         const startMs = side.pos * msPerQuarter;
