@@ -2,28 +2,24 @@
   import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
   import createArrangeSelector from "../../../service/arrange/arrange-selector";
   import { controlStore, dataStore } from "../../../store/global-store";
-
-  const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  import TonalityTheory from "../../../domain/theory/tonality-theory";
 
   $: selector = createArrangeSelector({ control: $controlStore, data: $dataStore });
   $: editor = selector.getGuitarEditor();
-
-  const getNoteName = (midi: number) => {
-    const pitchClass = ((midi % 12) + 12) % 12;
-    const octave = Math.floor(midi / 12) - 1;
-    return `${NOTE_NAMES[pitchClass]}${octave}`;
-  };
 
   $: records = GuitarEditorState.STANDARD_TUNING.map((string, stringIndex) => {
     const fret = editor.frets[stringIndex];
     if (fret == null) return "-";
 
-    return getNoteName(string.openMidi + fret);
+    return TonalityTheory.getKey12FullName(string.openPitchIndex + fret);
   });
+  $: displayStrings = GuitarEditorState.STANDARD_TUNING
+    .map((string, stringIndex) => ({ string, stringIndex }))
+    .reverse();
 </script>
 
 <div class="wrap">
-  {#each GuitarEditorState.STANDARD_TUNING as string, stringIndex}
+  {#each displayStrings as { string, stringIndex }}
     <div class="record">
       <div class="struct">
         {string.number} {records[stringIndex]}

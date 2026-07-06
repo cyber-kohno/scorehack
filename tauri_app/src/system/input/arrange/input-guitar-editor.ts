@@ -21,8 +21,8 @@ const useInputGuitarEditor = () => {
         switch (editor.control) {
             case "voicing":
                 switch (eventKey) {
-                    case "ArrowUp": guitarActions.moveCursor({ string: -1 }); break;
-                    case "ArrowDown": guitarActions.moveCursor({ string: 1 }); break;
+                    case "ArrowUp": guitarActions.moveCursor({ string: 1 }); break;
+                    case "ArrowDown": guitarActions.moveCursor({ string: -1 }); break;
                     case "ArrowLeft": guitarActions.moveCursor({ fret: -1 }); break;
                     case "ArrowRight": guitarActions.moveCursor({ fret: 1 }); break;
                     case "a":

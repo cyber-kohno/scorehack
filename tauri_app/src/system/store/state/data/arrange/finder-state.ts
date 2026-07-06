@@ -1,6 +1,8 @@
 import RhythmTheory from "../../../../domain/theory/rhythm-theory";
+import type ChordTheory from "../../../../domain/theory/chord-theory";
 import type ArrangeState from "./arrange-state";
 import type DrumEditorState from "./drum/drum-editor-state";
+import type GuitarEditorState from "./guitar/guitar-editor-state";
 import type PianoEditorState from "./piano/piano-editor-state";
 
 namespace FinderState {
@@ -90,6 +92,101 @@ namespace FinderState {
         ) => {
             const pattern = bank.patterns.find(item => item.no === no);
             if (pattern == undefined) throw new Error("Drum pattern must exist.");
+            return pattern;
+        };
+    }
+
+    export namespace Guitar {
+        export const ColumnCount = 3;
+        export const MaxVoicingItemCount = 6;
+
+        export type VoicingKey = {
+            root: number;
+            symbol: ChordTheory.ChordSymol;
+            on: number | null;
+        };
+
+        export type VoicingItem = {
+            voicingNo: number;
+        };
+
+        export type BackingItem = {
+            backingNo: number;
+        };
+
+        export type Cursor = {
+            target: "voicing" | "backing";
+            voicing: number;
+            backing: number;
+        };
+
+        export type Finder = {
+            request: SearchRequest;
+            key: VoicingKey;
+            voicings: VoicingItem[];
+            backings: BackingItem[];
+            cursor: Cursor;
+            apply: {
+                voicing: number;
+                backing: number;
+            };
+        };
+
+        export const createVoicingKey = (
+            chord: ChordTheory.KeyChordProps,
+        ): VoicingKey => ({
+            root: chord.key12,
+            symbol: chord.symbol,
+            on: chord.on?.key12 ?? null,
+        });
+
+        export const equalsVoicingKey = (
+            a: VoicingKey,
+            b: VoicingKey | undefined,
+        ) => {
+            if (b == undefined) return false;
+            return a.root === b.root && a.symbol === b.symbol && a.on === b.on;
+        };
+
+        export const searchVoicings = (args: {
+            key: VoicingKey;
+            arrTrack: ArrangeState.GuitarTrack;
+        }): VoicingItem[] => {
+            const { key, arrTrack } = args;
+            return [
+                { voicingNo: -1 },
+                ...arrTrack.bank.voicingPatterns
+                    .filter(pattern => equalsVoicingKey(key, pattern.key))
+                    .slice(0, MaxVoicingItemCount - 1)
+                    .map(pattern => ({ voicingNo: pattern.no })),
+            ];
+        };
+
+        export const searchBackings = (args: {
+            arrTrack: ArrangeState.GuitarTrack;
+        }): BackingItem[] => {
+            const { arrTrack } = args;
+            return [
+                { backingNo: -1 },
+                ...arrTrack.bank.backingPatterns.map(pattern => ({ backingNo: pattern.no })),
+            ];
+        };
+
+        export const getVoicingFromNo = (
+            no: number,
+            bank: GuitarEditorState.Bank,
+        ) => {
+            const pattern = bank.voicingPatterns.find(item => item.no === no);
+            if (pattern == undefined) throw new Error("Guitar voicing pattern must exist.");
+            return pattern;
+        };
+
+        export const getBackingFromNo = (
+            no: number,
+            bank: GuitarEditorState.Bank,
+        ) => {
+            const pattern = bank.backingPatterns.find(item => item.no === no);
+            if (pattern == undefined) throw new Error("Guitar backing pattern must exist.");
             return pattern;
         };
     }

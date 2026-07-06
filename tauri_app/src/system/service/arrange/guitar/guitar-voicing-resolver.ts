@@ -21,7 +21,7 @@ namespace GuitarVoicingResolver {
         const stringCandidates = GuitarEditorState.STANDARD_TUNING.map((string) => {
             const frets: GuitarEditorState.StringSelection[] = [null];
             for (let fret = 0; fret <= GuitarEditorState.MAX_FRET; fret++) {
-                const pitchClass = (string.openMidi + fret) % 12;
+                const pitchClass = (string.openPitchIndex + fret) % 12;
                 if (pitchClasses.includes(pitchClass)) frets.push(fret);
             }
             return frets;
@@ -68,7 +68,7 @@ namespace GuitarVoicingResolver {
             .map((fret, stringIndex) => fret == null ? null : {
                 fret,
                 stringIndex,
-                pitchClass: (GuitarEditorState.STANDARD_TUNING[stringIndex].openMidi + fret) % 12,
+                pitchClass: (GuitarEditorState.STANDARD_TUNING[stringIndex].openPitchIndex + fret) % 12,
             })
             .filter((item): item is NonNullable<typeof item> => item != null);
 
@@ -102,7 +102,7 @@ namespace GuitarVoicingResolver {
             const bassFret = frets[firstSoundingString];
             if (bassFret != null) {
                 const bassPitchClass =
-                    (GuitarEditorState.STANDARD_TUNING[firstSoundingString].openMidi + bassFret) % 12;
+                    (GuitarEditorState.STANDARD_TUNING[firstSoundingString].openPitchIndex + bassFret) % 12;
                 if (bassPitchClass === pitchClasses[0]) score += 25;
                 else score -= 8;
             }

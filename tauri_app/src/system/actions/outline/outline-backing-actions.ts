@@ -2,7 +2,7 @@ import ChordTheory from "../../domain/theory/chord-theory";
 import GuitarVoicingResolver from "../../service/arrange/guitar/guitar-voicing-resolver";
 import ConfirmDialog from "../../service/common/confirm-dialog-controller";
 import Toast from "../../service/common/toast-controller";
-import type FinderState from "../../store/state/data/arrange/finder-state";
+import FinderState from "../../store/state/data/arrange/finder-state";
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
@@ -224,7 +224,11 @@ const createOutlineBackingActions = (
         });
         if (frets.every(fret => fret == null)) return false;
 
-        const voicingPattNo = GuitarEditorState.registPattern(frets, guitarLib);
+        const voicingPattNo = GuitarEditorState.registPattern(
+            frets,
+            guitarLib,
+            FinderState.Guitar.createVoicingKey(compiledChord.chord),
+        );
 
         relation = {
             chordSeq,

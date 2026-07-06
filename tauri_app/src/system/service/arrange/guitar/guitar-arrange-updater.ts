@@ -1,6 +1,7 @@
 import type ArrangeState from "../../../store/state/data/arrange/arrange-state";
 import Layout from "../../../layout/layout-constant";
 import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
+import FinderState from "../../../store/state/data/arrange/finder-state";
 
 type Context = {
     arrange: ArrangeState.EditorProps;
@@ -31,6 +32,11 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         return arrTrack.bank;
     };
 
+    const getFinder = () => {
+        if (arrange.finder == undefined) throw new Error("Guitar finder must exist.");
+        return arrange.finder as FinderState.Guitar.Finder;
+    };
+
     const getCompiledChord = () => {
         return arrange.target.compiledChord;
     };
@@ -38,7 +44,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
     const isCurrentChordTone = () => {
         const editor = getGuitarEditor();
         const tuning = GuitarEditorState.STANDARD_TUNING[editor.cursorString];
-        const pitchClass = (tuning.openMidi + editor.cursorFret) % 12;
+        const pitchClass = (tuning.openPitchIndex + editor.cursorFret) % 12;
         return getCompiledChord().structs
             .map(s => ((s.key12 % 12) + 12) % 12)
             .includes(pitchClass);
@@ -224,7 +230,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         return {
             activated,
             pitch: activated
-                ? GuitarEditorState.STANDARD_TUNING[editor.cursorString].openMidi + editor.cursorFret
+                ? GuitarEditorState.STANDARD_TUNING[editor.cursorString].openPitchIndex + editor.cursorFret
                 : undefined,
         };
     };
@@ -238,7 +244,11 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         const editor = getGuitarEditor();
         const chordSeq = arrange.target.chordSeq;
         const guitarLib = getGuitarLib();
-        const voicingPattNo = GuitarEditorState.registPattern(editor.frets, guitarLib);
+        const voicingPattNo = GuitarEditorState.registPattern(
+            editor.frets,
+            guitarLib,
+            FinderState.Guitar.createVoicingKey(arrange.target.compiledChord.chord),
+        );
         const backingPattNo = editor.backing == null
             ? -1
             : GuitarEditorState.registBackingPattern(
@@ -261,12 +271,81 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         }
     };
 
+    const moveFinder = (dir: -1 | 1 | -3 | 3) => {
+        const finder = getFinder();
+        const list = finder.cursor.target === "voicing"
+            ? finder.voicings
+            : finder.backings;
+        const key = finder.cursor.target;
+        const current = finder.cursor[key];
+        const next = current + dir;
+        if (next < 0 || next > list.length - 1) return false;
+
+        finder.cursor[key] = next;
+        return true;
+    };
+
+    const applyFinderSelection = () => {
+        const finder = getFinder();
+
+        if (finder.cursor.target === "voicing") {
+            finder.cursor.target = "backing";
+            return { control: true, data: false, closeArrange: false };
+        }
+
+        const selectedVoicing = finder.voicings[finder.cursor.voicing];
+        const selectedBacking = finder.backings[finder.cursor.backing];
+        if (selectedVoicing == undefined || selectedBacking == undefined) {
+            throw new Error("Guitar finder selection must exist.");
+        }
+
+        const voicingNo = selectedVoicing.voicingNo;
+        const backingNo = selectedBacking.backingNo;
+        const chordSeq = arrange.target.chordSeq;
+
+        const openEditor = () => {
+            const editor = GuitarEditorState.createInitialProps();
+            if (voicingNo !== -1) {
+                const voicing = FinderState.Guitar.getVoicingFromNo(voicingNo, arrTrack.bank);
+                editor.frets = JSON.parse(JSON.stringify(voicing.frets)) as GuitarEditorState.StringSelection[];
+            }
+            if (backingNo !== -1) {
+                const backing = FinderState.Guitar.getBackingFromNo(backingNo, arrTrack.bank);
+                editor.backing = GuitarEditorState.createBackingEditorProps(backing.backing);
+                editor.control = "voicing";
+            }
+            arrange.editor = editor;
+            delete arrange.finder;
+            return { control: true, data: false, closeArrange: false };
+        };
+
+        if (voicingNo === -1) return openEditor();
+
+        let relation = arrTrack.relations.find(r => r.chordSeq === chordSeq);
+        if (relation == undefined) {
+            relation = {
+                chordSeq,
+                bkgPatt: backingNo,
+                sndsPatt: voicingNo,
+            };
+            arrTrack.relations.push(relation);
+        } else {
+            relation.bkgPatt = backingNo;
+            relation.sndsPatt = voicingNo;
+            GuitarEditorState.deleteUnreferUnit(arrTrack);
+        }
+
+        return { control: true, data: true, closeArrange: true };
+    };
+
     return {
+        applyFinderSelection,
         applyArrange,
         deleteBacking,
         deleteBackingCol,
         insertBackingCol,
         moveCursor,
+        moveFinder,
         moveBackingColCursor,
         muteString,
         setBackingColDiv,

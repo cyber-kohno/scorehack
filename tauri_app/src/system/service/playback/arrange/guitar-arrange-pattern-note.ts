@@ -4,7 +4,7 @@ import type PlaybackCacheState from "../timeline/playback-cache-state";
 namespace GuitarArrangePatternNote {
     const STROKE_INTERVAL_FACTOR = 0.015;
     const DEFAULT_STROKE_SPEED = 1;
-    const DEFAULT_STROKE_DECAY_RATE = 0.92;
+    const DEFAULT_STROKE_DECAY_RATE = 0.82;
     const DEFAULT_SUSTAIN_STROKE_VELOCITY = 10;
 
     type ResolvedStrokeProps = {
@@ -12,6 +12,9 @@ namespace GuitarArrangePatternNote {
         velocity: number;
         decayRate: number;
         speed: number;
+    };
+    type GuitarSoundNote = PlaybackCacheState.SoundNote & {
+        stringIndex: number;
     };
 
     export const createUnitNotes = (
@@ -30,7 +33,7 @@ namespace GuitarArrangePatternNote {
             sustainBeat: number;
         },
     ): PlaybackCacheState.SoundNote[] => {
-        const notes: PlaybackCacheState.SoundNote[] = [];
+        const notes: GuitarSoundNote[] = [];
         pushStrokeNotes(notes, unit, 0, option.sustainBeat, {
             direction: "down",
             velocity: DEFAULT_SUSTAIN_STROKE_VELOCITY,
@@ -38,14 +41,14 @@ namespace GuitarArrangePatternNote {
             speed: DEFAULT_STROKE_SPEED,
         });
 
-        return notes;
+        return finalizeSustainNotes(notes, option.sustainBeat);
     };
 
     export const createBackingNotes = (
         unit: GuitarEditorState.Unit,
         backing: GuitarEditorState.BackingEditorProps | GuitarEditorState.BackingData,
     ): PlaybackCacheState.SoundNote[] => {
-        const notes: PlaybackCacheState.SoundNote[] = [];
+        const notes: GuitarSoundNote[] = [];
 
         if ("items" in backing) {
             backing.items.forEach((item) => {
@@ -58,11 +61,11 @@ namespace GuitarArrangePatternNote {
             });
         }
 
-        return notes;
+        return finalizeSustainNotes(notes, getColsBeat(backing.cols));
     };
 
     const pushBackingEventNotes = (
-        notes: PlaybackCacheState.SoundNote[],
+        notes: GuitarSoundNote[],
         unit: GuitarEditorState.Unit,
         cols: GuitarEditorState.Col[],
         event: GuitarEditorState.PatternEvent,
@@ -89,38 +92,41 @@ namespace GuitarArrangePatternNote {
     };
 
     const pushStrokeNotes = (
-        notes: PlaybackCacheState.SoundNote[],
+        notes: GuitarSoundNote[],
         unit: GuitarEditorState.Unit,
         posBeat: number,
         lenBeat: number,
         stroke: ResolvedStrokeProps,
     ) => {
-        const orderedStringIndexes = getOrderedStringIndexes(stroke.direction);
+        const soundingStrings = getOrderedStringIndexes(stroke.direction)
+            .map((stringIndex) => {
+                const fret = unit.frets[stringIndex];
+                const tuning = GuitarEditorState.STANDARD_TUNING[stringIndex];
+                if (fret == null || tuning == undefined) return undefined;
+
+                return { fret, stringIndex, tuning };
+            })
+            .filter((item) => item != undefined);
         const intervalBeat = STROKE_INTERVAL_FACTOR / stroke.speed;
 
-        orderedStringIndexes.forEach((stringIndex, strokeIndex) => {
-            const fret = unit.frets[stringIndex];
-            if (fret == null) return;
-
-            const tuning = GuitarEditorState.STANDARD_TUNING[stringIndex];
-            if (tuning == undefined) return;
-
+        soundingStrings.forEach(({ fret, stringIndex, tuning }, strokeIndex) => {
             const delayBeat = intervalBeat * strokeIndex;
             const sustainBeat = Math.max(0, lenBeat - delayBeat);
             if (sustainBeat === 0) return;
 
             notes.push({
+                stringIndex,
                 norm: { div: 1 },
                 pos: posBeat + delayBeat,
                 len: sustainBeat,
-                pitch: tuning.openMidi + fret,
+                pitch: tuning.openPitchIndex + fret,
                 velocity: stroke.velocity * Math.pow(stroke.decayRate, strokeIndex),
             });
         });
     };
 
     const pushPickNote = (
-        notes: PlaybackCacheState.SoundNote[],
+        notes: GuitarSoundNote[],
         unit: GuitarEditorState.Unit,
         stringNumber: GuitarEditorState.PickStringNumber,
         velocity: number,
@@ -135,10 +141,11 @@ namespace GuitarArrangePatternNote {
         if (tuning == undefined) return;
 
         notes.push({
+            stringIndex,
             norm: { div: 1 },
             pos: posBeat,
             len: lenBeat,
-            pitch: tuning.openMidi + fret,
+            pitch: tuning.openPitchIndex + fret,
             velocity,
         });
     };
@@ -148,6 +155,10 @@ namespace GuitarArrangePatternNote {
             if (colIndex >= index) return total;
             return total + getColBeat(col);
         }, 0);
+    };
+
+    const getColsBeat = (cols: GuitarEditorState.Col[]) => {
+        return cols.reduce((total, col) => total + getColBeat(col), 0);
     };
 
     const getColBeat = (col: GuitarEditorState.Col) => {
@@ -165,6 +176,27 @@ namespace GuitarArrangePatternNote {
     const getOrderedStringIndexes = (direction: GuitarEditorState.StrokeDirection) => {
         const indexes = GuitarEditorState.STANDARD_TUNING.map((_, index) => index);
         return direction === "down" ? indexes : indexes.reverse();
+    };
+
+    const finalizeSustainNotes = (
+        notes: GuitarSoundNote[],
+        endBeat: number,
+    ): PlaybackCacheState.SoundNote[] => {
+        const sorted = [...notes].sort((a, b) => {
+            if (a.stringIndex !== b.stringIndex) return a.stringIndex - b.stringIndex;
+            return a.pos - b.pos;
+        });
+
+        sorted.forEach((note, index) => {
+            const next = sorted
+                .slice(index + 1)
+                .find((item) => item.stringIndex === note.stringIndex);
+            note.len = Math.max(0, (next?.pos ?? endBeat) - note.pos);
+        });
+
+        return notes
+            .filter((note) => note.len > 0)
+            .map(({ stringIndex: _stringIndex, ...note }) => note);
     };
 }
 

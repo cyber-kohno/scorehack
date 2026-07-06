@@ -1,6 +1,7 @@
 import type InputState from "../../../store/state/input-state";
 import createArrangeActions from "../../../actions/arrange/arrange-actions";
 import createDrumArrangeActions from "../../../actions/arrange/drum/drum-arrange-actions";
+import createGuitarArrangeActions from "../../../actions/arrange/guitar/guitar-arrange-actions";
 import createPianoArrangeActions from "../../../actions/arrange/piano/piano-arrange-actions";
 import { get } from "svelte/store";
 import { controlStore } from "../../../store/global-store";
@@ -8,6 +9,7 @@ import { controlStore } from "../../../store/global-store";
 const useInputFinder = () => {
     const arrangeActions = createArrangeActions();
     const drumActions = createDrumArrangeActions();
+    const guitarActions = createGuitarArrangeActions();
     const pianoActions = createPianoArrangeActions();
 
     const getMethod = () => {
@@ -36,6 +38,16 @@ const useInputFinder = () => {
         }
     };
 
+    const guitarControl = (eventKey: string) => {
+        switch (eventKey) {
+            case 'ArrowLeft': guitarActions.moveFinderPattern(-1); break;
+            case 'ArrowRight': guitarActions.moveFinderPattern(1); break;
+            case 'ArrowUp': guitarActions.moveFinderPattern(-3); break;
+            case 'ArrowDown': guitarActions.moveFinderPattern(3); break;
+            case 'Enter': guitarActions.applyFinderSelection(); break;
+        }
+    };
+
     const control = (eventKey: string) => {
         switch (eventKey) {
             case 'Escape':
@@ -44,6 +56,9 @@ const useInputFinder = () => {
                 switch (getMethod()) {
                     case "piano":
                         pianoControl(eventKey);
+                        break;
+                    case "guitar":
+                        guitarControl(eventKey);
                         break;
                     case "drum":
                         drumControl(eventKey);

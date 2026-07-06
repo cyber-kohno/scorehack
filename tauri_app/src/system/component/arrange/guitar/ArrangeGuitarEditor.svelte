@@ -5,8 +5,7 @@
   import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
   import { controlStore, dataStore } from "../../../store/global-store";
   import GEBackingFrame from "./GEBackingFrame.svelte";
-
-  const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  import TonalityTheory from "../../../domain/theory/tonality-theory";
 
   $: selector = createArrangeSelector({ control: $controlStore, data: $dataStore });
   $: arrange = selector.getArrange();
@@ -17,15 +16,12 @@
   })();
   $: pitchClasses = compiledChord.structs.map((s) => ((s.key12 % 12) + 12) % 12);
   $: frets = Array.from({ length: GuitarEditorState.MAX_FRET + 1 }, (_, fret) => fret);
+  $: displayStrings = GuitarEditorState.STANDARD_TUNING
+    .map((string, stringIndex) => ({ string, stringIndex }))
+    .reverse();
 
   const getMidi = (stringIndex: number, fret: number) => {
-    return GuitarEditorState.STANDARD_TUNING[stringIndex].openMidi + fret;
-  };
-
-  const getNoteName = (midi: number) => {
-    const pitchClass = ((midi % 12) + 12) % 12;
-    const octave = Math.floor(midi / 12) - 1;
-    return `${NOTE_NAMES[pitchClass]}${octave}`;
+    return GuitarEditorState.STANDARD_TUNING[stringIndex].openPitchIndex + fret;
   };
 
   const isChordTone = (midi: number) => {
@@ -47,7 +43,7 @@
         {/each}
       </div>
 
-      {#each GuitarEditorState.STANDARD_TUNING as string, stringIndex}
+      {#each displayStrings as { string, stringIndex }}
         <div class="row">
           <div class="string-label">
             <strong>{string.number}</strong>
@@ -70,7 +66,7 @@
               class:current={isVoicingFocus && editor.cursorString === stringIndex && editor.cursorFret === fret}
               class="fret-cell"
             >
-              {getNoteName(midi)}
+              {TonalityTheory.getKey12FullName(midi)}
             </div>
           {/each}
         </div>

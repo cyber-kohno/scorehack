@@ -238,7 +238,7 @@ const collectArrangeTrackEvents = (props: CreateScoreWavProps) => {
             const startBeat =
               chordCache.startBeat * beatRate +
               (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
-            const patternNotes = GuitarArrangePatternNote.createNotes(
+            const patternNotes = GuitarArrangePatternNote.createUnitNotes(
               arrPattern,
               {
                 sustainBeat: chordCache.lengthBeatNote,
@@ -251,7 +251,7 @@ const collectArrangeTrackEvents = (props: CreateScoreWavProps) => {
                 baseCaches,
                 0,
                 targetNote,
-                track.volume,
+                track.volume * (note.velocity / 10),
                 settings.playback.swing,
               );
               if (playInfo == null) return;
@@ -355,7 +355,7 @@ const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
             const startBeat =
               chordCache.startBeat * beatRate +
               (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
-            const patternNotes = GuitarArrangePatternNote.createNotes(
+            const patternNotes = GuitarArrangePatternNote.createUnitNotes(
               arrPattern,
               {
                 sustainBeat: chordCache.lengthBeatNote,
@@ -368,7 +368,7 @@ const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
                 baseCaches,
                 0,
                 targetNote,
-                track.volume,
+                track.volume * (note.velocity / 10),
                 settings.playback.swing,
               );
               if (playInfo == null) return;

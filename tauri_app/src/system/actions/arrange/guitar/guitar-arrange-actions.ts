@@ -7,7 +7,7 @@ import { createCommitDataAndRecalculate } from "../../../service/derived/recalcu
 import playbackGuitarEditor from "../../../service/playback/arrange/playback-guitar-editor";
 import previewArrangeNote from "../../../service/playback/arrange/preview-arrange-note";
 import { controlStore, dataStore } from "../../../store/global-store";
-import type GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
+import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
 import ToastState from "../../../store/state/toast-state";
 import startEditorPreviewProgress from "../common/editor-preview-progress";
 
@@ -25,6 +25,7 @@ const createContext = () => {
     const commitData = () => dataStore.set({ ...data });
 
     return {
+        arrange,
         control,
         arrTrack,
         guitarUpdater: createGuitarArrangeUpdater({ arrange, arrTrack }),
@@ -34,7 +35,40 @@ const createContext = () => {
 };
 
 const createGuitarArrangeActions = () => {
+    const showEditorToast = (text: string) => {
+        Toast.create({
+            ...ToastState.createInitial(),
+            x: 238,
+            y: 56,
+            width: 360,
+            text,
+        });
+    };
+
+    const getVoicingValidationMessage = (
+        validation: GuitarEditorState.StrokeVoicingValidationResult,
+    ) => {
+        if (validation.ok) return "";
+
+        switch (validation.reason) {
+            case "too-few-sounding-strings":
+                return "Voicing must have at least 3 sounding strings.";
+            case "split-sounding-strings":
+                return "Voicing must use continuous sounding strings.";
+        }
+    };
+
     const playbackPattern = () => {
+        const ctx = createContext();
+        const editor = ctx.arrange.editor as GuitarEditorState.Value | undefined;
+        if (editor == undefined) throw new Error("Guitar editor must exist.");
+
+        const validation = GuitarEditorState.validateStrokeVoicing(editor.frets);
+        if (!validation.ok) {
+            showEditorToast(getVoicingValidationMessage(validation));
+            return;
+        }
+
         const result = playbackGuitarEditor();
         if (result.ok) {
             startEditorPreviewProgress(result.durationMs);
@@ -42,13 +76,24 @@ const createGuitarArrangeActions = () => {
         }
         if (result.reason !== "inst-not-set") return;
 
-        Toast.create({
-            ...ToastState.createInitial(),
-            x: 24,
-            y: 84,
-            width: 300,
-            text: "Instrument is not assigned.",
-        });
+        showEditorToast("Instrument is not assigned.");
+    };
+
+    const moveFinderPattern = (dir: -1 | 1 | -3 | 3) => {
+        const ctx = createContext();
+        const moved = ctx.guitarUpdater.moveFinder(dir);
+        if (!moved) return;
+
+        ctx.commitControl();
+    };
+
+    const applyFinderSelection = () => {
+        const ctx = createContext();
+        const result = ctx.guitarUpdater.applyFinderSelection();
+
+        if (result.closeArrange) ctx.control.outline.arrange = null;
+        if (result.data) ctx.commitDataAndRecalculate();
+        if (result.control) ctx.commitControl();
     };
 
     const updateControlWithArg = <T>(
@@ -148,11 +193,13 @@ const createGuitarArrangeActions = () => {
     };
 
     return {
+        applyFinderSelection,
         applyArrange,
         deleteBackingCol,
         insertBackingCol,
         moveCursor,
         moveBackingColCursor,
+        moveFinderPattern,
         muteString,
         playbackPattern,
         setBackingColDiv,

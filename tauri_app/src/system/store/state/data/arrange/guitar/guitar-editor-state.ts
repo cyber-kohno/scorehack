@@ -1,4 +1,5 @@
 import ArrangeState from "../arrange-state";
+import type FinderState from "../finder-state";
 
 namespace GuitarEditorState {
   export const MAX_FRET = 12;
@@ -74,6 +75,7 @@ namespace GuitarEditorState {
   };
 
   export interface VoicingPattern extends ArrangeState.Pattern {
+    key?: FinderState.Guitar.VoicingKey;
     frets: StringSelection[];
   }
 
@@ -91,13 +93,20 @@ namespace GuitarEditorState {
     backing?: BackingData | null;
   }
 
+  export type StrokeVoicingValidationResult =
+    | { ok: true }
+    | {
+      ok: false;
+      reason: "too-few-sounding-strings" | "split-sounding-strings";
+    };
+
   export const STANDARD_TUNING = [
-    { number: 6, openMidi: 40, openNote: "E2" },
-    { number: 5, openMidi: 45, openNote: "A2" },
-    { number: 4, openMidi: 50, openNote: "D3" },
-    { number: 3, openMidi: 55, openNote: "G3" },
-    { number: 2, openMidi: 59, openNote: "B3" },
-    { number: 1, openMidi: 64, openNote: "E4" },
+    { number: 6, openPitchIndex: 28, openNote: "E2" },
+    { number: 5, openPitchIndex: 33, openNote: "A2" },
+    { number: 4, openPitchIndex: 38, openNote: "D3" },
+    { number: 3, openPitchIndex: 43, openNote: "G3" },
+    { number: 2, openPitchIndex: 47, openNote: "B3" },
+    { number: 1, openPitchIndex: 52, openNote: "E4" },
   ] as const;
 
   export const createMutedFrets = (): StringSelection[] => {
@@ -119,6 +128,26 @@ namespace GuitarEditorState {
     cols: [],
     events: [],
   });
+
+  export const validateStrokeVoicing = (
+    frets: StringSelection[],
+  ): StrokeVoicingValidationResult => {
+    const soundingIndexes = frets
+      .map((fret, index) => fret == null ? -1 : index)
+      .filter((index) => index !== -1);
+
+    if (soundingIndexes.length < 3) {
+      return { ok: false, reason: "too-few-sounding-strings" };
+    }
+
+    const first = soundingIndexes[0];
+    const last = soundingIndexes[soundingIndexes.length - 1];
+    if (last - first + 1 !== soundingIndexes.length) {
+      return { ok: false, reason: "split-sounding-strings" };
+    }
+
+    return { ok: true };
+  };
 
   export const getDotRate = (dot?: number) => {
     switch (dot ?? 0) {
@@ -277,10 +306,12 @@ namespace GuitarEditorState {
   export const registPattern = (
     frets: StringSelection[],
     bank: Bank,
+    key?: FinderState.Guitar.VoicingKey,
   ) => {
     const src = JSON.stringify(frets);
     let pattern = bank.voicingPatterns.find((pat) => {
-      return JSON.stringify(pat.frets) === src;
+      return JSON.stringify(pat.frets) === src &&
+        JSON.stringify(pat.key) === JSON.stringify(key);
     });
 
     if (pattern == undefined) {
@@ -290,6 +321,7 @@ namespace GuitarEditorState {
       );
       pattern = {
         no: maxNo + 1,
+        key,
         frets: JSON.parse(src) as StringSelection[],
       };
       bank.voicingPatterns.push(pattern);

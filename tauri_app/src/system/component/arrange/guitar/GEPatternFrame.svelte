@@ -36,6 +36,9 @@
     });
     return stringIndex === -1 ? undefined : stringIndex;
   };
+  $: displayStrings = GuitarEditorState.STANDARD_TUNING
+    .map((string, stringIndex) => ({ string, stringIndex }))
+    .reverse();
   $: focusRect = (() => {
     if (editor.control !== "pattern") return null;
     const col = backing.cols[backing.cursorX];
@@ -53,7 +56,7 @@
 
 <div class="frame" bind:this={$refStore.arrange.guitar.pattern}>
   <div class="content" style:width={`${contentWidth}px`}>
-    {#each GuitarEditorState.STANDARD_TUNING as _string, stringIndex}
+    {#each displayStrings as { stringIndex }}
       <div class="record">
         {#each backing.cols as col, colIndex}
           {@const event = getEvent(colIndex)}
@@ -75,7 +78,7 @@
           style:left={`${backing.cols.slice(0, colIndex).reduce((total, col) => total + getColWidth(col) + 1, 1)}px`}
           style:width={`${getColWidth(col)}px`}
         >
-          {@html event.direction === "down" ? "&darr;" : "&uarr;"}
+          {@html event.direction === "down" ? "&uarr;" : "&darr;"}
         </div>
       {/if}
     {/each}

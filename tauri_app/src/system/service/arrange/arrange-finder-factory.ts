@@ -24,12 +24,21 @@ type DrumFinderSource = {
     arrTrack: ArrangeState.DrumTrack;
 };
 
+type GuitarFinderSource = {
+    ts: RhythmTheory.TimeSignature;
+    beat: DerivedState.BeatCache;
+    compiledChord: DerivedState.CompiledChord;
+    chordSeq: number;
+    arrTrack: ArrangeState.GuitarTrack;
+};
+
 /**
  * メソッドに応じたファインダーを生成して返す
  */
 export const createArrangeFinder = (props: ArrangeFinderProps) => {
     switch (props.arrTrack.method) {
         case "piano": return createPianoArrangeFinder(props);
+        case "guitar": return createGuitarArrangeFinder(props);
         case "drum": return createDrumArrangeFinder(props);
     }
 };
@@ -59,6 +68,21 @@ export const createDrumArrangeFinder = (props: ArrangeFinderProps) => {
     return createDrumArrangeFinderFromSource({
         ts,
         beat: chord.beat,
+        chordSeq: chord.chordSeq,
+        arrTrack,
+    });
+};
+
+export const createGuitarArrangeFinder = (props: ArrangeFinderProps) => {
+    const { ts, chordCache: chord, arrTrack } = props;
+    if (arrTrack.method !== "guitar") throw new Error();
+    const compiledChord = chord.compiledChord;
+    if (compiledChord == undefined) throw new Error();
+
+    return createGuitarArrangeFinderFromSource({
+        ts,
+        beat: chord.beat,
+        compiledChord,
         chordSeq: chord.chordSeq,
         arrTrack,
     });
@@ -162,6 +186,50 @@ const createDrumArrangeFinderFromSource = (props: DrumFinderSource) => {
                 finder.cursor = finder.apply = patternIndex;
             }
         }
+    }
+
+    return finder;
+};
+
+const createGuitarArrangeFinderFromSource = (props: GuitarFinderSource) => {
+    const { ts, beat, compiledChord, chordSeq, arrTrack } = props;
+    const req: FinderState.SearchRequest = {
+        beat: beat.num,
+        eatHead: beat.eatHead,
+        eatTail: beat.eatTail,
+        structCnt: compiledChord.structs.length,
+        ts,
+    };
+    const key = FinderState.Guitar.createVoicingKey(compiledChord.chord);
+    const voicings = FinderState.Guitar.searchVoicings({
+        key,
+        arrTrack,
+    });
+    const backings = FinderState.Guitar.searchBackings({
+        arrTrack,
+    });
+    const finder: FinderState.Guitar.Finder = {
+        cursor: {
+            target: "voicing",
+            voicing: 0,
+            backing: 0,
+        },
+        apply: {
+            voicing: -1,
+            backing: -1,
+        },
+        request: req,
+        key,
+        voicings,
+        backings,
+    };
+
+    const relation = arrTrack.relations.find(r => r.chordSeq === chordSeq);
+    if (relation != undefined) {
+        const voicingIndex = voicings.findIndex(item => item.voicingNo === relation.sndsPatt);
+        const backingIndex = backings.findIndex(item => item.backingNo === relation.bkgPatt);
+        finder.cursor.voicing = finder.apply.voicing = Math.max(0, voicingIndex);
+        finder.cursor.backing = finder.apply.backing = Math.max(0, backingIndex);
     }
 
     return finder;
