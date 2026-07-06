@@ -8,7 +8,8 @@ namespace GuitarEditorState {
   export type StringSelection = number | null;
 
   export type StrokeDirection = "down" | "up";
-  export type Technique =
+  export type PickStringNumber = 1 | 2 | 3 | 4 | 5 | 6;
+  export type TechniqueSelection =
     | "up"
     | "down"
     | "pick6"
@@ -18,7 +19,7 @@ namespace GuitarEditorState {
     | "pick2"
     | "pick1";
 
-  export const TECHNIQUES: (Technique | "none")[] = [
+  export const TECHNIQUES: (TechniqueSelection | "none")[] = [
     "none",
     "down",
     "up",
@@ -30,23 +31,27 @@ namespace GuitarEditorState {
     "pick1",
   ];
 
-  export type GuitarStrokeProps = {
-    strokeDelayBeat: number;
-    strokeDirection: StrokeDirection;
-    velocity: number;
-    decayRate: number;
-  };
-
   export type Col = {
     div: number;
     dot?: number;
     tuplets?: number;
   };
 
-  export type PatternEvent = {
+  export type PlayAction =
+    | {
+      kind: "stroke";
+      direction: StrokeDirection;
+      speed: number;
+      velocity: number;
+    }
+    | {
+      kind: "pick";
+      stringNumber: PickStringNumber;
+      velocity: number;
+    };
+
+  export type PatternEvent = PlayAction & {
     colIndex: number;
-    technique: Technique;
-    velocity: number;
   };
 
   export type BackingData = {
@@ -85,13 +90,6 @@ namespace GuitarEditorState {
     frets: StringSelection[];
     backing?: BackingData | null;
   }
-
-  export const createDefaultStrokeProps = (): GuitarStrokeProps => ({
-    strokeDelayBeat: 0.015,
-    strokeDirection: "down",
-    velocity: 10,
-    decayRate: 0.92,
-  });
 
   export const STANDARD_TUNING = [
     { number: 6, openMidi: 40, openNote: "E2" },
@@ -159,7 +157,37 @@ namespace GuitarEditorState {
     return target.backingPatterns;
   };
 
-  const getTechniqueCode = (technique: Technique) => {
+  const DEFAULT_STROKE_SPEED = 1;
+
+  export const getTechniqueSelection = (action: PlayAction): TechniqueSelection => {
+    if (action.kind === "stroke") return action.direction;
+    return `pick${action.stringNumber}`;
+  };
+
+  export const createPlayActionFromTechnique = (
+    technique: TechniqueSelection,
+    velocity = 10,
+  ): PlayAction => {
+    switch (technique) {
+      case "down":
+      case "up":
+        return {
+          kind: "stroke",
+          direction: technique,
+          speed: DEFAULT_STROKE_SPEED,
+          velocity,
+        };
+      case "pick6": return { kind: "pick", stringNumber: 6, velocity };
+      case "pick5": return { kind: "pick", stringNumber: 5, velocity };
+      case "pick4": return { kind: "pick", stringNumber: 4, velocity };
+      case "pick3": return { kind: "pick", stringNumber: 3, velocity };
+      case "pick2": return { kind: "pick", stringNumber: 2, velocity };
+      case "pick1": return { kind: "pick", stringNumber: 1, velocity };
+    }
+  };
+
+  const getTechniqueCode = (action: PlayAction) => {
+    const technique = getTechniqueSelection(action);
     switch (technique) {
       case "down": return "d";
       case "up": return "u";
@@ -172,7 +200,7 @@ namespace GuitarEditorState {
     }
   };
 
-  const getTechniqueFromCode = (code: string): Technique => {
+  const getTechniqueFromCode = (code: string): TechniqueSelection => {
     switch (code) {
       case "d": return "down";
       case "u": return "up";
@@ -187,7 +215,7 @@ namespace GuitarEditorState {
   };
 
   export const formatPatternItem = (event: PatternEvent) => {
-    const base = `${event.colIndex}.${getTechniqueCode(event.technique)}`;
+    const base = `${event.colIndex}.${getTechniqueCode(event)}`;
     if (event.velocity === 10) return base;
     return `${base}.${event.velocity}`;
   };
@@ -196,11 +224,11 @@ namespace GuitarEditorState {
     const [colIndexText, techniqueText, velocityText] = src.split(".");
     const colIndex = Number(colIndexText);
     if (!Number.isInteger(colIndex)) throw new Error(`Invalid guitar pattern item. [${src}]`);
+    const velocity = velocityText == undefined ? 10 : Number(velocityText);
 
     return {
       colIndex,
-      technique: getTechniqueFromCode(techniqueText),
-      velocity: velocityText == undefined ? 10 : Number(velocityText),
+      ...createPlayActionFromTechnique(getTechniqueFromCode(techniqueText), velocity),
     };
   };
 

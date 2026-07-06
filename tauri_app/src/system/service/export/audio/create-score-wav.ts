@@ -242,7 +242,6 @@ const collectArrangeTrackEvents = (props: CreateScoreWavProps) => {
               arrPattern,
               {
                 sustainBeat: chordCache.lengthBeatNote,
-                stroke: GuitarEditorState.createDefaultStrokeProps(),
               },
             );
 
@@ -360,7 +359,6 @@ const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
               arrPattern,
               {
                 sustainBeat: chordCache.lengthBeatNote,
-                stroke: GuitarEditorState.createDefaultStrokeProps(),
               },
             );
 

@@ -27,10 +27,10 @@
   $: getEvent = (colIndex: number) => {
     return backing.events.find((event) => event.colIndex === colIndex);
   };
-  $: getPickStringIndex = (technique: GuitarEditorState.Technique) => {
-    if (!technique.startsWith("pick")) return undefined;
+  $: getPickStringIndex = (event: GuitarEditorState.PatternEvent | undefined) => {
+    if (event?.kind !== "pick") return undefined;
 
-    const stringNumber = Number(technique.replace("pick", ""));
+    const stringNumber = event.stringNumber;
     const stringIndex = GuitarEditorState.STANDARD_TUNING.findIndex((string) => {
       return string.number === stringNumber;
     });
@@ -57,7 +57,7 @@
       <div class="record">
         {#each backing.cols as col, colIndex}
           {@const event = getEvent(colIndex)}
-          {@const pickStringIndex = event == undefined ? undefined : getPickStringIndex(event.technique)}
+          {@const pickStringIndex = getPickStringIndex(event)}
           <div class="cell" style:width={`${getColWidth(col)}px`}>
             <div class="inner"></div>
             {#if pickStringIndex === stringIndex}
@@ -69,13 +69,13 @@
     {/each}
     {#each backing.cols as col, colIndex}
       {@const event = getEvent(colIndex)}
-      {#if event?.technique === "down" || event?.technique === "up"}
+      {#if event?.kind === "stroke"}
         <div
           class="stroke-mark"
           style:left={`${backing.cols.slice(0, colIndex).reduce((total, col) => total + getColWidth(col) + 1, 1)}px`}
           style:width={`${getColWidth(col)}px`}
         >
-          {@html event.technique === "down" ? "&darr;" : "&uarr;"}
+          {@html event.direction === "down" ? "&darr;" : "&uarr;"}
         </div>
       {/if}
     {/each}

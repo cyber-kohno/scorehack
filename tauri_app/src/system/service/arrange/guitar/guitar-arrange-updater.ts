@@ -174,7 +174,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         return true;
     };
 
-    const setTechnique = (technique: GuitarEditorState.Technique | "none") => {
+    const setTechnique = (technique: GuitarEditorState.TechniqueSelection | "none") => {
         const backing = getBacking();
         if (backing.cursorX === -1) return false;
 
@@ -188,8 +188,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
 
         const event: GuitarEditorState.PatternEvent = {
             colIndex: backing.cursorX,
-            technique,
-            velocity: 10,
+            ...GuitarEditorState.createPlayActionFromTechnique(technique),
         };
         if (currentIndex === -1) backing.events.push(event);
         else backing.events[currentIndex] = event;
@@ -202,8 +201,11 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
 
         const current = backing.events.find((event) => {
             return event.colIndex === backing.cursorX;
-        })?.technique ?? "none";
-        const index = GuitarEditorState.TECHNIQUES.indexOf(current);
+        });
+        const technique = current == undefined
+            ? "none"
+            : GuitarEditorState.getTechniqueSelection(current);
+        const index = GuitarEditorState.TECHNIQUES.indexOf(technique);
         const next = GuitarEditorState.TECHNIQUES[index + dir];
         if (next == undefined) return false;
 

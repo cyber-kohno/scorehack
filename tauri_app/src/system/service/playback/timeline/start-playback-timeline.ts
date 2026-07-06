@@ -244,7 +244,6 @@ const startPlaybackTimeline = async (option: PlaybackCacheState.Option) => {
                                 arrPattern,
                                 {
                                     sustainBeat: chordCache.lengthBeatNote,
-                                    stroke: GuitarEditorState.createDefaultStrokeProps(),
                                 },
                             );
 

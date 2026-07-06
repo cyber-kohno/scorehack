@@ -126,7 +126,7 @@ const createGuitarArrangeActions = () => {
         return updater.shiftTechnique(dir);
     });
 
-    const setTechnique = updateControlWithArg<GuitarEditorState.Technique | "none">((updater, technique) => {
+    const setTechnique = updateControlWithArg<GuitarEditorState.TechniqueSelection | "none">((updater, technique) => {
         return updater.setTechnique(technique);
     });
 

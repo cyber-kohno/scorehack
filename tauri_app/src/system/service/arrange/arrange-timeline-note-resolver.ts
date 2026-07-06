@@ -85,7 +85,6 @@ namespace ArrangeTimelineNoteResolver {
                     arrPattern,
                     {
                         sustainBeat: chordCache.lengthBeatNote,
-                        stroke: GuitarEditorState.createDefaultStrokeProps(),
                     },
                 ).forEach((note) => {
                     notes.push({

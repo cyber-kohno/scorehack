@@ -35,19 +35,16 @@ const playbackGuitarEditor = () => {
         (-arrange.target.beat.eatHead + arrange.target.beat.eatTail) / beatDiv16Cnt;
     const sustainBeat = beatSize * beatRate;
     const unit = { frets: editor.frets };
-    const stroke = GuitarEditorState.createDefaultStrokeProps();
     const notes = editor.backing == null
         ? GuitarArrangePatternNote.createNotes(
             unit,
             {
                 sustainBeat,
-                stroke,
             },
         )
         : GuitarArrangePatternNote.createBackingNotes(
             unit,
             editor.backing,
-            { stroke },
         );
 
     playback.timerKeys = [];
