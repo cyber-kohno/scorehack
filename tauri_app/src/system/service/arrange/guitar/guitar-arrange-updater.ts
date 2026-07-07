@@ -249,9 +249,16 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
             guitarLib,
             FinderState.Guitar.createVoicingKey(arrange.target.compiledChord.chord),
         );
+        const backingCategory: FinderState.BackingCategory = {
+            beat: arrange.target.beat.num,
+            tsGloup: [arrange.target.scoreBase.rhythm.ts],
+            eatHead: arrange.target.beat.eatHead,
+            eatTail: arrange.target.beat.eatTail,
+        };
         const backingPattNo = editor.backing == null
             ? -1
             : GuitarEditorState.registBackingPattern(
+                backingCategory,
                 GuitarEditorState.createBackingData(editor.backing),
                 guitarLib,
             );
@@ -338,9 +345,18 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         return { control: true, data: true, closeArrange: true };
     };
 
+    const backFinderSelection = () => {
+        const finder = getFinder();
+        if (finder.cursor.target !== "backing") return false;
+
+        finder.cursor.target = "voicing";
+        return true;
+    };
+
     return {
         applyFinderSelection,
         applyArrange,
+        backFinderSelection,
         deleteBacking,
         deleteBackingCol,
         insertBackingCol,

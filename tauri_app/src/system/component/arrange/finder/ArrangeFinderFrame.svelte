@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import ChordTheory from "../../../domain/theory/chord-theory";
   import ScrollRateFrame from "../../common/ScrollRateFrame.svelte";
   import FinderConditionHeader from "./condition/FinderConditionHeader.svelte";
   import { controlStore, dataStore, refStore } from "../../../store/global-store";
@@ -7,6 +8,7 @@
   import APFinderPresetItem from "./list/piano/APFinderPresetItem.svelte";
   import ADFinderPatternItem from "./list/drum/ADFinderPatternItem.svelte";
   import AGFinderVoicingThumbnail from "./list/guitar/AGFinderVoicingThumbnail.svelte";
+  import AGFinderBackingThumbnail from "./list/guitar/AGFinderBackingThumbnail.svelte";
 
   let ref: HTMLElement | null = null;
 
@@ -61,6 +63,19 @@
     return arrange.finder as FinderState.Drum.Finder;
   })();
   $: request = arrange.finder.request;
+  $: chordName = guitarFinder == null
+    ? undefined
+    : ChordTheory.getKeyChordName({
+        key12: guitarFinder.key.root,
+        symbol: guitarFinder.key.symbol,
+        isFlat: false,
+        on: guitarFinder.key.on == null
+          ? undefined
+          : {
+              key12: guitarFinder.key.on,
+              isFlat: false,
+            },
+      });
   $: cursorIndex = (() => {
     if (drumFinder != null) return drumFinder.cursor;
     if (guitarFinder != null) {
@@ -89,6 +104,10 @@
     if (track?.method !== "guitar") throw new Error("Guitar track must exist.");
     return FinderState.Guitar.getVoicingFromNo(voicingNo, track.bank);
   };
+  $: getGuitarBacking = (backingNo: number) => {
+    if (track?.method !== "guitar") throw new Error("Guitar track must exist.");
+    return FinderState.Guitar.getBackingFromNo(backingNo, track.bank);
+  };
   $: getGuitarItemClass = (
     target: FinderState.Guitar.Cursor["target"],
     index: number,
@@ -105,7 +124,7 @@
 </script>
 
 <div class="wrap">
-  <FinderConditionHeader {request} {method} />
+  <FinderConditionHeader {request} {method} {chordName} />
   <div class="list-base">
     <ScrollRateFrame
       {ref}
@@ -132,7 +151,7 @@
         </div>
       {:else if method === "guitar" && guitarFinder != null}
         <div class="guitar-finder">
-          <div class="guitar-section voicing">
+          <div class:active-section={guitarFinder.cursor.target === "voicing"} class="guitar-section voicing">
             <div class="guitar-title">Voicing</div>
             <div class="guitar-grid">
               {#each guitarFinder.voicings as item, index}
@@ -150,12 +169,20 @@
               {/each}
             </div>
           </div>
-          <div class="guitar-section backing">
+          <div class:active-section={guitarFinder.cursor.target === "backing"} class="guitar-section backing">
             <div class="guitar-title">Backing</div>
             <div class="guitar-grid">
               {#each guitarFinder.backings as item, index}
                 <div class={getGuitarItemClass("backing", index)}>
-                  {item.backingNo === -1 ? "None" : `Backing #${item.backingNo}`}
+                  {#if item.backingNo === -1}
+                    None
+                  {:else}
+                    {@const backing = getGuitarBacking(item.backingNo)}
+                    <div class="guitar-item-label">#{item.backingNo}</div>
+                    <div class="guitar-thumbnail">
+                      <AGFinderBackingThumbnail backing={backing.backing} ts={request.ts} />
+                    </div>
+                  {/if}
                 </div>
               {/each}
             </div>
@@ -227,8 +254,8 @@
     display: block;
     position: relative;
     width: 100%;
-    min-height: 100%;
-    padding: 8px;
+    height: 100%;
+    padding: 0;
     box-sizing: border-box;
   }
 
@@ -236,14 +263,26 @@
     display: block;
     position: relative;
     width: 100%;
+    padding: 5px 6px 7px;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .guitar-section.voicing {
-    height: 178px;
+    height: 162px;
+    background-color: rgba(72, 94, 118, 0.34);
   }
 
   .guitar-section.backing {
-    min-height: calc(100% - 178px);
+    height: calc(100% - 162px);
+    margin-top: 0;
+    background-color: rgba(90, 83, 111, 0.34);
+  }
+
+  .guitar-section.active-section {
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 255, 255, 0.45),
+      inset 0 0 24px rgba(255, 255, 255, 0.11);
   }
 
   .guitar-title {

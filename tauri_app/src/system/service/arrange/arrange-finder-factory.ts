@@ -206,6 +206,7 @@ const createGuitarArrangeFinderFromSource = (props: GuitarFinderSource) => {
         arrTrack,
     });
     const backings = FinderState.Guitar.searchBackings({
+        req,
         arrTrack,
     });
     const finder: FinderState.Guitar.Finder = {

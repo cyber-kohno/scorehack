@@ -81,6 +81,7 @@ namespace GuitarEditorState {
 
   export interface BackingPattern extends ArrangeState.Pattern {
     backing: BackingData;
+    category: FinderState.BackingCategory;
   }
 
   export type Bank = {
@@ -331,6 +332,7 @@ namespace GuitarEditorState {
   };
 
   export const registBackingPattern = (
+    category: FinderState.BackingCategory,
     backing: BackingData,
     bank: Bank,
   ) => {
@@ -347,6 +349,7 @@ namespace GuitarEditorState {
       );
       pattern = {
         no: maxNo + 1,
+        category: { ...category },
         backing: JSON.parse(src) as BackingData,
       };
       backingPatterns.push(pattern);

@@ -163,12 +163,27 @@ namespace FinderState {
         };
 
         export const searchBackings = (args: {
+            req: SearchRequest;
             arrTrack: ArrangeState.GuitarTrack;
         }): BackingItem[] => {
-            const { arrTrack } = args;
+            const { req, arrTrack } = args;
             return [
                 { backingNo: -1 },
-                ...arrTrack.bank.backingPatterns.map(pattern => ({ backingNo: pattern.no })),
+                ...arrTrack.bank.backingPatterns
+                    .filter((pattern) => {
+                        const cond = pattern.category;
+                        if (cond == undefined) return false;
+                        const condEatHead = cond.eatHead ?? 0;
+                        const condEatTail = cond.eatTail ?? 0;
+
+                        return cond.tsGloup
+                            .map(ts => RhythmTheory.formatTS(ts))
+                            .includes(RhythmTheory.formatTS(req.ts)) &&
+                            cond.beat === req.beat &&
+                            condEatHead === req.eatHead &&
+                            condEatTail === req.eatTail;
+                    })
+                    .map(pattern => ({ backingNo: pattern.no })),
             ];
         };
 

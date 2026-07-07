@@ -45,6 +45,7 @@ const useInputFinder = () => {
             case 'ArrowUp': guitarActions.moveFinderPattern(-3); break;
             case 'ArrowDown': guitarActions.moveFinderPattern(3); break;
             case 'Enter': guitarActions.applyFinderSelection(); break;
+            case 'Backspace': guitarActions.backFinderSelection(); break;
         }
     };
 

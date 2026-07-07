@@ -122,6 +122,10 @@ const createGuitarArrangeActions = () => {
         };
     };
 
+    const backFinderSelection = updateControl(updater => {
+        return updater.backFinderSelection();
+    });
+
     const moveCursor = updateControlWithArg<{ string?: -1 | 1; fret?: -1 | 1 }>((updater, dir) => {
         updater.moveCursor(dir);
     });
@@ -195,6 +199,7 @@ const createGuitarArrangeActions = () => {
     return {
         applyFinderSelection,
         applyArrange,
+        backFinderSelection,
         deleteBackingCol,
         insertBackingCol,
         moveCursor,

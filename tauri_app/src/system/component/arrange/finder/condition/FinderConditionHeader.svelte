@@ -4,11 +4,16 @@
 
   export let request!: FinderState.SearchRequest;
   export let method!: string;
+  export let chordName: string | undefined = undefined;
 
   const formatEat = (value: number) => {
     if (value === 0) return "±0";
     return value > 0 ? `+${value}` : `${value}`;
   };
+
+  $: chordItem = chordName == undefined
+    ? ["Struct", `${request.structCnt}`]
+    : ["Chord", chordName];
 
   $: items = [
     ["Method", method],
@@ -16,7 +21,7 @@
     ["Beat", `${request.beat}`],
     ["Eat Head", formatEat(request.eatHead)],
     ["Eat Tail", formatEat(request.eatTail)],
-    ["Struct", `${request.structCnt}`],
+    chordItem,
   ];
 </script>
 

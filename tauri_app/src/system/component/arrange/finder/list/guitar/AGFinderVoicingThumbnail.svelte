@@ -47,7 +47,7 @@
   }
 
   .fret-cell[data-on="true"] {
-    background-color: rgba(92, 255, 101, 0.92);
-    box-shadow: 0 0 4px rgba(105, 255, 118, 0.82);
+    background-color: rgba(255, 164, 74, 0.94);
+    box-shadow: 0 0 4px rgba(255, 178, 88, 0.84);
   }
 </style>
