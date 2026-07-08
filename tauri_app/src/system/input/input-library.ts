@@ -1,5 +1,6 @@
 import { get } from "svelte/store";
 import createLibraryDrumActions from "../actions/library/library-drum-actions";
+import createLibraryGuitarActions from "../actions/library/library-guitar-actions";
 import createLibraryActions from "../actions/library/library-actions";
 import createLibraryPianoActions from "../actions/library/library-piano-actions";
 import createMappingActions from "../actions/library/mapping-actions";
@@ -9,6 +10,7 @@ import { controlStore, dataStore, libraryStore } from "../store/global-store";
 const useInputLibrary = () => {
     const actions = createLibraryActions();
     const drumActions = createLibraryDrumActions();
+    const guitarActions = createLibraryGuitarActions();
     const pianoActions = createLibraryPianoActions();
     const mappingActions = createMappingActions();
     const terminalActions = createTerminalActions();
@@ -30,6 +32,9 @@ const useInputLibrary = () => {
                 break;
             case "drum":
                 drumActions.switchToFinder();
+                break;
+            case "guitar":
+                guitarActions.switchToFinder();
                 break;
         }
     };
@@ -75,6 +80,20 @@ const useInputLibrary = () => {
                     case "e": drumActions.toggleRegular(); break;
                     case "M":
                     case "m": drumActions.openMenu(); break;
+                }
+                break;
+            case "guitar":
+                switch (eventKey) {
+                    case "ArrowLeft": guitarActions.moveFinder(-1); break;
+                    case "ArrowRight": guitarActions.moveFinder(1); break;
+                    case "ArrowUp": guitarActions.moveFinder(-3); break;
+                    case "ArrowDown": guitarActions.moveFinder(3); break;
+                    case "Enter": guitarActions.applyFinderSelection(); break;
+                    case "Backspace": guitarActions.backFinderSelection(); break;
+                    case "B":
+                    case "b": guitarActions.openEditor(); break;
+                    case "E":
+                    case "e": guitarActions.toggleRegular(); break;
                 }
                 break;
         }

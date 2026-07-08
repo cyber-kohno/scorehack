@@ -75,7 +75,7 @@ namespace GuitarEditorState {
   };
 
   export interface VoicingPattern extends ArrangeState.Pattern {
-    key?: FinderState.Guitar.VoicingKey;
+    key: FinderState.Guitar.VoicingKey;
     frets: StringSelection[];
   }
 
@@ -84,9 +84,21 @@ namespace GuitarEditorState {
     category: FinderState.BackingCategory;
   }
 
+  export type VoicingRegular = {
+    voicingNo: number;
+    sortNo: number;
+  };
+
+  export type BackingRegular = {
+    backingNo: number;
+    sortNo: number;
+  };
+
   export type Bank = {
     voicingPatterns: VoicingPattern[];
     backingPatterns: BackingPattern[];
+    voicingRegulars: VoicingRegular[];
+    backingRegulars: BackingRegular[];
   };
 
   export interface Unit {
@@ -175,6 +187,8 @@ namespace GuitarEditorState {
   export const createInitialBank = (): Bank => ({
     voicingPatterns: [],
     backingPatterns: [],
+    voicingRegulars: [],
+    backingRegulars: [],
   });
 
   const clone = <T>(value: T): T => {
@@ -187,7 +201,8 @@ namespace GuitarEditorState {
     return target.backingPatterns;
   };
 
-  const DEFAULT_STROKE_SPEED = 1;
+  export const DEFAULT_ACTION_VELOCITY = 10;
+  export const DEFAULT_STROKE_SPEED = 10;
 
   export const getTechniqueSelection = (action: PlayAction): TechniqueSelection => {
     if (action.kind === "stroke") return action.direction;
@@ -196,7 +211,7 @@ namespace GuitarEditorState {
 
   export const createPlayActionFromTechnique = (
     technique: TechniqueSelection,
-    velocity = 10,
+    velocity = DEFAULT_ACTION_VELOCITY,
   ): PlayAction => {
     switch (technique) {
       case "down":
@@ -246,19 +261,29 @@ namespace GuitarEditorState {
 
   export const formatPatternItem = (event: PatternEvent) => {
     const base = `${event.colIndex}.${getTechniqueCode(event)}`;
-    if (event.velocity === 10) return base;
-    return `${base}.${event.velocity}`;
+    if (
+      event.velocity === DEFAULT_ACTION_VELOCITY &&
+      (event.kind !== "stroke" || event.speed === DEFAULT_STROKE_SPEED)
+    ) {
+      return base;
+    }
+    if (event.kind !== "stroke") return `${base}.${event.velocity}`;
+    return `${base}.${event.velocity}.${event.speed}`;
   };
 
   export const convPatternItem = (src: string): PatternEvent => {
-    const [colIndexText, techniqueText, velocityText] = src.split(".");
+    const [colIndexText, techniqueText, velocityText, speedText] = src.split(".");
     const colIndex = Number(colIndexText);
     if (!Number.isInteger(colIndex)) throw new Error(`Invalid guitar pattern item. [${src}]`);
-    const velocity = velocityText == undefined ? 10 : Number(velocityText);
+    const velocity = velocityText == undefined ? DEFAULT_ACTION_VELOCITY : Number(velocityText);
+    const action = createPlayActionFromTechnique(getTechniqueFromCode(techniqueText), velocity);
+    if (action.kind === "stroke" && speedText != undefined) {
+      action.speed = Number(speedText);
+    }
 
     return {
       colIndex,
-      ...createPlayActionFromTechnique(getTechniqueFromCode(techniqueText), velocity),
+      ...action,
     };
   };
 
@@ -307,7 +332,7 @@ namespace GuitarEditorState {
   export const registPattern = (
     frets: StringSelection[],
     bank: Bank,
-    key?: FinderState.Guitar.VoicingKey,
+    key: FinderState.Guitar.VoicingKey,
   ) => {
     const src = JSON.stringify(frets);
     let pattern = bank.voicingPatterns.find((pat) => {

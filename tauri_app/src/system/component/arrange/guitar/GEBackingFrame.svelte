@@ -5,6 +5,7 @@
   import GEColFrame from "./GEColFrame.svelte";
   import GEMeasureFrame from "./GEMeasureFrame.svelte";
   import GEPatternFrame from "./GEPatternFrame.svelte";
+  import GEPatternOptionLayer from "./GEPatternOptionLayer.svelte";
   import GERecordFrame from "./GERecordFrame.svelte";
 
   $: selector = createArrangeSelector({ control: $controlStore, data: $dataStore });
@@ -30,6 +31,7 @@
     <div class="recorddiv">
       <FocusableContent isFocus={editor.control === "pattern"}>
         <GEPatternFrame />
+        <GEPatternOptionLayer />
       </FocusableContent>
     </div>
   </div>

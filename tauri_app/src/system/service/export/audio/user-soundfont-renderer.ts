@@ -7,7 +7,8 @@ import { readBinaryFile } from "../../../infra/tauri/fs";
 import type { TrackInstRef } from "../../../store/state/data/track-inst-ref";
 import type SettingsState from "../../../store/state/settings-state";
 
-const CHANNEL = 0;
+const MELODY_CHANNEL = 0;
+const DRUM_CHANNEL = 9;
 const BANK_SELECT_MSB = 0;
 const BANK_SELECT_LSB = 32;
 const TICKS_PER_QUARTER = 480;
@@ -92,6 +93,12 @@ const toVelocity = (gain: number) => {
   return clamp(Math.round((gain / DEFAULT_GAIN_MAX) * 127), 1, 127);
 };
 
+const getChannel = (
+  ref: Extract<TrackInstRef, { source: "soundfont" }>,
+) => {
+  return ref.bank === 128 ? DRUM_CHANNEL : MELODY_CHANNEL;
+};
+
 const createMidi = (track: UserSoundFontRenderer.TrackEvents) => {
   const events: { tick: number; order: number; data: number[] }[] = [];
   const addEvent = (tick: number, order: number, data: number[]) => {
@@ -109,19 +116,20 @@ const createMidi = (track: UserSoundFontRenderer.TrackEvents) => {
   ]);
 
   const ref = track.ref;
+  const channel = getChannel(ref);
   if (ref.bank !== 128) {
-    addEvent(0, 1, [0xb0 | CHANNEL, BANK_SELECT_MSB, clamp(ref.bank, 0, 127)]);
-    addEvent(0, 2, [0xb0 | CHANNEL, BANK_SELECT_LSB, 0]);
+    addEvent(0, 1, [0xb0 | channel, BANK_SELECT_MSB, clamp(ref.bank, 0, 127)]);
+    addEvent(0, 2, [0xb0 | channel, BANK_SELECT_LSB, 0]);
   }
-  addEvent(0, 3, [0xc0 | CHANNEL, clamp(ref.program, 0, 127)]);
+  addEvent(0, 3, [0xc0 | channel, clamp(ref.program, 0, 127)]);
 
   track.notes.forEach((note) => {
     const startTick = toTick(note.startSec);
     const endTick = Math.max(startTick + 1, toTick(note.startSec + note.durationSec));
     const midiNote = clamp(NoteName.toMidiNumber(note.pitchName), 0, 127);
 
-    addEvent(startTick, 5, [0x90 | CHANNEL, midiNote, toVelocity(note.gain)]);
-    addEvent(endTick, 4, [0x80 | CHANNEL, midiNote, 0x40]);
+    addEvent(startTick, 5, [0x90 | channel, midiNote, toVelocity(note.gain)]);
+    addEvent(endTick, 4, [0x80 | channel, midiNote, 0x40]);
   });
   addEvent(Math.max(0, ...events.map((event) => event.tick)), 9, [0xff, 0x2f, 0x00]);
 

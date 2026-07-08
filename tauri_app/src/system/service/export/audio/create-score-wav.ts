@@ -4,10 +4,12 @@ import FilePathRef from "../../../infra/file/file-path-ref";
 import { readBinaryFile } from "../../../infra/tauri/fs";
 import type DataState from "../../../store/state/data/data-state";
 import MelodyState from "../../../store/state/data/melody-state";
+import DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-state";
 import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
 import PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import type DerivedState from "../../../store/state/derived-state";
 import type SettingsState from "../../../store/state/settings-state";
+import DrumArrangePatternNote from "../../playback/arrange/drum-arrange-pattern-note";
 import GuitarArrangePatternNote from "../../playback/arrange/guitar-arrange-pattern-note";
 import PianoArrangePatternNote from "../../playback/arrange/piano-arrange-pattern-note";
 import convertNoteToPlayer from "../../playback/timeline/convert-note-to-player";
@@ -266,6 +268,51 @@ const collectArrangeTrackEvents = (props: CreateScoreWavProps) => {
           });
           break;
         }
+        case "drum": {
+          chordCaches.forEach((chordCache) => {
+            const arrPattern = DrumEditorState.getArrangePatternFromRelation(
+              chordCache.chordSeq,
+              track,
+            );
+            if (arrPattern == undefined) return;
+
+            const baseCache = baseCaches[chordCache.baseSeq];
+            const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(
+              baseCache.scoreBase.rhythm.ts,
+            );
+            const beatRate = beatDiv16Cnt / 4;
+            const startBeat =
+              chordCache.startBeat * beatRate +
+              (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
+            const patternNotes = DrumArrangePatternNote.createNotes(
+              arrPattern,
+              {
+                beat: chordCache.beat,
+                ts: baseCache.scoreBase.rhythm.ts,
+              },
+            );
+
+            patternNotes.forEach((note) => {
+              const targetNote = MelodyState.calcAddBeat(note, startBeat);
+              const playInfo = convertNoteToPlayer(
+                baseCaches,
+                0,
+                targetNote,
+                track.volume * (note.velocity / 10),
+                settings.playback.swing,
+              );
+              if (playInfo == null) return;
+
+              notes.push({
+                pitchName: playInfo.pitchName,
+                gain: playInfo.gain,
+                startSec: playInfo.startMs / MILLISECONDS_PER_SECOND,
+                durationSec: Math.max(0.2, playInfo.sustainMs / MILLISECONDS_PER_SECOND),
+              });
+            });
+          });
+          break;
+        }
       }
 
       if (notes.length === 0) return null;
@@ -378,6 +425,51 @@ const collectUserSoundFontArrangeTrackEvents = (props: CreateScoreWavProps) => {
                 gain: playInfo.gain,
                 startSec: playInfo.startMs / MILLISECONDS_PER_SECOND,
                 durationSec: playInfo.sustainMs / MILLISECONDS_PER_SECOND,
+              });
+            });
+          });
+          break;
+        }
+        case "drum": {
+          chordCaches.forEach((chordCache) => {
+            const arrPattern = DrumEditorState.getArrangePatternFromRelation(
+              chordCache.chordSeq,
+              track,
+            );
+            if (arrPattern == undefined) return;
+
+            const baseCache = baseCaches[chordCache.baseSeq];
+            const beatDiv16Cnt = RhythmTheory.getBeatDiv16Count(
+              baseCache.scoreBase.rhythm.ts,
+            );
+            const beatRate = beatDiv16Cnt / 4;
+            const startBeat =
+              chordCache.startBeat * beatRate +
+              (chordCache.beat.eatHead / beatDiv16Cnt) * beatRate;
+            const patternNotes = DrumArrangePatternNote.createNotes(
+              arrPattern,
+              {
+                beat: chordCache.beat,
+                ts: baseCache.scoreBase.rhythm.ts,
+              },
+            );
+
+            patternNotes.forEach((note) => {
+              const targetNote = MelodyState.calcAddBeat(note, startBeat);
+              const playInfo = convertNoteToPlayer(
+                baseCaches,
+                0,
+                targetNote,
+                track.volume * (note.velocity / 10),
+                settings.playback.swing,
+              );
+              if (playInfo == null) return;
+
+              notes.push({
+                pitchName: playInfo.pitchName,
+                gain: playInfo.gain,
+                startSec: playInfo.startMs / MILLISECONDS_PER_SECOND,
+                durationSec: Math.max(0.2, playInfo.sustainMs / MILLISECONDS_PER_SECOND),
               });
             });
           });

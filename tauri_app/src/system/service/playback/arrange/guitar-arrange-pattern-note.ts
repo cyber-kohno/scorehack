@@ -3,7 +3,6 @@ import type PlaybackCacheState from "../timeline/playback-cache-state";
 
 namespace GuitarArrangePatternNote {
     const STROKE_INTERVAL_FACTOR = 0.015;
-    const DEFAULT_STROKE_SPEED = 1;
     const DEFAULT_STROKE_DECAY_RATE = 0.82;
     const DEFAULT_SUSTAIN_STROKE_VELOCITY = 10;
 
@@ -38,7 +37,7 @@ namespace GuitarArrangePatternNote {
             direction: "down",
             velocity: DEFAULT_SUSTAIN_STROKE_VELOCITY,
             decayRate: DEFAULT_STROKE_DECAY_RATE,
-            speed: DEFAULT_STROKE_SPEED,
+            speed: GuitarEditorState.DEFAULT_STROKE_SPEED,
         });
 
         return finalizeSustainNotes(notes, option.sustainBeat);
@@ -107,7 +106,7 @@ namespace GuitarArrangePatternNote {
                 return { fret, stringIndex, tuning };
             })
             .filter((item) => item != undefined);
-        const intervalBeat = STROKE_INTERVAL_FACTOR / stroke.speed;
+        const intervalBeat = STROKE_INTERVAL_FACTOR / (stroke.speed * 0.1);
 
         soundingStrings.forEach(({ fret, stringIndex, tuning }, strokeIndex) => {
             const delayBeat = intervalBeat * strokeIndex;

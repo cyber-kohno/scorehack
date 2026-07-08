@@ -81,9 +81,15 @@ namespace ArrangeState {
       type: "library";
       mode: DrumLibraryEditorMode;
       patternNo: number;
+    }
+    | {
+      type: "library";
+      mode: GuitarLibraryEditorMode;
+      voicingNo: number;
+      backingNo: number;
     };
 
-  export type LibraryEditorMode = PianoLibraryEditorMode | DrumLibraryEditorMode;
+  export type LibraryEditorMode = PianoLibraryEditorMode | DrumLibraryEditorMode | GuitarLibraryEditorMode;
 
   export type PianoLibraryEditorMode =
     | "edit-backing"
@@ -94,6 +100,12 @@ namespace ArrangeState {
   export type DrumLibraryEditorMode =
     | "edit-pattern"
     | "add-pattern";
+
+  export type GuitarLibraryEditorMode =
+    | "edit-voicing"
+    | "add-voicing"
+    | "edit-backing"
+    | "add-backing";
 
   export type TargetBase = {
     scoreBase: ElementState.DataInit;

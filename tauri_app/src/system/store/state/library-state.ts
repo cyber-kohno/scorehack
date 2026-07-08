@@ -25,8 +25,13 @@ namespace LibraryState {
         'eat-tail',
     ];
 
+    export type FinderCursor = FinderState.Cursor & {
+        target?: FinderState.Guitar.Cursor["target"];
+        voicing?: number;
+    };
+
     export type Finder = {
-        cursor: FinderState.Cursor;
+        cursor: FinderCursor;
     };
 
     export type Value = {

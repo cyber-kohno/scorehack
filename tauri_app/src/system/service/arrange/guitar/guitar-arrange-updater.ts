@@ -91,6 +91,8 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
     };
 
     const toggleBacking = () => {
+        if (arrange.origin.type === "library") return false;
+
         const editor = getGuitarEditor();
         return editor.backing == null ? useBacking() : deleteBacking();
     };
@@ -218,6 +220,21 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         return setTechnique(next);
     };
 
+    const modifyPatternEvent = (
+        modifier: (event: GuitarEditorState.PatternEvent) => GuitarEditorState.PatternEvent,
+    ) => {
+        const backing = getBacking();
+        if (backing.cursorX === -1) return false;
+
+        const eventIndex = backing.events.findIndex((event) => {
+            return event.colIndex === backing.cursorX;
+        });
+        if (eventIndex === -1) return false;
+
+        backing.events[eventIndex] = modifier(backing.events[eventIndex]);
+        return true;
+    };
+
     const toggleFret = () => {
         if (!isCurrentChordTone()) return false;
 
@@ -275,6 +292,66 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
             relation.bkgPatt = backingPattNo;
             relation.sndsPatt = voicingPattNo;
             GuitarEditorState.deleteUnreferUnit(arrTrack);
+        }
+    };
+
+    const applyLibrary = () => {
+        const origin = arrange.origin;
+        if (origin.type !== "library") throw new Error("Guitar library origin must exist.");
+        if (
+            origin.mode !== "edit-voicing" &&
+            origin.mode !== "add-voicing" &&
+            origin.mode !== "edit-backing" &&
+            origin.mode !== "add-backing"
+        ) {
+            throw new Error("Guitar library mode must exist.");
+        }
+
+        const editor = getGuitarEditor();
+        const guitarLib = getGuitarLib();
+        const voicingKey = FinderState.Guitar.createVoicingKey(arrange.target.compiledChord.chord);
+        const backingCategory: FinderState.BackingCategory = {
+            beat: arrange.target.beat.num,
+            tsGloup: [arrange.target.scoreBase.rhythm.ts],
+            eatHead: arrange.target.beat.eatHead,
+            eatTail: arrange.target.beat.eatTail,
+        };
+
+        switch (origin.mode) {
+            case "edit-voicing": {
+                if (origin.voicingNo === -1) throw new Error("Guitar voicing pattern must be selected.");
+                const pattern = guitarLib.voicingPatterns.find(pattern => {
+                    return pattern.no === origin.voicingNo;
+                });
+                if (pattern == undefined) throw new Error("Guitar voicing pattern must exist.");
+
+                pattern.key = voicingKey;
+                pattern.frets = JSON.parse(JSON.stringify(editor.frets));
+                return;
+            }
+            case "add-voicing":
+                GuitarEditorState.registPattern(editor.frets, guitarLib, voicingKey);
+                return;
+            case "edit-backing": {
+                if (origin.backingNo === -1) throw new Error("Guitar backing pattern must be selected.");
+                if (editor.backing == null) throw new Error("Guitar backing editor must exist.");
+                const pattern = guitarLib.backingPatterns.find(pattern => {
+                    return pattern.no === origin.backingNo;
+                });
+                if (pattern == undefined) throw new Error("Guitar backing pattern must exist.");
+
+                pattern.category = backingCategory;
+                pattern.backing = GuitarEditorState.createBackingData(editor.backing);
+                return;
+            }
+            case "add-backing":
+                if (editor.backing == null) throw new Error("Guitar backing editor must exist.");
+                GuitarEditorState.registBackingPattern(
+                    backingCategory,
+                    GuitarEditorState.createBackingData(editor.backing),
+                    guitarLib,
+                );
+                return;
         }
     };
 
@@ -356,6 +433,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
     return {
         applyFinderSelection,
         applyArrange,
+        applyLibrary,
         backFinderSelection,
         deleteBacking,
         deleteBackingCol,
@@ -363,6 +441,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         moveCursor,
         moveFinder,
         moveBackingColCursor,
+        modifyPatternEvent,
         muteString,
         setBackingColDiv,
         setTechnique,

@@ -179,6 +179,40 @@ const createGuitarArrangeActions = () => {
         return updater.setTechnique(technique);
     });
 
+    const increasePatternVelocity = updateControl(updater => {
+        return updater.modifyPatternEvent((event) => ({
+            ...event,
+            velocity: Math.min(20, event.velocity + 1),
+        }));
+    });
+
+    const decreasePatternVelocity = updateControl(updater => {
+        return updater.modifyPatternEvent((event) => ({
+            ...event,
+            velocity: Math.max(1, event.velocity - 1),
+        }));
+    });
+
+    const increasePatternSpeed = updateControl(updater => {
+        return updater.modifyPatternEvent((event) => {
+            if (event.kind !== "stroke") return event;
+            return {
+                ...event,
+                speed: Math.min(20, event.speed + 1),
+            };
+        });
+    });
+
+    const decreasePatternSpeed = updateControl(updater => {
+        return updater.modifyPatternEvent((event) => {
+            if (event.kind !== "stroke") return event;
+            return {
+                ...event,
+                speed: Math.max(1, event.speed - 1),
+            };
+        });
+    });
+
     const shiftControl = updateControlWithArg<GuitarEditorState.Control>((updater, next) => {
         return updater.shiftControl(next);
     });
@@ -190,7 +224,11 @@ const createGuitarArrangeActions = () => {
     const applyArrange = () => {
         const ctx = createContext();
 
-        ctx.guitarUpdater.applyArrange();
+        if (ctx.arrange.origin.type === "library") {
+            ctx.guitarUpdater.applyLibrary();
+        } else {
+            ctx.guitarUpdater.applyArrange();
+        }
         ctx.control.outline.arrange = null;
         ctx.commitDataAndRecalculate();
         ctx.commitControl();
@@ -201,6 +239,10 @@ const createGuitarArrangeActions = () => {
         applyArrange,
         backFinderSelection,
         deleteBackingCol,
+        decreasePatternSpeed,
+        decreasePatternVelocity,
+        increasePatternSpeed,
+        increasePatternVelocity,
         insertBackingCol,
         moveCursor,
         moveBackingColCursor,

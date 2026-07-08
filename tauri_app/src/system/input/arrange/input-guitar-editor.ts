@@ -91,6 +91,18 @@ const useInputGuitarEditor = () => {
             }
         };
 
+        callbacks.holdC = () => {
+            const editor = reducerArrange.getGuitarEditor();
+            if (editor.control !== "pattern") return;
+
+            switch (eventKey) {
+                case "ArrowUp": guitarActions.increasePatternVelocity(); break;
+                case "ArrowDown": guitarActions.decreasePatternVelocity(); break;
+                case "ArrowLeft": guitarActions.decreasePatternSpeed(); break;
+                case "ArrowRight": guitarActions.increasePatternSpeed(); break;
+            }
+        };
+
         return callbacks;
     }
 
