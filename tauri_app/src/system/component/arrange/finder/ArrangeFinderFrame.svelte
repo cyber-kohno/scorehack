@@ -266,23 +266,20 @@
     padding: 5px 6px 7px;
     box-sizing: border-box;
     overflow: hidden;
+    background-color: rgba(82, 91, 112, 0.34);
   }
 
   .guitar-section.voicing {
     height: 162px;
-    background-color: rgba(72, 94, 118, 0.34);
   }
 
   .guitar-section.backing {
     height: calc(100% - 162px);
     margin-top: 0;
-    background-color: rgba(90, 83, 111, 0.34);
   }
 
   .guitar-section.active-section {
-    box-shadow:
-      inset 0 0 0 2px rgba(255, 255, 255, 0.45),
-      inset 0 0 24px rgba(255, 255, 255, 0.11);
+    background-color: rgba(114, 130, 154, 0.58);
   }
 
   .guitar-title {
