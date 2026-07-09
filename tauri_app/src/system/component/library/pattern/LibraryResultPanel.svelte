@@ -454,10 +454,6 @@
     background-color: rgba(143, 125, 88, 0.85);
   }
 
-  .guitar-item.regular {
-    background-color: rgba(74, 74, 18, 0.92);
-  }
-
   .guitar-item-label {
     display: inline-block;
     position: absolute;

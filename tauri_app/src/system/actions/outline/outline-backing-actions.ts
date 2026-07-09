@@ -17,11 +17,19 @@ const createOutlineBackingActions = (
         ctx: OutlineActionContext,
         chordData: ElementState.DataChord,
     ) => {
-        if (chordData.degree == undefined) return [];
+        const chord = getKeyChord(ctx, chordData);
+        if (chord == undefined) return [];
+        return ChordTheory.getStructsFromKeyChord(chord);
+    };
+
+    const getKeyChord = (
+        ctx: OutlineActionContext,
+        chordData: ElementState.DataChord,
+    ) => {
+        if (chordData.degree == undefined) return undefined;
 
         const tonality = ctx.derivedSelector.getCurBase().scoreBase.tonality;
-        const chord = ChordTheory.getKeyChordFromDegree(tonality, chordData.degree);
-        return ChordTheory.getStructsFromKeyChord(chord);
+        return ChordTheory.getKeyChordFromDegree(tonality, chordData.degree);
     };
 
     const getChordStructCount = (
@@ -31,18 +39,20 @@ const createOutlineBackingActions = (
         return getChordStructs(ctx, chordData).length;
     };
 
-    const getChordPitchClasses = (
+    const isSameGuitarVoicingKey = (
         ctx: OutlineActionContext,
-        chordData: ElementState.DataChord,
+        beforeChordData: ElementState.DataChord,
+        afterChordData: ElementState.DataChord,
     ) => {
-        return getChordStructs(ctx, chordData)
-            .map(struct => ((struct.key12 % 12) + 12) % 12)
-            .sort((a, b) => a - b);
-    };
+        const beforeChord = getKeyChord(ctx, beforeChordData);
+        const afterChord = getKeyChord(ctx, afterChordData);
+        if (beforeChord == undefined && afterChord == undefined) return true;
+        if (beforeChord == undefined || afterChord == undefined) return false;
 
-    const isSamePitchClasses = (left: number[], right: number[]) => {
-        if (left.length !== right.length) return false;
-        return left.every((item, index) => item === right[index]);
+        return FinderState.Guitar.equalsVoicingKey(
+            FinderState.Guitar.createVoicingKey(beforeChord),
+            FinderState.Guitar.createVoicingKey(afterChord),
+        );
     };
 
     const clearPianoVoicing = (
@@ -100,7 +110,52 @@ const createOutlineBackingActions = (
         return true;
     };
 
-    const clearVoicingIfChordChanged = (
+    const findFirstRegularGuitarVoicing = (
+        ctx: OutlineActionContext,
+        track: ArrangeState.GuitarTrack,
+        chordData: ElementState.DataChord,
+    ) => {
+        const chord = getKeyChord(ctx, chordData);
+        if (chord == undefined) return undefined;
+
+        const key = FinderState.Guitar.createVoicingKey(chord);
+        const bank = track.bank;
+        return bank.voicingRegulars
+            .map(regular => bank.voicingPatterns.find(pattern => pattern.no === regular.voicingNo))
+            .find(pattern => FinderState.Guitar.equalsVoicingKey(key, pattern?.key));
+    };
+
+    const adjustGuitarVoicingAfterChordChanged = (
+        ctx: OutlineActionContext,
+        track: ArrangeState.GuitarTrack,
+        afterChordData: ElementState.DataChord,
+    ) => {
+        const { chordSeq } = ctx.derived.elementCaches[ctx.outline.focus];
+        if (chordSeq === -1) return false;
+
+        const voicing = findFirstRegularGuitarVoicing(ctx, track, afterChordData);
+        const relationIndex = track.relations.findIndex(r => r.chordSeq === chordSeq);
+        if (relationIndex === -1) {
+            if (voicing == undefined) return false;
+
+            track.relations.push({
+                chordSeq,
+                bkgPatt: -1,
+                sndsPatt: voicing.no,
+            });
+            return true;
+        }
+
+        const relation = track.relations[relationIndex];
+        relation.sndsPatt = voicing?.no ?? -1;
+        if (relation.bkgPatt === -1 && relation.sndsPatt === -1) {
+            track.relations.splice(relationIndex, 1);
+        }
+        GuitarEditorState.deleteUnreferUnit(track);
+        return true;
+    };
+
+    const adjustArrangeAfterChordChanged = (
         ctx: OutlineActionContext,
         beforeChordData: ElementState.DataChord,
         afterChordData: ElementState.DataChord,
@@ -114,10 +169,8 @@ const createOutlineBackingActions = (
                 return clearPianoVoicing(ctx, track, afterCount);
             }
             case "guitar": {
-                const beforePitchClasses = getChordPitchClasses(ctx, beforeChordData);
-                const afterPitchClasses = getChordPitchClasses(ctx, afterChordData);
-                if (isSamePitchClasses(beforePitchClasses, afterPitchClasses)) return false;
-                return removeGuitarBacking(ctx, track);
+                if (isSameGuitarVoicingKey(ctx, beforeChordData, afterChordData)) return false;
+                return adjustGuitarVoicingAfterChordChanged(ctx, track, afterChordData);
             }
         }
     };
@@ -435,7 +488,7 @@ const createOutlineBackingActions = (
 
     return {
         applyDefaultVoicing,
-        clearVoicingIfChordChanged,
+        adjustArrangeAfterChordChanged,
         deleteChord,
         openArrangeEditor,
         openArrangeFinder,

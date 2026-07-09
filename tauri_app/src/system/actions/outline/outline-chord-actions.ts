@@ -63,7 +63,7 @@ const createOutlineChordActions = (
         afterChordData.degree = DegreeBasis.toStoredDegree(degree, tonality, ctx.settings.notation.degreeBasis);
 
         ctx.outlineUpdater.setChordData(afterChordData);
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        backingActions.adjustArrangeAfterChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 
@@ -81,7 +81,7 @@ const createOutlineChordActions = (
         if (!changed) return;
 
         const afterChordData = element.data as ElementState.DataChord;
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        backingActions.adjustArrangeAfterChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 
@@ -99,7 +99,7 @@ const createOutlineChordActions = (
         if (!changed) return;
 
         const afterChordData = element.data as ElementState.DataChord;
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        backingActions.adjustArrangeAfterChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 
@@ -172,7 +172,7 @@ const createOutlineChordActions = (
         }
 
         const afterChordData = element.data as ElementState.DataChord;
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        backingActions.adjustArrangeAfterChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 
@@ -225,7 +225,7 @@ const createOutlineChordActions = (
         };
 
         ctx.outlineUpdater.setChordData(afterChordData);
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        backingActions.adjustArrangeAfterChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 
@@ -248,7 +248,7 @@ const createOutlineChordActions = (
         afterChordData.degree = degree;
 
         ctx.outlineUpdater.setChordData(afterChordData);
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        backingActions.adjustArrangeAfterChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 
@@ -267,7 +267,7 @@ const createOutlineChordActions = (
         afterChordData.degree = degree;
 
         ctx.outlineUpdater.setChordData(afterChordData);
-        backingActions.clearVoicingIfChordChanged(ctx, beforeChordData, afterChordData);
+        backingActions.adjustArrangeAfterChordChanged(ctx, beforeChordData, afterChordData);
         ctx.commitDataAndRecalculate();
     };
 

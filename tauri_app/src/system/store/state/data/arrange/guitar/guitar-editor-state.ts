@@ -409,13 +409,13 @@ namespace GuitarEditorState {
     ArrangeState.deleteUnreferPattern(
       "sndsPatt",
       guitarLib.voicingPatterns,
-      () => false,
+      (patt) => guitarLib.voicingRegulars.some(regular => regular.voicingNo === patt.no),
       track,
     );
     ArrangeState.deleteUnreferPattern(
       "bkgPatt",
       getBackingPatterns(guitarLib),
-      () => false,
+      (patt) => guitarLib.backingRegulars.some(regular => regular.backingNo === patt.no),
       track,
     );
   };

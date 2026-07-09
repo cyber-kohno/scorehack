@@ -197,8 +197,10 @@ const createLibraryGuitarActions = () => {
         }
         if (mode === "edit-backing" && backingPattern != undefined) {
             editor.backing = GuitarEditorState.createBackingEditorProps(backingPattern.backing);
+            editor.control = "col";
         } else if (mode === "add-backing") {
             editor.backing = GuitarEditorState.createInitialBackingProps();
+            editor.control = "col";
         } else {
             editor.backing = null;
         }
