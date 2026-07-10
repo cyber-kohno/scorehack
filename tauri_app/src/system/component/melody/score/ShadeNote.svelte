@@ -85,6 +85,7 @@
     left: 0;
     width: 100%;
     z-index: 2;
+    opacity: 0.45;
     border-radius: 0 12px 12px 0;
   }
 </style>

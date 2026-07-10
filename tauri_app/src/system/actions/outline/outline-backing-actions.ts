@@ -160,19 +160,20 @@ const createOutlineBackingActions = (
         beforeChordData: ElementState.DataChord,
         afterChordData: ElementState.DataChord,
     ) => {
-        const track = ctx.outlineSelector.getCurrHarmonizeTrack();
-        switch (track.method) {
-            case "piano": {
-                const beforeCount = getChordStructCount(ctx, beforeChordData);
-                const afterCount = getChordStructCount(ctx, afterChordData);
-                if (beforeCount === afterCount) return false;
-                return clearPianoVoicing(ctx, track, afterCount);
+        ctx.data.arrange.tracks.forEach(track => {
+            switch (track.method) {
+                case "piano": {
+                    const beforeCount = getChordStructCount(ctx, beforeChordData);
+                    const afterCount = getChordStructCount(ctx, afterChordData);
+                    if (beforeCount === afterCount) return false;
+                    return clearPianoVoicing(ctx, track, afterCount);
+                }
+                case "guitar": {
+                    if (isSameGuitarVoicingKey(ctx, beforeChordData, afterChordData)) return false;
+                    return adjustGuitarVoicingAfterChordChanged(ctx, track, afterChordData);
+                }
             }
-            case "guitar": {
-                if (isSameGuitarVoicingKey(ctx, beforeChordData, afterChordData)) return false;
-                return adjustGuitarVoicingAfterChordChanged(ctx, track, afterChordData);
-            }
-        }
+        });
     };
 
     const openArrangeEditor = () => {

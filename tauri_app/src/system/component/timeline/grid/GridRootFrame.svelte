@@ -6,7 +6,8 @@
     import Cursor from "../../melody/Cursor.svelte";
     import RefState from "../../../store/state/ref-state";
     import ShadeTracks from "../../melody/score/ShadeTracks.svelte";
-    import ActiveTrack from "../../melody/score/ActiveTrack.svelte";
+    import ActiveMelodyNotes from "../../melody/score/ActiveMelodyNotes.svelte";
+    import OutlineActiveTrackShade from "../../melody/score/OutlineActiveTrackShade.svelte";
     import PreviewPosLine from "./PreviewPosLine.svelte";
     import TimelineTailMargin from "../TimelineTailMargin.svelte";
     import { controlStore, derivedStore, playbackStore, refStore } from "../../../store/global-store";
@@ -14,6 +15,7 @@
     $: cache = $derivedStore;
 
     $: isMelodyMode = (() => $controlStore.mode === "melody")();
+    $: isOutlineMode = (() => $controlStore.mode === "harmonize")();
 
     $: isPlayback = $playbackStore.timerKeys != null;
     $: isArrangeEditorActive = $controlStore.outline.arrange?.editor != undefined;
@@ -49,7 +51,9 @@
 
     <div class="noteswrap" data-isMelodyMode={isMelodyMode}>
         {#if isMelodyMode}
-            <ActiveTrack />
+            <ActiveMelodyNotes />
+        {:else if isOutlineMode}
+            <OutlineActiveTrackShade />
         {/if}
         <ShadeTracks />
     </div>
