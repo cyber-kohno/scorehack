@@ -92,6 +92,7 @@ const createTerminalUpdater = (ctx: Context) => {
         const funcKey = resolvedItems[0];
         const args = resolvedItems.slice(1);
         let list: string[] = [];
+        let header = "";
 
         const isInputFunc = orderItems.length === 1;
         const argIndex = args.length - 1;
@@ -102,6 +103,7 @@ const createTerminalUpdater = (ctx: Context) => {
             list = orderItems[0].startsWith("@")
                 ? settings.terminalShortcuts.map((shortcut) => shortcut.key)
                 : terminal.availableFuncs.map(f => f.funcKey);
+            header = orderItems[0].startsWith("@") ? "Shortcut" : "Command";
         } else {
             const func = terminal.availableFuncs.find(f => f.funcKey === funcKey);
             if (func == undefined) return;
@@ -110,6 +112,7 @@ const createTerminalUpdater = (ctx: Context) => {
             if (arg == undefined) return;
 
             list = (arg.getCandidate ?? (() => []))(args);
+            header = `${func.funcKey} / ${arg.name}`;
         }
 
         const keyword = orderItems[orderItems.length - 1];
@@ -119,6 +122,7 @@ const createTerminalUpdater = (ctx: Context) => {
             if (list.length === 1 && list[0] === keyword) return;
 
             terminal.helper = TerminalState.createHelperInitial();
+            terminal.helper.header = header;
             terminal.helper.list = list;
             terminal.helper.keyword = keyword;
         }

@@ -14,12 +14,14 @@ namespace TerminalState {
     }
 
     export type HelperProps = {
+        header: string;
         list: string[];
         keyword: string;
         focus: number;
     }
     export const createHelperInitial = (): HelperProps => {
         return {
+            header: '',
             list: [],
             keyword: '',
             focus: 0

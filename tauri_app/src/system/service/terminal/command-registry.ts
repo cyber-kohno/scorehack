@@ -8,7 +8,6 @@ import createInitProvider from "./command/provider/init-provider";
 import createLibraryProvider from "./command/provider/library-provider";
 import createMelodyProvider from "./command/provider/melody-provider";
 import createModulateProvider from "./command/provider/modulate-provider";
-import createPianoEditorProvider from "./command/provider/piano-editor-provider";
 import createSectionProvider from "./command/provider/section-provider";
 
 const createCommandRegistry = (ctx: TerminalCommand.Context) => {
@@ -22,7 +21,6 @@ const createCommandRegistry = (ctx: TerminalCommand.Context) => {
     const chordProvider = createChordProvider(ctx);
     const melodyProvider = createMelodyProvider(ctx);
     const modulateProvider = createModulateProvider(ctx);
-    const pianoEditorProvider = createPianoEditorProvider(ctx);
 
     const buildAvailableFunctions = () => {
         const items: TerminalCommand.Props[] = [];
@@ -52,7 +50,6 @@ const createCommandRegistry = (ctx: TerminalCommand.Context) => {
                 } else {
                     const arrangeSector = sectors[2] as ArrangeState.ArrangeMedhod;
                     switch (arrangeSector) {
-                        case "piano": add(pianoEditorProvider.commands(), "piano"); break;
                     }
                 }
             } break;

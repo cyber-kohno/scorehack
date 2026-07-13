@@ -33,6 +33,7 @@
   style:left="{$pos.left}px"
   bind:this={$refStore.helper}
 >
+  <div class="header">{helper.header}</div>
   {#each helper.list as item, i}
     <div class="item" data-isFocus={helper.focus === i}>
       <HighlightText baseText={item} keyword={helper.keyword} color="#f44" />
@@ -54,6 +55,20 @@
     border-radius: 2px;
     overflow: hidden;
     box-shadow: 10px 10px 15px -10px;
+  }
+  .header {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    height: 24px;
+    padding: 0 0 0 6px;
+    box-sizing: border-box;
+    background-color: rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+    color: rgba(232, 248, 255, 0.86);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 22px;
   }
   .item {
     display: inline-block;
