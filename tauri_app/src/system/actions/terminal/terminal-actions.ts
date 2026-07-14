@@ -135,6 +135,7 @@ const createTerminalActions = () => {
         const changed = ctx.terminalUpdater.removeCommand();
         if (!changed) return;
 
+        rebuildAvailableFunctions(ctx);
         ctx.terminalUpdater.buildHelper();
         ctx.commitTerminal();
     };
@@ -146,6 +147,7 @@ const createTerminalActions = () => {
         const moved = ctx.terminalUpdater.moveFocus(dir);
         if (!moved) return;
 
+        rebuildAvailableFunctions(ctx);
         ctx.terminalUpdater.buildHelper();
         ctx.commitTerminal();
     };
@@ -157,6 +159,7 @@ const createTerminalActions = () => {
         const changed = ctx.terminalUpdater.insertCommand(key);
         if (!changed) return;
 
+        rebuildAvailableFunctions(ctx);
         ctx.terminalUpdater.buildHelper();
         ctx.commitTerminal();
     };
@@ -174,9 +177,10 @@ const createTerminalActions = () => {
         if (ctx.terminalSelector.isWait()) return;
 
         const applied = ctx.terminalUpdater.applyHelper();
-        if (!applied) return;
+        if (!applied) return false;
 
         ctx.commitTerminal();
+        return true;
     };
 
     const moveHelperFocus = (dir: -1 | 1) => {

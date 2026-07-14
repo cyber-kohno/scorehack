@@ -133,58 +133,43 @@ const createShortcutCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Pr
     ctx.commit.terminal();
   };
 
-  const outputUnknownAction = (action: string) => {
-    logger.outputError(`Unknown shortcut action. [${action}]`);
-    ctx.commit.terminal();
-  };
-
   return {
-    ...defaultProps,
-    funcKey: "shortcut",
+    sector: defaultProps.sector,
+    kind: "multi",
+    key: "shortcut",
     usage: "Manage terminal command shortcuts.",
-    args: [
+    subCommands: [
       {
-        name: "action: string",
-        getCandidate: () => actions,
+        key: "list",
+        usage: "Displays terminal command shortcuts.",
+        args: [],
+        callback: () => listShortcuts(),
       },
       {
-        name: "shortcut: string",
-        getCandidate: (args) => (
-          ["update", "delete"].includes(args[0])
-            ? shortcutKeys()
-            : []
-        ),
+        key: "create",
+        usage: "Create a terminal command shortcut.",
+        args: [
+          { name: "key" },
+          { name: "command" },
+        ],
+        callback: (args) => createShortcut(args[0], args.slice(1)),
       },
       {
-        name: "command...: string",
+        key: "update",
+        usage: "Update a terminal command shortcut.",
+        args: [
+          { name: "key", getCandidate: () => shortcutKeys() },
+          { name: "command" },
+        ],
+        callback: (args) => updateShortcut(args[0], args.slice(1)),
+      },
+      {
+        key: "delete",
+        usage: "Delete a terminal command shortcut.",
+        args: [{ name: "key", getCandidate: () => shortcutKeys() }],
+        callback: (args) => deleteShortcut(args[0]),
       },
     ],
-    callback: (args) => {
-      const action = args[0];
-
-      if (action == undefined || action === "") {
-        outputReference();
-        return;
-      }
-
-      switch (action) {
-        case "list":
-          listShortcuts();
-          break;
-        case "create":
-          createShortcut(args[1], args.slice(2));
-          break;
-        case "update":
-          updateShortcut(args[1], args.slice(2));
-          break;
-        case "delete":
-          deleteShortcut(args[1]);
-          break;
-        default:
-          outputUnknownAction(action);
-          break;
-      }
-    },
   };
 };
 

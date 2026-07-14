@@ -10,7 +10,7 @@ const createSectionProvider = (ctx: TerminalCommand.Context) => {
         return [
             {
                 ...defaultProps,
-                funcKey: 'ren',
+                key: 'ren',
                 usage: 'Change the section name.',
                 args: [],
                 callback: (args) => {

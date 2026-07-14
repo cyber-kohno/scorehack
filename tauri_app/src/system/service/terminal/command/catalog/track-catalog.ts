@@ -4,6 +4,7 @@ import CompressedJsonFile from "../../../common/compressed-json-file";
 import useScrollService from "../../../common/scroll-service";
 import ArrangeState from "../../../../store/state/data/arrange/arrange-state";
 import MelodyState from "../../../../store/state/data/melody-state";
+import ArgumentRegulationFactory from "../../argument-regulation-factory";
 import TerminalCommand from "../../terminal-command";
 
 type TrackCatalogKind = "harmonize" | "melody";
@@ -429,7 +430,7 @@ const createTrackCatalog = (
       return;
     }
 
-    const prev = tracks[control.melody.trackIndex];
+    const prev = tracks[control.melody.trackIndex]?.name ?? "";
     control.melody.trackIndex = nextIndex;
     logger.outputInfo(`Active track changed. [${prev} -> ${name}]`);
     terminal.target = `melody\\${tracks[nextIndex].name}`;
@@ -447,7 +448,7 @@ const createTrackCatalog = (
       return;
     }
 
-    const prev = tracks[control.outline.trackIndex];
+    const prev = tracks[control.outline.trackIndex]?.name ?? "";
     control.outline.trackIndex = nextIndex;
     logger.outputInfo(`Active track changed. [${prev} -> ${name}]`);
     ctx.commit.control();
@@ -537,67 +538,61 @@ const createTrackCatalog = (
     logger.outputError(`Unknown track action. [${action}]`);
     ctx.commit.terminal();
   };
+  const existingTrackNameReg = ArgumentRegulationFactory.createExistingNameReg(getTrackNames);
+  const uniqueTrackNameReg = ArgumentRegulationFactory.createUniqueNameReg(getTrackNames);
 
   return {
-    ...defaultProps,
-    funcKey: "track",
+    sector: defaultProps.sector,
+    kind: "multi",
+    key: "track",
     usage: "Show, create, or manage tracks.",
-    args: [
+    subCommands: [
       {
-        name: "action: string",
-        getCandidate: () => actions,
+        key: "list",
+        usage: "Displays tracks.",
+        args: [],
+        callback: () => listTracks(),
       },
       {
-        name: "trackName?: string",
-        getCandidate: (args) => (
-          args[0] === "use"
-          || args[0] === "delete"
-          || args[0] === "copy"
-          || args[0] === "export"
-          || args[0] === "import"
-            ? getTrackNames()
-            : []
-        ),
+        key: "create",
+        usage: "Create a track.",
+        args: [{ name: "name", ...uniqueTrackNameReg }],
+        callback: (args) => createTrack(args[0]),
       },
       {
-        name: "newTrackName?: string",
+        key: "copy",
+        usage: "Copy a track.",
+        args: [
+          { name: "name", ...existingTrackNameReg },
+          { name: "name", ...uniqueTrackNameReg },
+        ],
+        callback: (args) => copyTrack(args[0], args[1]),
+      },
+      {
+        key: "export",
+        usage: "Export notes from a track.",
+        args: [{ name: "name", ...existingTrackNameReg }],
+        callback: (args) => exportTrack(args[0]),
+      },
+      {
+        key: "import",
+        usage: "Import notes into a track.",
+        args: [{ name: "name", ...existingTrackNameReg }],
+        callback: (args) => importTrack(args[0]),
+      },
+      {
+        key: "use",
+        usage: "Use a track.",
+        args: [{ name: "name", ...existingTrackNameReg }],
+        callback: (args) => useTrack(args[0]),
+      },
+      {
+        key: "delete",
+        usage: "Delete a track.",
+        args: [{ name: "name", ...existingTrackNameReg }],
+        callback: (args) => deleteTrack(args[0]),
       },
     ],
-    callback: (args) => {
-      const action = args[0];
-
-      if (action == undefined || action === "") {
-        outputReference();
-        return;
-      }
-
-      switch (action) {
-        case "list":
-          listTracks();
-          break;
-        case "create":
-          createTrack(args[1]);
-          break;
-        case "copy":
-          copyTrack(args[1], args[2]);
-          break;
-        case "export":
-          exportTrack(args[1]);
-          break;
-        case "import":
-          importTrack(args[1]);
-          break;
-        case "use":
-          useTrack(args[1]);
-          break;
-        case "delete":
-          deleteTrack(args[1]);
-          break;
-        default:
-          outputUnknownAction(action);
-          break;
-      }
-    },
   };
 };
 

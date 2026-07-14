@@ -149,11 +149,11 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
 
   return {
     ...defaultProps,
-    funcKey: "export",
+    key: "export",
     usage: "Export the active data to an external file format.",
     args: [
       {
-        name: "format: string",
+        name: "format",
         getCandidate: () => exportFormats,
       },
     ],

@@ -46,11 +46,11 @@ const createSaveCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props 
 
   return {
     ...defaultProps,
-    funcKey: "save",
+    key: "save",
     usage: "Save project or application settings.",
     args: [
       {
-        name: "target: string",
+        name: "target",
         getCandidate: () => saveTargets,
       },
     ],

@@ -1,5 +1,7 @@
 import ArrangeState from "../../../../store/state/data/arrange/arrange-state";
 import type SettingsState from "../../../../store/state/settings-state";
+import ArgumentRegulationFactory from "../../argument-regulation-factory";
+import TerminalArgumentReader from "../../terminal-argument-reader";
 import TerminalCommand from "../../terminal-command";
 import createInstCatalog from "../catalog/inst-catalog";
 import createTrackCatalog from "../catalog/track-catalog";
@@ -63,11 +65,11 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
       createTrackCatalog(ctx, "harmonize"),
       {
         ...defaultProps,
-        funcKey: "method",
+        key: "method",
         usage: "Change the arrange method for the active track.",
         args: [
           {
-            name: "method: piano | guitar | drum",
+            name: "method",
             getCandidate: () => [...ArrangeState.ArrangeMedhods],
           },
         ],
@@ -133,15 +135,15 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "notation",
+        key: "notation",
         usage: "Change notation settings.",
         args: [
           {
-            name: "property: degree-basis",
+            name: "property",
             getCandidate: () => ["degree-basis"],
           },
           {
-            name: "value: tonality | relative-major",
+            name: "value",
             getCandidate: (args) => args[0] === "degree-basis"
               ? ["tonality", "relative-major"]
               : [],
@@ -170,18 +172,16 @@ const createHarmonizeProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "volume",
+        key: "volume",
         usage: "Adjust volume for the active track.",
-        args: [{ name: "value" }],
+        args: [{ name: "value", ...ArgumentRegulationFactory.createNumberReg(1, 10) }],
         callback: (args) => {
-          const arg0 = logger.validateRequired(args[0], 1);
-          if (arg0 == null) return;
-          const arg0Number = logger.validateNumber(arg0, 1);
+          const arg0Number = TerminalArgumentReader.readNumber(args, 0, logger, { min: 1, max: 10 });
           if (arg0Number == null) return;
           const track = getCurrHarmonizeTrack();
           const prev = track.volume;
           track.volume = arg0Number;
-          logger.outputInfo(`Changed volume. [${prev} -> ${arg0}]`);
+          logger.outputInfo(`Changed volume. [${prev} -> ${arg0Number}]`);
           ctx.commit.data();
         },
       },

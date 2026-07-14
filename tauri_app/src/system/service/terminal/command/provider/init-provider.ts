@@ -1,5 +1,7 @@
 import RhythmTheory from "../../../../domain/theory/rhythm-theory";
 import TonalityTheory from "../../../../domain/theory/tonality-theory";
+import ArgumentRegulationFactory from "../../argument-regulation-factory";
+import TerminalArgumentReader from "../../terminal-argument-reader";
 import TerminalCommand from "../../terminal-command";
 
 const createInitProvider = (ctx: TerminalCommand.Context) => {
@@ -13,7 +15,7 @@ const createInitProvider = (ctx: TerminalCommand.Context) => {
     return [
       {
         ...defaultProps,
-        funcKey: "scales",
+        key: "scales",
         args: [],
         callback: () => {
           terminal.outputs.push({
@@ -27,7 +29,7 @@ const createInitProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "lsts",
+        key: "lsts",
         args: [],
         callback: () => {
           terminal.outputs.push({
@@ -41,14 +43,12 @@ const createInitProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "tempo",
-        args: [{ name: "value" }],
+        key: "tempo",
+        args: [{ name: "value", ...ArgumentRegulationFactory.createNumberReg(20, 300) }],
         callback: (args) => {
           const initData = getCurrentInitData();
           const prev = initData.tempo;
-          const arg0 = logger.validateRequired(args[0], 1);
-          if (arg0 == null) return;
-          const arg0Number = logger.validateNumber(arg0, 1);
+          const arg0Number = TerminalArgumentReader.readNumber(args, 0, logger, { min: 20, max: 300 });
           if (arg0Number == null) return;
           initData.tempo = arg0Number;
           ctx.commit.dataAndRecalculate();
@@ -57,7 +57,7 @@ const createInitProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "chts",
+        key: "chts",
         args: [{ name: "timeSignature", getCandidate: () => RhythmTheory.getTSNames() }],
         callback: (args) => {
           const initData = getCurrentInitData();
@@ -78,7 +78,7 @@ const createInitProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "feel",
+        key: "feel",
         args: [
           { name: "type", getCandidate: () => [...feelTypes] },
           {
@@ -125,7 +125,7 @@ const createInitProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "scale",
+        key: "scale",
         args: [{ name: "scale", getCandidate: () => TonalityTheory.VALID_SCALE_NAMES }],
         callback: (args) => {
           const tonality = getCurrentInitData().tonality;

@@ -1,7 +1,9 @@
 import FilePathRef from "../../../../infra/file/file-path-ref";
 import { openAudioFilePath } from "../../../../infra/tauri/dialog";
 import type MelodyState from "../../../../store/state/data/melody-state";
+import ArgumentRegulationFactory from "../../argument-regulation-factory";
 import TerminalCommand from "../../terminal-command";
+import TerminalArgumentReader from "../../terminal-argument-reader";
 
 const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
   const { data, logger, settings, terminal } = ctx;
@@ -186,10 +188,7 @@ const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props
     const trackName = logger.validateRequired(name, 2);
     if (trackName == null) return;
 
-    const adjustMsText = logger.validateRequired(ms, 3);
-    if (adjustMsText == null) return;
-
-    const adjustMs = logger.validateNumber(adjustMsText, 3);
+    const adjustMs = TerminalArgumentReader.readNumber([trackName, ms], 1, logger, { min: -60000, max: 60000 });
     if (adjustMs == null) return;
 
     const track = findTrack(trackName);
@@ -204,62 +203,55 @@ const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props
     ctx.commit.terminal();
   };
 
-  const outputUnknownAction = (action: string) => {
-    logger.outputError(`Unknown audio action. [${action}]`);
-    ctx.commit.terminal();
-  };
-
   return {
-    ...defaultProps,
-    funcKey: "audio",
+    sector: defaultProps.sector,
+    kind: "multi",
+    key: "audio",
     usage: "Manage audio tracks.",
-    args: [
+    subCommands: [
       {
-        name: "action: string",
-        getCandidate: () => actions,
+        key: "list",
+        usage: "Displays audio tracks.",
+        args: [],
+        callback: () => listTracks(),
       },
       {
-        name: "audioTrackName?: string",
-        getCandidate: (args) => {
-          return ["delete", "rename", "update", "adjust"].includes(args[0]) ? trackNames() : [];
-        },
+        key: "add",
+        usage: "Add an audio track.",
+        args: [{ name: "name" }],
+        callback: (args) => addTrack(args[0]),
       },
       {
-        name: "newNameOrMs?: string",
+        key: "delete",
+        usage: "Delete an audio track.",
+        args: [{ name: "name", getCandidate: () => trackNames() }],
+        callback: (args) => deleteTrack(args[0]),
+      },
+      {
+        key: "rename",
+        usage: "Rename an audio track.",
+        args: [
+          { name: "name", getCandidate: () => trackNames() },
+          { name: "name" },
+        ],
+        callback: (args) => renameTrack(args[0], args[1]),
+      },
+      {
+        key: "update",
+        usage: "Update an audio track resource.",
+        args: [{ name: "name", getCandidate: () => trackNames() }],
+        callback: (args) => updateTrack(args[0]),
+      },
+      {
+        key: "adjust",
+        usage: "Adjust an audio track timing.",
+        args: [
+          { name: "name", getCandidate: () => trackNames() },
+          { name: "value", ...ArgumentRegulationFactory.createNumberReg(-60000, 60000) },
+        ],
+        callback: (args) => adjustTrack(args[0], args[1]),
       },
     ],
-    callback: (args) => {
-      const action = args[0];
-
-      if (action == undefined || action === "") {
-        outputReference();
-        return;
-      }
-
-      switch (action) {
-        case "list":
-          listTracks();
-          break;
-        case "add":
-          addTrack(args[1]);
-          break;
-        case "delete":
-          deleteTrack(args[1]);
-          break;
-        case "rename":
-          renameTrack(args[1], args[2]);
-          break;
-        case "update":
-          updateTrack(args[1]);
-          break;
-        case "adjust":
-          adjustTrack(args[1], args[2]);
-          break;
-        default:
-          outputUnknownAction(action);
-          break;
-      }
-    },
   };
 };
 

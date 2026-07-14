@@ -1,5 +1,6 @@
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import type ElementState from "../../store/state/data/element-state";
+import ArgumentRegulationFactory from "./argument-regulation-factory";
 import TerminalCommand from "./terminal-command";
 import createChordProvider from "./command/provider/chord-provider";
 import createGlobalProvider from "./command/provider/global-provider";
@@ -25,9 +26,29 @@ const createCommandRegistry = (ctx: TerminalCommand.Context) => {
     const buildAvailableFunctions = () => {
         const items: TerminalCommand.Props[] = [];
         const sectors = terminal.target.split("\\");
-        const add = (funcs: TerminalCommand.Props[], sector: string) => {
-            items.push(...funcs.map((func) => ({
-                ...func,
+        const dummyReg = ArgumentRegulationFactory.createDummyReg();
+        const regulateArg = (arg: TerminalCommand.Arg): TerminalCommand.Arg => ({
+            ...dummyReg,
+            ...arg,
+        });
+        const regulateCommand = (command: TerminalCommand.Props): TerminalCommand.Props => {
+            if (command.kind === "single") {
+                return {
+                    ...command,
+                    args: command.args.map(regulateArg),
+                };
+            }
+            return {
+                ...command,
+                subCommands: command.subCommands.map((subCommand) => ({
+                    ...subCommand,
+                    args: subCommand.args.map(regulateArg),
+                })),
+            };
+        };
+        const add = (commands: TerminalCommand.Props[], sector: string) => {
+            items.push(...commands.map((command) => ({
+                ...regulateCommand(command),
                 sector,
             })));
         };

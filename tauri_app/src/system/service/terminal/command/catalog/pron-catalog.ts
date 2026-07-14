@@ -52,41 +52,25 @@ const createPronCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props 
     ctx.commit.data();
   };
 
-  const outputUnknownAction = (action: string) => {
-    logger.outputError(`Unknown pronunciation action. [${action}]`);
-    ctx.commit.terminal();
-  };
-
   return {
-    ...defaultProps,
-    funcKey: "pron",
+    sector: defaultProps.sector,
+    kind: "multi",
+    key: "pron",
     usage: "Manage pronunciation data on the active track.",
-    args: [
+    subCommands: [
       {
-        name: "action: string",
-        getCandidate: () => actions,
+        key: "clear",
+        usage: "Remove pronunciation data from all notes on the active track.",
+        args: [],
+        callback: () => clearPron(),
+      },
+      {
+        key: "dummy",
+        usage: "Set dummy pronunciation data to all notes on the active track.",
+        args: [],
+        callback: () => setDummyPron(),
       },
     ],
-    callback: (args) => {
-      const action = args[0];
-
-      if (action == undefined || action === "") {
-        outputReference();
-        return;
-      }
-
-      switch (action) {
-        case "clear":
-          clearPron();
-          break;
-        case "dummy":
-          setDummyPron();
-          break;
-        default:
-          outputUnknownAction(action);
-          break;
-      }
-    },
   };
 };
 

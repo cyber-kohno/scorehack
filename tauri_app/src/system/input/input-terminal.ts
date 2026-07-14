@@ -28,7 +28,10 @@ const useInputTerminal = () => {
         if (terminalActions.hasHelper()) {
             switch (eventKey) {
                 case 'Escape': terminalActions.closeHelper(); break;
-                case 'Enter': terminalActions.applyHelper(); break;
+                case 'Enter': {
+                    const applied = terminalActions.applyHelper();
+                    if (!applied) terminalActions.registCommand();
+                } break;
                 case 'ArrowUp': terminalActions.moveHelperFocus(-1); break;
                 case 'ArrowDown': terminalActions.moveHelperFocus(1); break;
             }

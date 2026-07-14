@@ -11,20 +11,34 @@ import type useTerminalLogger from "./terminal-logger";
 namespace TerminalCommand {
     export type Arg = {
         name: string;
-        /** ヘルパー利用時の候補リスト */
+        overview?: string;
+        /** Candidate list for terminal helper. */
         getCandidate?: (args: string[]) => string[];
+        isAccept?: (value: string, args: string[]) => boolean;
     };
 
-    export interface PropsDefault {
-        sector: string;
+    export interface CommandBase {
+        key: string;
         usage: string;
+    }
+
+    export interface CommandUnit extends CommandBase {
         args: Arg[];
         callback: (args: string[]) => void;
     }
 
-    export interface Props extends PropsDefault {
-        funcKey: string;
+    export interface SingleCommandDef extends CommandUnit {
+        sector: string;
+        kind: "single";
     }
+
+    export interface MultiCommandDef extends CommandBase {
+        sector: string;
+        kind: "multi";
+        subCommands: CommandUnit[];
+    }
+
+    export type Props = SingleCommandDef | MultiCommandDef;
 
     export type Context = {
         control: ControlState.Value;
@@ -48,8 +62,9 @@ namespace TerminalCommand {
         };
     };
 
-    export const createDefaultProps = (sector: string): PropsDefault => ({
+    export const createDefaultProps = (sector: string) => ({
         sector,
+        kind: "single" as const,
         usage: "",
         args: [],
         callback: () => [],

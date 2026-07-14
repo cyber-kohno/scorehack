@@ -130,11 +130,11 @@ const createLoadCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props 
 
   return {
     ...defaultProps,
-    funcKey: "load",
+    key: "load",
     usage: "Load project or other external data.",
     args: [
       {
-        name: "target: string",
+        name: "target",
         getCandidate: () => loadTargets,
       },
     ],

@@ -15,16 +15,20 @@ namespace TerminalState {
 
     export type HelperProps = {
         header: string;
+        overview: string;
         list: string[];
         keyword: string;
         focus: number;
+        isAccept: boolean;
     }
     export const createHelperInitial = (): HelperProps => {
         return {
             header: '',
+            overview: '',
             list: [],
             keyword: '',
-            focus: 0
+            focus: 0,
+            isAccept: true,
         }
     };
 

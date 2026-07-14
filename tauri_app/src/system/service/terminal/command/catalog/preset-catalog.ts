@@ -518,62 +518,70 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
   };
 
   return {
-    ...defaultProps,
-    funcKey: "preset",
+    sector: defaultProps.sector,
+    kind: "multi",
+    key: "preset",
     usage: "Manage arrange library presets.",
-    args: [
+    subCommands: [
       {
-        name: "action",
-        getCandidate: () => actions,
-      },
-      {
-        name: "name",
-        getCandidate: (args) => {
-          return ["apply", "overwrite", "delete"].includes(args[0])
-            ? settings.library.presets.map(preset => preset.name)
-            : [];
-        },
-      },
-    ],
-    callback: (args) => {
-      const action = args[0];
-      if (action == undefined || action === "") {
-        outputReference();
-        return;
-      }
-
-      switch (action) {
-        case "regist": {
-          const name = logger.validateRequired(args[1], 2);
+        key: "regist",
+        usage: "Register the active track library as a global preset.",
+        args: [{ name: "name" }],
+        callback: (args) => {
+          const name = logger.validateRequired(args[0], 1);
           if (name == null) return;
           regist(name);
-        } break;
-        case "list":
-          list();
-          break;
-        case "apply": {
-          const name = logger.validateRequired(args[1], 2);
+        },
+      },
+      {
+        key: "list",
+        usage: "Displays global library presets.",
+        args: [],
+        callback: () => list(),
+      },
+      {
+        key: "apply",
+        usage: "Apply a global preset to the active track library.",
+        args: [{ name: "name", getCandidate: () => settings.library.presets.map(preset => preset.name) }],
+        callback: (args) => {
+          const name = logger.validateRequired(args[0], 1);
           if (name == null) return;
           apply(name);
-        } break;
-        case "overwrite": {
-          const name = logger.validateRequired(args[1], 2);
+        },
+      },
+      {
+        key: "overwrite",
+        usage: "Overwrite a global preset from the active track library.",
+        args: [{ name: "name", getCandidate: () => settings.library.presets.map(preset => preset.name) }],
+        callback: (args) => {
+          const name = logger.validateRequired(args[0], 1);
           if (name == null) return;
           overwrite(name);
-        } break;
-        case "delete": {
-          const name = logger.validateRequired(args[1], 2);
+        },
+      },
+      {
+        key: "delete",
+        usage: "Delete a global library preset.",
+        args: [{ name: "name", getCandidate: () => settings.library.presets.map(preset => preset.name) }],
+        callback: (args) => {
+          const name = logger.validateRequired(args[0], 1);
           if (name == null) return;
           deletePreset(name);
-        } break;
-        case "export":
-          exportLibrary();
-          break;
-        case "import":
-          importLibrary();
-          break;
-      }
-    },
+        },
+      },
+      {
+        key: "export",
+        usage: "Export the active track library to a file.",
+        args: [],
+        callback: () => exportLibrary(),
+      },
+      {
+        key: "import",
+        usage: "Import a library file into the active track library.",
+        args: [],
+        callback: () => importLibrary(),
+      },
+    ],
   };
 };
 

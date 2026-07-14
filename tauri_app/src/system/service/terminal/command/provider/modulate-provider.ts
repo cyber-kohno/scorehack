@@ -19,7 +19,7 @@ const createModulateProvider = (ctx: TerminalCommand.Context) => {
     return [
       {
         ...defaultProps,
-        funcKey: "domm",
+        key: "domm",
         args: [
           {
             name: "value",
@@ -45,7 +45,7 @@ const createModulateProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "key",
+        key: "key",
         args: [
           {
             name: "value",
@@ -71,7 +71,7 @@ const createModulateProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "parallel",
+        key: "parallel",
         args: [],
         callback: () => {
           const data = outlineSelector.getCurrentModulateData();
@@ -87,7 +87,7 @@ const createModulateProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "relative",
+        key: "relative",
         args: [],
         callback: () => {
           const data = outlineSelector.getCurrentModulateData();

@@ -177,74 +177,45 @@ const createInstCatalog = (
     });
   };
 
-  const outputUnknownSource = (source: string) => {
-    logger.outputError(`Unknown instrument source. [${source}]`);
-    ctx.commit.terminal();
-  };
-
   return {
-    ...defaultProps,
-    funcKey: "inst",
+    sector: defaultProps.sector,
+    kind: "multi",
+    key: "inst",
     usage: "Set the active track instrument.",
-    args: [
+    subCommands: [
       {
-        name: "source: string",
-        getCandidate: () => sources,
+        key: "builtin",
+        usage: "Set a built-in instrument.",
+        args: [{ name: "name", getCandidate: () => PlaybackState.InstrumentNames }],
+        callback: (args) => useBuiltin(args[0]),
       },
       {
-        name: "name: string",
-        getCandidate: (args) => {
-          switch (args[0]) {
-            case "builtin":
-              return PlaybackState.InstrumentNames;
-            case "soundfont":
-              return settings.userSoundFonts.map((soundFont) => soundFont.name);
-            default:
-              return [];
-          }
-        },
-      },
-      {
-        name: "bank: number",
-        getCandidate: (args) => {
-          if (args[0] !== "soundfont") return [];
-          const soundFont = findSoundFont(args[1]);
-          if (soundFont == undefined) return [];
-          return UserSoundFontCache.getPresetBanks(UserSoundFontPath.resolvePath(soundFont, settings));
-        },
-      },
-      {
-        name: "program: number",
-        getCandidate: (args) => {
-          if (args[0] !== "soundfont") return [];
-          const soundFont = findSoundFont(args[1]);
-          if (soundFont == undefined) return [];
-          const bank = Number(args[2]);
-          if (!Number.isFinite(bank)) return [];
-          return UserSoundFontCache.getPresetPrograms(UserSoundFontPath.resolvePath(soundFont, settings), bank);
-        },
+        key: "soundfont",
+        usage: "Set a SoundFont instrument.",
+        args: [
+          { name: "name", getCandidate: () => settings.userSoundFonts.map((soundFont) => soundFont.name) },
+          {
+            name: "bank",
+            getCandidate: (args) => {
+              const soundFont = findSoundFont(args[0]);
+              if (soundFont == undefined) return [];
+              return UserSoundFontCache.getPresetBanks(UserSoundFontPath.resolvePath(soundFont, settings));
+            },
+          },
+          {
+            name: "program",
+            getCandidate: (args) => {
+              const soundFont = findSoundFont(args[0]);
+              if (soundFont == undefined) return [];
+              const bank = Number(args[1]);
+              if (!Number.isFinite(bank)) return [];
+              return UserSoundFontCache.getPresetPrograms(UserSoundFontPath.resolvePath(soundFont, settings), bank);
+            },
+          },
+        ],
+        callback: (args) => useSoundFont(args[0], args[1], args[2]),
       },
     ],
-    callback: (args) => {
-      const source = args[0];
-
-      if (source == undefined || source === "") {
-        outputReference();
-        return;
-      }
-
-      switch (source) {
-        case "builtin":
-          useBuiltin(args[1]);
-          break;
-        case "soundfont":
-          useSoundFont(args[1], args[2], args[3]);
-          break;
-        default:
-          outputUnknownSource(source);
-          break;
-      }
-    },
   };
 };
 

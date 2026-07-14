@@ -208,56 +208,43 @@ const createSoundfontCatalog = (ctx: TerminalCommand.Context): TerminalCommand.P
     ctx.commit.terminal();
   };
 
-  const outputUnknownAction = (action: string) => {
-    logger.outputError(`Unknown soundfont action. [${action}]`);
-    ctx.commit.terminal();
-  };
-
   return {
-    ...defaultProps,
-    funcKey: "soundfont",
+    sector: defaultProps.sector,
+    kind: "multi",
+    key: "soundfont",
     usage: "Manage external SoundFont definitions.",
-    args: [
+    subCommands: [
       {
-        name: "action: string",
-        getCandidate: () => actions,
+        key: "list",
+        usage: "Displays SoundFont definitions.",
+        args: [],
+        callback: () => listDefinitions(),
       },
       {
-        name: "soundFontName?: string",
-        getCandidate: (args) => {
-          return ["update", "remove", "presets"].includes(args[0]) ? definitionNames() : [];
-        },
+        key: "add",
+        usage: "Add a SoundFont definition.",
+        args: [{ name: "name" }],
+        callback: (args) => addDefinition(args[0]),
+      },
+      {
+        key: "update",
+        usage: "Update a SoundFont definition.",
+        args: [{ name: "name", getCandidate: () => definitionNames() }],
+        callback: (args) => updateDefinition(args[0]),
+      },
+      {
+        key: "remove",
+        usage: "Remove a SoundFont definition.",
+        args: [{ name: "name", getCandidate: () => definitionNames() }],
+        callback: (args) => removeDefinition(args[0]),
+      },
+      {
+        key: "presets",
+        usage: "Displays SoundFont presets.",
+        args: [{ name: "name", getCandidate: () => definitionNames() }],
+        callback: (args) => listPresets(args[0]),
       },
     ],
-    callback: (args) => {
-      const action = args[0];
-
-      if (action == undefined || action === "") {
-        outputReference();
-        return;
-      }
-
-      switch (action) {
-        case "list":
-          listDefinitions();
-          break;
-        case "add":
-          addDefinition(args[1]);
-          break;
-        case "update":
-          updateDefinition(args[1]);
-          break;
-        case "remove":
-          removeDefinition(args[1]);
-          break;
-        case "presets":
-          listPresets(args[1]);
-          break;
-        default:
-          outputUnknownAction(action);
-          break;
-      }
-    },
   };
 };
 

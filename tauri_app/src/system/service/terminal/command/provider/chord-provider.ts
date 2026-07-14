@@ -10,7 +10,7 @@ const createChordProvider = (ctx: TerminalCommand.Context) => {
         return [
             {
                 ...defaultProps,
-                funcKey: 'lsb',
+                key: 'lsb',
                 usage: 'Displays a list of available chord symbols.',
                 args: [],
                 callback: () => {

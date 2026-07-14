@@ -12,13 +12,13 @@ const useTerminalLogger = (terminal: TerminalState.Value) => {
         });
     }
 
-    const undefinedFunction = (funcKey: string) => {
+    const undefinedFunction = (key: string) => {
         terminal.outputs.push({
             type: 'record',
             record: {
                 attr: 'error',
                 texts: [
-                    { str: '[' }, { str: funcKey, highlight: 'word' }, { str: ']' },
+                    { str: '[' }, { str: key, highlight: 'word' }, { str: ']' },
                     { str: ' command not found.' }
                 ]
             }

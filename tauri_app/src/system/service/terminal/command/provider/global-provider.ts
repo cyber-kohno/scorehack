@@ -23,7 +23,7 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
     return [
       {
         ...defaultProps,
-        funcKey: "clear",
+        key: "clear",
         usage: "Delete all output from the terminal.",
         args: [],
         callback: () => {
@@ -32,7 +32,7 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "help",
+        key: "help",
         usage: "Lists the available help commands.",
         args: [],
         callback: () => {
@@ -45,7 +45,7 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
                 { headerName: "Usage", width: 400, attr: "sentence" },
               ],
               table: props.items.map((item) => {
-                return [item.sector, item.funcKey, item.usage];
+                return [item.sector, item.key, item.usage];
               }),
             },
           });
@@ -59,7 +59,7 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
       createShortcutCatalog(ctx),
       {
         ...defaultProps,
-        funcKey: "test",
+        key: "test",
         usage: "Show a test prompt.",
         args: [],
         callback: () => {
@@ -89,7 +89,7 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "restart",
+        key: "restart",
         usage: "Restart the application process.",
         args: [],
         callback: () => {
@@ -110,15 +110,15 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
       },
       {
         ...defaultProps,
-        funcKey: "env",
+        key: "env",
         usage: "Show or configure application environment variables.",
         args: [
           {
-            name: "key: string",
+            name: "key",
             getCandidate: () => SettingsState.EnvKeys,
           },
           {
-            name: "operation: string",
+            name: "operation",
             getCandidate: (args) => (isEnvKey(args[0]) ? ["clear"] : []),
           },
         ],

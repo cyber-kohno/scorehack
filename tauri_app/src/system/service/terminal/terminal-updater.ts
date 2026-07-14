@@ -1,4 +1,5 @@
 import TerminalState from "../../store/state/terminal-state";
+import type TerminalCommand from "./terminal-command";
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
 import type LibraryState from "../../store/state/library-state";
@@ -89,10 +90,14 @@ const createTerminalUpdater = (ctx: Context) => {
             settings.terminalShortcuts,
         );
         const resolvedItems = resolvedCommand.split(" ");
-        const funcKey = resolvedItems[0];
+        const commandKey = resolvedItems[0];
         const args = resolvedItems.slice(1);
         let list: string[] = [];
         let header = "";
+        let overview = "";
+        let currentArg: TerminalCommand.Arg | null = null;
+        let currentArgs: string[] = [];
+        let showEmptyList = false;
 
         const isInputFunc = orderItems.length === 1;
         const argIndex = args.length - 1;
@@ -102,29 +107,59 @@ const createTerminalUpdater = (ctx: Context) => {
         if (isInputFunc) {
             list = orderItems[0].startsWith("@")
                 ? settings.terminalShortcuts.map((shortcut) => shortcut.key)
-                : terminal.availableFuncs.map(f => f.funcKey);
-            header = orderItems[0].startsWith("@") ? "Shortcut" : "Command";
+                : terminal.availableFuncs.map(f => f.key);
+            header = orderItems[0].startsWith("@") ? "Shortcut" : "command";
         } else {
-            const func = terminal.availableFuncs.find(f => f.funcKey === funcKey);
-            if (func == undefined) return;
+            const command = terminal.availableFuncs.find(f => f.key === commandKey);
+            if (command == undefined) return;
 
-            const arg = func.args[argIndex];
-            if (arg == undefined) return;
+            if (command.kind === "single") {
+                const arg = command.args[argIndex];
+                if (arg == undefined) return;
 
-            list = (arg.getCandidate ?? (() => []))(args);
-            header = `${func.funcKey} / ${arg.name}`;
+                list = (arg.getCandidate ?? (() => []))(args);
+                header = `${command.key} / ${arg.name}`;
+                overview = arg.overview ?? "";
+                currentArg = arg;
+                currentArgs = args;
+                showEmptyList = true;
+            } else {
+                if (args.length <= 1) {
+                    list = command.subCommands.map(subCommand => subCommand.key);
+                    header = `${command.key} / sub-command`;
+                } else {
+                    const subCommand = command.subCommands.find(subCommand => subCommand.key === args[0]);
+                    if (subCommand == undefined) return;
+
+                    const subArgs = args.slice(1);
+                    const arg = subCommand.args[subArgs.length - 1];
+                    if (arg == undefined) return;
+
+                    list = (arg.getCandidate ?? (() => []))(subArgs);
+                    header = `${command.key} ${subCommand.key} / ${arg.name}`;
+                    overview = arg.overview ?? "";
+                    currentArg = arg;
+                    currentArgs = subArgs;
+                    showEmptyList = true;
+                }
+            }
         }
 
         const keyword = orderItems[orderItems.length - 1];
         list = list.filter(item => item.indexOf(keyword) !== -1);
-        if (list.length > 0) {
+        if (list.length > 0 || showEmptyList) {
             // 候補と完全一致した候補しかない場合表示しない
             if (list.length === 1 && list[0] === keyword) return;
 
             terminal.helper = TerminalState.createHelperInitial();
             terminal.helper.header = header;
+            terminal.helper.overview = overview;
             terminal.helper.list = list;
             terminal.helper.keyword = keyword;
+            terminal.helper.focus = list.length > 0 ? 0 : -1;
+            terminal.helper.isAccept = keyword === ""
+                ? true
+                : currentArg?.isAccept?.(keyword, currentArgs) ?? true;
         }
     };
 
@@ -163,6 +198,27 @@ const createTerminalUpdater = (ctx: Context) => {
     const registCommand = () => {
         const { backupCommand, undefinedFunction } = useTerminalLogger(terminal);
 
+        const outputCommandReference = (command: TerminalStateType.Value["availableFuncs"][number]) => {
+            if (command.kind !== "multi") return;
+
+            terminal.outputs.push({
+                type: "table",
+                table: {
+                    cols: [
+                        { headerName: "Command", width: 170, attr: "def" },
+                        { headerName: "Usage", width: 420, attr: "sentence" },
+                    ],
+                    table: command.subCommands.map((subCommand) => {
+                        const args = subCommand.args.map(arg => `<${arg.name}>`).join(" ");
+                        return [
+                            [command.key, subCommand.key, args].filter(item => item !== "").join(" "),
+                            subCommand.usage,
+                        ];
+                    }),
+                },
+            });
+        };
+
         // コマンドのバックアップを出力する
         backupCommand();
 
@@ -172,14 +228,26 @@ const createTerminalUpdater = (ctx: Context) => {
                 settings.terminalShortcuts,
             );
             const orderItems = resolvedCommand.split(" ");
-            const funcKey = orderItems[0];
+            const commandKey = orderItems[0];
             const args = orderItems.slice(1);
 
-            const func = terminal.availableFuncs.find(f => f.funcKey === funcKey);
-            if (func == undefined) {
-                undefinedFunction(funcKey);
+            const command = terminal.availableFuncs.find(f => f.key === commandKey);
+            if (command == undefined) {
+                undefinedFunction(commandKey);
+            } else if (command.kind === "single") {
+                command.callback(args);
             } else {
-                func.callback(args);
+                const subCommandKey = args[0];
+                const subCommand = command.subCommands.find(subCommand => subCommand.key === subCommandKey);
+                if (subCommand == undefined) {
+                    if (subCommandKey == undefined || subCommandKey === "") {
+                        outputCommandReference(command);
+                    } else {
+                        undefinedFunction(`${command.key} ${subCommandKey}`);
+                    }
+                } else {
+                    subCommand.callback(args.slice(1));
+                }
             }
         }
 

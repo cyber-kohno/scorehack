@@ -14,6 +14,41 @@
   $: prompt = terminal?.prompt;
 
   $: [commandLeft, commandRight] = terminalSelector?.splitCommand() ?? ["", ""];
+  $: commandView = (() => {
+    if (terminal == null || helper == null || helper.isAccept) {
+      return {
+        useInvalidArg: false,
+        prefix: commandLeft,
+        invalidLeft: "",
+        invalidRight: "",
+        suffix: commandRight,
+      };
+    }
+
+    const command = terminal.command;
+    const focus = terminal.focus;
+    const argStart = command.lastIndexOf(" ", Math.max(0, focus - 1)) + 1;
+    const nextSpace = command.indexOf(" ", focus);
+    const argEnd = nextSpace === -1 ? command.length : nextSpace;
+
+    if (argStart >= argEnd || focus < argStart || focus > argEnd) {
+      return {
+        useInvalidArg: false,
+        prefix: commandLeft,
+        invalidLeft: "",
+        invalidRight: "",
+        suffix: commandRight,
+      };
+    }
+
+    return {
+      useInvalidArg: true,
+      prefix: command.slice(0, argStart),
+      invalidLeft: command.slice(argStart, focus),
+      invalidRight: command.slice(focus, argEnd),
+      suffix: command.slice(argEnd),
+    };
+  })();
 
   let lastScrollHeight = 0;
   onMount(() => {
@@ -65,7 +100,11 @@
     {#if terminal != null && !terminal.wait && prompt == null}
       <div class="command">
         <span class="target">{"$" + terminal.target + ">"}</span>
-        <span>{commandLeft}</span><CommandCursor /><span>{commandRight}</span>
+        {#if commandView.useInvalidArg}
+          <span>{commandView.prefix}</span><span class="invalid-arg">{commandView.invalidLeft}</span><CommandCursor /><span class="invalid-arg">{commandView.invalidRight}</span><span>{commandView.suffix}</span>
+        {:else}
+          <span>{commandLeft}</span><CommandCursor /><span>{commandRight}</span>
+        {/if}
       </div>
     {:else if terminal != null && prompt == null}
       <!-- 待機中はカーソルの点滅のみ表示 -->
@@ -133,6 +172,9 @@
   }
   .target {
     color: yellow;
+  }
+  .invalid-arg {
+    opacity: 0.42;
   }
 
   .prompt {
