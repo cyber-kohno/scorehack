@@ -1,3 +1,4 @@
+import ArgumentRegulationFactory from "../../argument-regulation-factory";
 import TerminalCommand from "../../terminal-command";
 
 const createShortcutCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
@@ -132,6 +133,16 @@ const createShortcutCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Pr
     ctx.commit.settings();
     ctx.commit.terminal();
   };
+  const existingShortcutKeyReg = ArgumentRegulationFactory.createExistingNameReg(shortcutKeys);
+  const uniqueShortcutKeyReg = {
+    ...ArgumentRegulationFactory.createUniqueNameReg(shortcutKeys),
+    overview: "unique name, starts with @",
+    isAccept: (value: string) => {
+      return value.startsWith("@")
+        && value.length > 1
+        && !shortcutKeys().includes(value);
+    },
+  };
 
   return {
     sector: defaultProps.sector,
@@ -149,8 +160,8 @@ const createShortcutCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Pr
         key: "create",
         usage: "Create a terminal command shortcut.",
         args: [
-          { name: "key" },
-          { name: "command" },
+          { name: "key", ...uniqueShortcutKeyReg },
+          { name: "replacement", overview: "replacement command line", variadic: true },
         ],
         callback: (args) => createShortcut(args[0], args.slice(1)),
       },
@@ -158,15 +169,15 @@ const createShortcutCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Pr
         key: "update",
         usage: "Update a terminal command shortcut.",
         args: [
-          { name: "key", getCandidate: () => shortcutKeys() },
-          { name: "command" },
+          { name: "key", ...existingShortcutKeyReg },
+          { name: "replacement", overview: "replacement command line", variadic: true },
         ],
         callback: (args) => updateShortcut(args[0], args.slice(1)),
       },
       {
         key: "delete",
         usage: "Delete a terminal command shortcut.",
-        args: [{ name: "key", getCandidate: () => shortcutKeys() }],
+        args: [{ name: "key", ...existingShortcutKeyReg }],
         callback: (args) => deleteShortcut(args[0]),
       },
     ],

@@ -202,6 +202,8 @@ const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props
     ctx.commit.data();
     ctx.commit.terminal();
   };
+  const existingAudioNameReg = ArgumentRegulationFactory.createExistingNameReg(trackNames);
+  const uniqueAudioNameReg = ArgumentRegulationFactory.createUniqueNameReg(trackNames);
 
   return {
     sector: defaultProps.sector,
@@ -218,35 +220,35 @@ const createAudioCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props
       {
         key: "add",
         usage: "Add an audio track.",
-        args: [{ name: "name" }],
+        args: [{ name: "name", ...uniqueAudioNameReg }],
         callback: (args) => addTrack(args[0]),
       },
       {
         key: "delete",
         usage: "Delete an audio track.",
-        args: [{ name: "name", getCandidate: () => trackNames() }],
+        args: [{ name: "name", ...existingAudioNameReg }],
         callback: (args) => deleteTrack(args[0]),
       },
       {
         key: "rename",
         usage: "Rename an audio track.",
         args: [
-          { name: "name", getCandidate: () => trackNames() },
-          { name: "name" },
+          { name: "name", ...existingAudioNameReg },
+          { name: "name", ...uniqueAudioNameReg },
         ],
         callback: (args) => renameTrack(args[0], args[1]),
       },
       {
         key: "update",
         usage: "Update an audio track resource.",
-        args: [{ name: "name", getCandidate: () => trackNames() }],
+        args: [{ name: "name", ...existingAudioNameReg }],
         callback: (args) => updateTrack(args[0]),
       },
       {
         key: "adjust",
         usage: "Adjust an audio track timing.",
         args: [
-          { name: "name", getCandidate: () => trackNames() },
+          { name: "name", ...existingAudioNameReg },
           { name: "value", ...ArgumentRegulationFactory.createNumberReg(-60000, 60000) },
         ],
         callback: (args) => adjustTrack(args[0], args[1]),

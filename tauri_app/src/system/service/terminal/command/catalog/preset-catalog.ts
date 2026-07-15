@@ -1,4 +1,5 @@
 import TerminalCommand from "../../terminal-command";
+import ArgumentRegulationFactory from "../../argument-regulation-factory";
 import { openLibraryFilePath, saveLibraryFilePath } from "../../../../infra/tauri/dialog";
 import type SettingsState from "../../../../store/state/settings-state";
 import type PianoEditorState from "../../../../store/state/data/arrange/piano/piano-editor-state";
@@ -516,6 +517,9 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
     });
     ctx.commit.terminal();
   };
+  const presetNames = () => settings.library.presets.map(preset => preset.name);
+  const existingPresetNameReg = ArgumentRegulationFactory.createExistingNameReg(presetNames);
+  const uniquePresetNameReg = ArgumentRegulationFactory.createUniqueNameReg(presetNames);
 
   return {
     sector: defaultProps.sector,
@@ -526,7 +530,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       {
         key: "regist",
         usage: "Register the active track library as a global preset.",
-        args: [{ name: "name" }],
+        args: [{ name: "name", ...uniquePresetNameReg }],
         callback: (args) => {
           const name = logger.validateRequired(args[0], 1);
           if (name == null) return;
@@ -542,7 +546,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       {
         key: "apply",
         usage: "Apply a global preset to the active track library.",
-        args: [{ name: "name", getCandidate: () => settings.library.presets.map(preset => preset.name) }],
+        args: [{ name: "name", ...existingPresetNameReg }],
         callback: (args) => {
           const name = logger.validateRequired(args[0], 1);
           if (name == null) return;
@@ -552,7 +556,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       {
         key: "overwrite",
         usage: "Overwrite a global preset from the active track library.",
-        args: [{ name: "name", getCandidate: () => settings.library.presets.map(preset => preset.name) }],
+        args: [{ name: "name", ...existingPresetNameReg }],
         callback: (args) => {
           const name = logger.validateRequired(args[0], 1);
           if (name == null) return;
@@ -562,7 +566,7 @@ const createPresetCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       {
         key: "delete",
         usage: "Delete a global library preset.",
-        args: [{ name: "name", getCandidate: () => settings.library.presets.map(preset => preset.name) }],
+        args: [{ name: "name", ...existingPresetNameReg }],
         callback: (args) => {
           const name = logger.validateRequired(args[0], 1);
           if (name == null) return;

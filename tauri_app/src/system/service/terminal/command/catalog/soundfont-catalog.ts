@@ -3,6 +3,7 @@ import UserSoundFontCache from "../../../../infra/audio/user-soundfont-cache";
 import UserSoundFontPath from "../../../../infra/audio/user-soundfont-path";
 import { openSoundFontFilePath } from "../../../../infra/tauri/dialog";
 import type SettingsState from "../../../../store/state/settings-state";
+import ArgumentRegulationFactory from "../../argument-regulation-factory";
 import TerminalCommand from "../../terminal-command";
 
 const createSoundfontCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
@@ -207,6 +208,8 @@ const createSoundfontCatalog = (ctx: TerminalCommand.Context): TerminalCommand.P
     });
     ctx.commit.terminal();
   };
+  const existingDefinitionNameReg = ArgumentRegulationFactory.createExistingNameReg(definitionNames);
+  const uniqueDefinitionNameReg = ArgumentRegulationFactory.createUniqueNameReg(definitionNames);
 
   return {
     sector: defaultProps.sector,
@@ -223,25 +226,25 @@ const createSoundfontCatalog = (ctx: TerminalCommand.Context): TerminalCommand.P
       {
         key: "add",
         usage: "Add a SoundFont definition.",
-        args: [{ name: "name" }],
+        args: [{ name: "name", ...uniqueDefinitionNameReg }],
         callback: (args) => addDefinition(args[0]),
       },
       {
         key: "update",
         usage: "Update a SoundFont definition.",
-        args: [{ name: "name", getCandidate: () => definitionNames() }],
+        args: [{ name: "name", ...existingDefinitionNameReg }],
         callback: (args) => updateDefinition(args[0]),
       },
       {
         key: "remove",
         usage: "Remove a SoundFont definition.",
-        args: [{ name: "name", getCandidate: () => definitionNames() }],
+        args: [{ name: "name", ...existingDefinitionNameReg }],
         callback: (args) => removeDefinition(args[0]),
       },
       {
         key: "presets",
         usage: "Displays SoundFont presets.",
-        args: [{ name: "name", getCandidate: () => definitionNames() }],
+        args: [{ name: "name", ...existingDefinitionNameReg }],
         callback: (args) => listPresets(args[0]),
       },
     ],

@@ -12,6 +12,7 @@ namespace TerminalCommand {
     export type Arg = {
         name: string;
         overview?: string;
+        variadic?: boolean;
         /** Candidate list for terminal helper. */
         getCandidate?: (args: string[]) => string[];
         isAccept?: (value: string, args: string[]) => boolean;

@@ -8,6 +8,7 @@ import {
 } from "../../../playback/user-soundfont-service";
 import useSoundfontLoader from "../../../playback/soundfont-loader";
 import useUserSoundfontLoader from "../../../playback/user-soundfont-loader";
+import ArgumentRegulationFactory from "../../argument-regulation-factory";
 import TerminalCommand from "../../terminal-command";
 
 type InstCatalogKind = "harmonize" | "melody";
@@ -176,6 +177,8 @@ const createInstCatalog = (
       ctx.commit.terminal();
     });
   };
+  const userSoundFontNames = () => settings.userSoundFonts.map((soundFont) => soundFont.name);
+  const existingUserSoundFontNameReg = ArgumentRegulationFactory.createExistingNameReg(userSoundFontNames);
 
   return {
     sector: defaultProps.sector,
@@ -193,7 +196,7 @@ const createInstCatalog = (
         key: "soundfont",
         usage: "Set a SoundFont instrument.",
         args: [
-          { name: "name", getCandidate: () => settings.userSoundFonts.map((soundFont) => soundFont.name) },
+          { name: "name", ...existingUserSoundFontNameReg },
           {
             name: "bank",
             getCandidate: (args) => {

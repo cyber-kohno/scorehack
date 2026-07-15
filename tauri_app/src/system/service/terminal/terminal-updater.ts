@@ -81,6 +81,16 @@ const createTerminalUpdater = (ctx: Context) => {
         return true;
     };
 
+    const resolveArg = (args: TerminalCommand.Arg[], index: number) => {
+        const arg = args[index];
+        if (arg != undefined) return arg;
+
+        const lastArg = args[args.length - 1];
+        if (lastArg?.variadic === true) return lastArg;
+
+        return undefined;
+    };
+
     const buildHelper = () => {
         terminal.helper = null;
 
@@ -114,7 +124,7 @@ const createTerminalUpdater = (ctx: Context) => {
             if (command == undefined) return;
 
             if (command.kind === "single") {
-                const arg = command.args[argIndex];
+                const arg = resolveArg(command.args, argIndex);
                 if (arg == undefined) return;
 
                 list = (arg.getCandidate ?? (() => []))(args);
@@ -132,7 +142,7 @@ const createTerminalUpdater = (ctx: Context) => {
                     if (subCommand == undefined) return;
 
                     const subArgs = args.slice(1);
-                    const arg = subCommand.args[subArgs.length - 1];
+                    const arg = resolveArg(subCommand.args, subArgs.length - 1);
                     if (arg == undefined) return;
 
                     list = (arg.getCandidate ?? (() => []))(subArgs);
