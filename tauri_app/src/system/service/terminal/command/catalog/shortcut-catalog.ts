@@ -161,7 +161,7 @@ const createShortcutCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Pr
         usage: "Create a terminal command shortcut.",
         args: [
           { name: "key", ...uniqueShortcutKeyReg },
-          { name: "replacement", overview: "replacement command line", variadic: true },
+          { name: "replacement", overview: "command line", variadic: true },
         ],
         callback: (args) => createShortcut(args[0], args.slice(1)),
       },
