@@ -23,8 +23,8 @@
   };
 
   $: velocityWidth = `${Math.floor(event.velocity * 5)}%`;
-  $: speedWidth =
-    event.kind === "stroke" ? `${Math.floor(event.speed * 5)}%` : "0%";
+  $: isStroke = event.fromString !== event.toString;
+  $: speedWidth = isStroke ? `${Math.floor(event.speed * 5)}%` : "0%";
   $: frameStyle = (() => {
     const pattern = $refStore.arrange.guitar.pattern;
     if (pattern == undefined) return "";
@@ -41,14 +41,14 @@
   })();
 </script>
 
-<div class="wrap" data-stroke={event.kind === "stroke"} style={frameStyle}>
+<div class="wrap" data-stroke={isStroke} style={frameStyle}>
   <div class="label">velocity</div>
   <div class="record">
     <div class="value-frame">
       <div class="value" style:width={velocityWidth}></div>
     </div>
   </div>
-  {#if event.kind === "stroke"}
+  {#if isStroke}
     <div class="label">speed</div>
     <div class="record">
       <div class="value-frame">

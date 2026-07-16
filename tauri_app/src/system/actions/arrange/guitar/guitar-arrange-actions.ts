@@ -171,12 +171,25 @@ const createGuitarArrangeActions = () => {
         return updater.toggleBackingColDot();
     });
 
-    const shiftTechnique = updateControlWithArg<-1 | 1>((updater, dir) => {
-        return updater.shiftTechnique(dir);
+    const movePatternCursor = (dir: { x?: -1 | 1; y?: -1 | 1 }) => {
+        const ctx = createContext();
+        const moved = ctx.guitarUpdater.movePatternCursor(dir);
+        if (!moved) return;
+
+        ctx.commitControl();
+        if (dir.x != undefined) useScrollService().adjustGEBScrollCol();
+    };
+
+    const extendPatternEventToCursor = updateControlWithArg<-1 | 1>((updater, dir) => {
+        return updater.extendPatternEventToCursor(dir);
     });
 
-    const setTechnique = updateControlWithArg<GuitarEditorState.TechniqueSelection | "none">((updater, technique) => {
-        return updater.setTechnique(technique);
+    const togglePatternEvent = updateControl(updater => {
+        return updater.togglePatternEvent();
+    });
+
+    const removePatternEvent = updateControl(updater => {
+        return updater.removePatternEvent();
     });
 
     const increasePatternVelocity = updateControl(updater => {
@@ -195,7 +208,7 @@ const createGuitarArrangeActions = () => {
 
     const increasePatternSpeed = updateControl(updater => {
         return updater.modifyPatternEvent((event) => {
-            if (event.kind !== "stroke") return event;
+            if (event.fromString === event.toString) return event;
             return {
                 ...event,
                 speed: Math.min(20, event.speed + 1),
@@ -205,7 +218,7 @@ const createGuitarArrangeActions = () => {
 
     const decreasePatternSpeed = updateControl(updater => {
         return updater.modifyPatternEvent((event) => {
-            if (event.kind !== "stroke") return event;
+            if (event.fromString === event.toString) return event;
             return {
                 ...event,
                 speed: Math.max(1, event.speed - 1),
@@ -241,21 +254,23 @@ const createGuitarArrangeActions = () => {
         deleteBackingCol,
         decreasePatternSpeed,
         decreasePatternVelocity,
+        extendPatternEventToCursor,
         increasePatternSpeed,
         increasePatternVelocity,
         insertBackingCol,
         moveCursor,
         moveBackingColCursor,
         moveFinderPattern,
+        movePatternCursor,
         muteString,
         playbackPattern,
+        removePatternEvent,
         setBackingColDiv,
-        setTechnique,
         shiftControl,
-        shiftTechnique,
         toggleBacking,
         toggleBackingColDot,
         toggleFret,
+        togglePatternEvent,
     };
 };
 

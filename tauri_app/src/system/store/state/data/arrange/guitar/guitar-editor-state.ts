@@ -8,29 +8,7 @@ namespace GuitarEditorState {
 
   export type StringSelection = number | null;
 
-  export type StrokeDirection = "down" | "up";
   export type PickStringNumber = 1 | 2 | 3 | 4 | 5 | 6;
-  export type TechniqueSelection =
-    | "up"
-    | "down"
-    | "pick6"
-    | "pick5"
-    | "pick4"
-    | "pick3"
-    | "pick2"
-    | "pick1";
-
-  export const TECHNIQUES: (TechniqueSelection | "none")[] = [
-    "none",
-    "down",
-    "up",
-    "pick6",
-    "pick5",
-    "pick4",
-    "pick3",
-    "pick2",
-    "pick1",
-  ];
 
   export type Col = {
     div: number;
@@ -38,21 +16,12 @@ namespace GuitarEditorState {
     tuplets?: number;
   };
 
-  export type PlayAction =
-    | {
-      kind: "stroke";
-      direction: StrokeDirection;
-      speed: number;
-      velocity: number;
-    }
-    | {
-      kind: "pick";
-      stringNumber: PickStringNumber;
-      velocity: number;
-    };
-
-  export type PatternEvent = PlayAction & {
+  export type PatternEvent = {
     colIndex: number;
+    fromString: PickStringNumber;
+    toString: PickStringNumber;
+    velocity: number;
+    speed: number;
   };
 
   export type BackingData = {
@@ -62,6 +31,7 @@ namespace GuitarEditorState {
 
   export type BackingEditorProps = {
     cursorX: number;
+    cursorY: number;
     cols: Col[];
     events: PatternEvent[];
   };
@@ -138,6 +108,7 @@ namespace GuitarEditorState {
 
   export const createInitialBackingProps = (): BackingEditorProps => ({
     cursorX: -1,
+    cursorY: 0,
     cols: [],
     events: [],
   });
@@ -204,86 +175,50 @@ namespace GuitarEditorState {
   export const DEFAULT_ACTION_VELOCITY = 10;
   export const DEFAULT_STROKE_SPEED = 10;
 
-  export const getTechniqueSelection = (action: PlayAction): TechniqueSelection => {
-    if (action.kind === "stroke") return action.direction;
-    return `pick${action.stringNumber}`;
+  const isStringNumber = (value: number): value is PickStringNumber => {
+    return Number.isInteger(value) && value >= 1 && value <= 6;
   };
 
-  export const createPlayActionFromTechnique = (
-    technique: TechniqueSelection,
-    velocity = DEFAULT_ACTION_VELOCITY,
-  ): PlayAction => {
-    switch (technique) {
-      case "down":
-      case "up":
-        return {
-          kind: "stroke",
-          direction: technique,
-          speed: DEFAULT_STROKE_SPEED,
-          velocity,
-        };
-      case "pick6": return { kind: "pick", stringNumber: 6, velocity };
-      case "pick5": return { kind: "pick", stringNumber: 5, velocity };
-      case "pick4": return { kind: "pick", stringNumber: 4, velocity };
-      case "pick3": return { kind: "pick", stringNumber: 3, velocity };
-      case "pick2": return { kind: "pick", stringNumber: 2, velocity };
-      case "pick1": return { kind: "pick", stringNumber: 1, velocity };
-    }
+  const formatStringPath = (event: PatternEvent) => {
+    if (event.fromString === event.toString) return `${event.fromString}`;
+    return `${event.fromString}-${event.toString}`;
   };
 
-  const getTechniqueCode = (action: PlayAction) => {
-    const technique = getTechniqueSelection(action);
-    switch (technique) {
-      case "down": return "d";
-      case "up": return "u";
-      case "pick6": return "p6";
-      case "pick5": return "p5";
-      case "pick4": return "p4";
-      case "pick3": return "p3";
-      case "pick2": return "p2";
-      case "pick1": return "p1";
+  const parseStringPath = (src: string) => {
+    const [fromText, toText] = src.split("-");
+    const from = Number(fromText);
+    const to = toText == undefined ? from : Number(toText);
+    if (!isStringNumber(from) || !isStringNumber(to)) {
+      throw new Error(`Invalid guitar string path. [${src}]`);
     }
-  };
-
-  const getTechniqueFromCode = (code: string): TechniqueSelection => {
-    switch (code) {
-      case "d": return "down";
-      case "u": return "up";
-      case "p6": return "pick6";
-      case "p5": return "pick5";
-      case "p4": return "pick4";
-      case "p3": return "pick3";
-      case "p2": return "pick2";
-      case "p1": return "pick1";
-    }
-    throw new Error(`Unsupported guitar technique code. [${code}]`);
+    return { fromString: from, toString: to };
   };
 
   export const formatPatternItem = (event: PatternEvent) => {
-    const base = `${event.colIndex}.${getTechniqueCode(event)}`;
+    const base = `${event.colIndex}.${formatStringPath(event)}`;
+    const isStroke = event.fromString !== event.toString;
     if (
       event.velocity === DEFAULT_ACTION_VELOCITY &&
-      (event.kind !== "stroke" || event.speed === DEFAULT_STROKE_SPEED)
+      (!isStroke || event.speed === DEFAULT_STROKE_SPEED)
     ) {
       return base;
     }
-    if (event.kind !== "stroke") return `${base}.${event.velocity}`;
+    if (!isStroke) return `${base}.${event.velocity}`;
     return `${base}.${event.velocity}.${event.speed}`;
   };
 
   export const convPatternItem = (src: string): PatternEvent => {
-    const [colIndexText, techniqueText, velocityText, speedText] = src.split(".");
+    const [colIndexText, stringPathText, velocityText, speedText] = src.split(".");
     const colIndex = Number(colIndexText);
     if (!Number.isInteger(colIndex)) throw new Error(`Invalid guitar pattern item. [${src}]`);
     const velocity = velocityText == undefined ? DEFAULT_ACTION_VELOCITY : Number(velocityText);
-    const action = createPlayActionFromTechnique(getTechniqueFromCode(techniqueText), velocity);
-    if (action.kind === "stroke" && speedText != undefined) {
-      action.speed = Number(speedText);
-    }
+    const speed = speedText == undefined ? DEFAULT_STROKE_SPEED : Number(speedText);
 
     return {
       colIndex,
-      ...action,
+      ...parseStringPath(stringPathText),
+      velocity,
+      speed,
     };
   };
 
@@ -295,6 +230,7 @@ namespace GuitarEditorState {
         .filter((event) => {
           return event.colIndex >= 0 && event.colIndex <= cols.length - 1;
         })
+        .sort((a, b) => a.colIndex - b.colIndex)
         .map(formatPatternItem),
     };
   };
@@ -302,6 +238,7 @@ namespace GuitarEditorState {
   export const createBackingEditorProps = (backing: BackingData): BackingEditorProps => {
     return {
       cursorX: backing.cols.length === 0 ? -1 : 0,
+      cursorY: 0,
       cols: clone(backing.cols),
       events: backing.items.map(convPatternItem),
     };

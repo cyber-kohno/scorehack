@@ -55,11 +55,12 @@ const useInputGuitarEditor = () => {
                 break;
             case "pattern":
                 switch (eventKey) {
-                    case "ArrowUp": guitarActions.shiftTechnique(-1); break;
-                    case "ArrowDown": guitarActions.shiftTechnique(1); break;
-                    case "ArrowLeft": guitarActions.moveBackingColCursor(-1); break;
-                    case "ArrowRight": guitarActions.moveBackingColCursor(1); break;
-                    case "Delete": guitarActions.setTechnique("none"); break;
+                    case "ArrowUp": guitarActions.movePatternCursor({ y: 1 }); break;
+                    case "ArrowDown": guitarActions.movePatternCursor({ y: -1 }); break;
+                    case "ArrowLeft": guitarActions.movePatternCursor({ x: -1 }); break;
+                    case "ArrowRight": guitarActions.movePatternCursor({ x: 1 }); break;
+                    case "a": guitarActions.togglePatternEvent(); break;
+                    case "Delete": guitarActions.removePatternEvent(); break;
                 }
                 break;
         }
@@ -100,6 +101,16 @@ const useInputGuitarEditor = () => {
                 case "ArrowDown": guitarActions.decreasePatternVelocity(); break;
                 case "ArrowLeft": guitarActions.decreasePatternSpeed(); break;
                 case "ArrowRight": guitarActions.increasePatternSpeed(); break;
+            }
+        };
+
+        callbacks.holdF = () => {
+            const editor = reducerArrange.getGuitarEditor();
+            if (editor.control !== "pattern") return;
+
+            switch (eventKey) {
+                case "ArrowUp": guitarActions.extendPatternEventToCursor(1); break;
+                case "ArrowDown": guitarActions.extendPatternEventToCursor(-1); break;
             }
         };
 

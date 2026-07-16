@@ -27,18 +27,21 @@
   $: getEvent = (colIndex: number) => {
     return backing.events.find((event) => event.colIndex === colIndex);
   };
-  $: getPickStringIndex = (event: GuitarEditorState.PatternEvent | undefined) => {
-    if (event?.kind !== "pick") return undefined;
-
-    const stringNumber = event.stringNumber;
-    const stringIndex = GuitarEditorState.STANDARD_TUNING.findIndex((string) => {
-      return string.number === stringNumber;
-    });
-    return stringIndex === -1 ? undefined : stringIndex;
-  };
   $: displayStrings = GuitarEditorState.STANDARD_TUNING
     .map((string, stringIndex) => ({ string, stringIndex }))
     .reverse();
+  $: getDisplayRowIndex = (stringNumber: number) => {
+    return displayStrings.findIndex(({ string }) => string.number === stringNumber);
+  };
+  $: isStringInEvent = (
+    event: GuitarEditorState.PatternEvent | undefined,
+    stringNumber: number,
+  ) => {
+    if (event == undefined) return false;
+    const min = Math.min(event.fromString, event.toString);
+    const max = Math.max(event.fromString, event.toString);
+    return stringNumber >= min && stringNumber <= max;
+  };
   $: focusRect = (() => {
     if (editor.control !== "pattern") return null;
     const col = backing.cols[backing.cursorX];
@@ -47,11 +50,27 @@
     const left = backing.cols
       .slice(0, backing.cursorX)
       .reduce((total, col) => total + getColWidth(col) + 1, 1);
+    const rowIndex = getDisplayRowIndex(GuitarEditorState.STANDARD_TUNING[backing.cursorY].number);
     return {
       left,
       width: getColWidth(col),
+      top: 1 + rowIndex * (Layout.arrange.piano.BACKING_RECORD_HEIGHT + 1),
+      height: Layout.arrange.piano.BACKING_RECORD_HEIGHT,
     };
   })();
+  $: getStrokeRect = (event: GuitarEditorState.PatternEvent) => {
+    const fromRow = getDisplayRowIndex(event.fromString);
+    const toRow = getDisplayRowIndex(event.toString);
+    const topRow = Math.min(fromRow, toRow);
+    const bottomRow = Math.max(fromRow, toRow);
+    const recordHeight = Layout.arrange.piano.BACKING_RECORD_HEIGHT;
+    const markSize = 10;
+    return {
+      top: 1 + topRow * (recordHeight + 1) + recordHeight / 2 - markSize / 2,
+      height: (bottomRow - topRow) * (recordHeight + 1) + markSize,
+      width: markSize,
+    };
+  };
 </script>
 
 <div class="frame" bind:this={$refStore.arrange.guitar.pattern}>
@@ -60,11 +79,13 @@
       <div class="record">
         {#each backing.cols as col, colIndex}
           {@const event = getEvent(colIndex)}
-          {@const pickStringIndex = getPickStringIndex(event)}
           <div class="cell" style:width={`${getColWidth(col)}px`}>
             <div class="inner"></div>
-            {#if pickStringIndex === stringIndex}
+            {#if event != undefined && event.fromString === GuitarEditorState.STANDARD_TUNING[stringIndex].number}
               <div class="pick-mark"></div>
+            {/if}
+            {#if event != undefined && event.fromString !== event.toString && event.toString === GuitarEditorState.STANDARD_TUNING[stringIndex].number}
+              <div class="to-mark"></div>
             {/if}
           </div>
         {/each}
@@ -72,14 +93,15 @@
     {/each}
     {#each backing.cols as col, colIndex}
       {@const event = getEvent(colIndex)}
-      {#if event?.kind === "stroke"}
+      {#if event != undefined && event.fromString !== event.toString}
+        {@const strokeRect = getStrokeRect(event)}
         <div
-          class="stroke-mark"
-          style:left={`${backing.cols.slice(0, colIndex).reduce((total, col) => total + getColWidth(col) + 1, 1)}px`}
-          style:width={`${getColWidth(col)}px`}
-        >
-          {@html event.direction === "down" ? "&uarr;" : "&darr;"}
-        </div>
+          class="stroke-range"
+          style:left={`${backing.cols.slice(0, colIndex).reduce((total, col) => total + getColWidth(col) + 1, 1) + getColWidth(col) / 2 - strokeRect.width / 2}px`}
+          style:width={`${strokeRect.width}px`}
+          style:top={`${strokeRect.top}px`}
+          style:height={`${strokeRect.height}px`}
+        ></div>
       {/if}
     {/each}
     {#if focusRect != null}
@@ -87,6 +109,8 @@
         class="column-focus"
         style:left={`${focusRect.left}px`}
         style:width={`${focusRect.width}px`}
+        style:top={`${focusRect.top}px`}
+        style:height={`${focusRect.height}px`}
       ></div>
     {/if}
   </div>
@@ -144,7 +168,7 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    z-index: 1;
+    z-index: 3;
     width: 10px;
     height: 10px;
     border-radius: 50%;
@@ -153,29 +177,34 @@
     transform: translate(-50%, -50%);
   }
 
-  .stroke-mark {
-    display: inline-flex;
+  .to-mark {
+    display: inline-block;
     position: absolute;
-    top: 1px;
-    z-index: 1;
-    height: calc((var(--ap-backing-record-height) + 1px) * 6);
-    align-items: center;
-    justify-content: center;
-    color: rgba(92, 255, 96, 0.95);
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1;
+    left: 50%;
+    top: 50%;
+    z-index: 4;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255, 69, 69, 0.96);
+    border: 1px solid rgba(91, 0, 0, 0.72);
+    transform: translate(-50%, -50%);
+  }
+
+  .stroke-range {
+    display: inline-block;
+    position: absolute;
+    z-index: 2;
+    border-radius: 5px;
+    background-color: rgba(126, 255, 117, 0.42);
     pointer-events: none;
-    text-shadow: 0 0 2px rgba(0, 0, 0, 0.65);
   }
 
   .column-focus {
     display: inline-block;
     position: absolute;
     left: 0;
-    top: 1px;
-    z-index: 2;
-    height: calc((var(--ap-backing-record-height) + 1px) * 6);
+    z-index: 3;
     background-color: rgba(255, 237, 134, 0.473);
     pointer-events: none;
   }

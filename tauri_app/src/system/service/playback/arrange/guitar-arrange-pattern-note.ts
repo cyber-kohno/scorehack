@@ -7,7 +7,8 @@ namespace GuitarArrangePatternNote {
     const DEFAULT_SUSTAIN_STROKE_VELOCITY = 10;
 
     type ResolvedStrokeProps = {
-        direction: GuitarEditorState.StrokeDirection;
+        fromString: GuitarEditorState.PickStringNumber;
+        toString: GuitarEditorState.PickStringNumber;
         velocity: number;
         decayRate: number;
         speed: number;
@@ -34,7 +35,8 @@ namespace GuitarArrangePatternNote {
     ): PlaybackCacheState.SoundNote[] => {
         const notes: GuitarSoundNote[] = [];
         pushStrokeNotes(notes, unit, 0, option.sustainBeat, {
-            direction: "down",
+            fromString: 6,
+            toString: 1,
             velocity: DEFAULT_SUSTAIN_STROKE_VELOCITY,
             decayRate: DEFAULT_STROKE_DECAY_RATE,
             speed: GuitarEditorState.DEFAULT_STROKE_SPEED,
@@ -75,19 +77,18 @@ namespace GuitarArrangePatternNote {
         const posBeat = getColStartBeat(cols, event.colIndex);
         const lenBeat = getColBeat(col);
 
-        switch (event.kind) {
-            case "stroke":
-                pushStrokeNotes(notes, unit, posBeat, lenBeat, {
-                    direction: event.direction,
-                    velocity: event.velocity,
-                    decayRate: DEFAULT_STROKE_DECAY_RATE,
-                    speed: event.speed,
-                });
-                return;
-            case "pick":
-                pushPickNote(notes, unit, event.stringNumber, event.velocity, posBeat, lenBeat);
-                return;
+        if (event.fromString === event.toString) {
+            pushPickNote(notes, unit, event.fromString, event.velocity, posBeat, lenBeat);
+            return;
         }
+
+        pushStrokeNotes(notes, unit, posBeat, lenBeat, {
+            fromString: event.fromString,
+            toString: event.toString,
+            velocity: event.velocity,
+            decayRate: DEFAULT_STROKE_DECAY_RATE,
+            speed: event.speed,
+        });
     };
 
     const pushStrokeNotes = (
@@ -97,7 +98,7 @@ namespace GuitarArrangePatternNote {
         lenBeat: number,
         stroke: ResolvedStrokeProps,
     ) => {
-        const soundingStrings = getOrderedStringIndexes(stroke.direction)
+        const soundingStrings = getOrderedStringIndexes(stroke.fromString, stroke.toString)
             .map((stringIndex) => {
                 const fret = unit.frets[stringIndex];
                 const tuning = GuitarEditorState.STANDARD_TUNING[stringIndex];
@@ -172,9 +173,21 @@ namespace GuitarArrangePatternNote {
         return index;
     };
 
-    const getOrderedStringIndexes = (direction: GuitarEditorState.StrokeDirection) => {
-        const indexes = GuitarEditorState.STANDARD_TUNING.map((_, index) => index);
-        return direction === "down" ? indexes : indexes.reverse();
+    const getOrderedStringIndexes = (
+        fromString: GuitarEditorState.PickStringNumber,
+        toString: GuitarEditorState.PickStringNumber,
+    ) => {
+        const fromIndex = getPickStringIndex(fromString);
+        const toIndex = getPickStringIndex(toString);
+        const step = fromIndex <= toIndex ? 1 : -1;
+        const indexes: number[] = [];
+
+        for (let index = fromIndex; ; index += step) {
+            indexes.push(index);
+            if (index === toIndex) break;
+        }
+
+        return indexes;
     };
 
     const finalizeSustainNotes = (

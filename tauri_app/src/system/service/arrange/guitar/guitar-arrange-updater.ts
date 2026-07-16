@@ -113,6 +113,21 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         return true;
     };
 
+    const movePatternCursor = (dir: { x?: -1 | 1; y?: -1 | 1 }) => {
+        const backing = getBacking();
+        if (dir.x != undefined) {
+            const nextX = backing.cursorX + dir.x;
+            if (nextX < 0 || nextX > backing.cols.length - 1) return false;
+            backing.cursorX = nextX;
+        }
+        if (dir.y != undefined) {
+            const nextY = backing.cursorY + dir.y;
+            if (nextY < 0 || nextY > GuitarEditorState.STANDARD_TUNING.length - 1) return false;
+            backing.cursorY = nextY;
+        }
+        return true;
+    };
+
     const createInitialBackingCol = (): GuitarEditorState.Col => {
         const backing = getBacking();
         const source = backing.cursorX >= 0 ? backing.cols[backing.cursorX] : undefined;
@@ -131,6 +146,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
 
         const insertIndex = backing.cursorX + 1;
         cols.splice(insertIndex, 0, createInitialBackingCol());
+        backing.cursorX = insertIndex;
         backing.events.forEach((event) => {
             if (insertIndex <= event.colIndex) event.colIndex++;
         });
@@ -182,42 +198,66 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         return true;
     };
 
-    const setTechnique = (technique: GuitarEditorState.TechniqueSelection | "none") => {
+    const getCurrentPatternString = (): GuitarEditorState.PickStringNumber => {
+        const backing = getBacking();
+        const string = GuitarEditorState.STANDARD_TUNING[backing.cursorY];
+        if (string == undefined) throw new Error("Guitar pattern cursor string must exist.");
+        return string.number;
+    };
+
+    const removePatternEvent = () => {
         const backing = getBacking();
         if (backing.cursorX === -1) return false;
 
         const currentIndex = backing.events.findIndex((event) => {
             return event.colIndex === backing.cursorX;
         });
-        if (technique === "none") {
-            if (currentIndex !== -1) backing.events.splice(currentIndex, 1);
+        if (currentIndex !== -1) backing.events.splice(currentIndex, 1);
+        return true;
+    };
+
+    const togglePatternEvent = () => {
+        const backing = getBacking();
+        if (backing.cursorX === -1) return false;
+
+        const stringNumber = getCurrentPatternString();
+        const currentIndex = backing.events.findIndex((event) => {
+            return event.colIndex === backing.cursorX;
+        });
+        const current = currentIndex === -1 ? undefined : backing.events[currentIndex];
+        if (
+            current != undefined &&
+            current.fromString === stringNumber &&
+            current.toString === stringNumber
+        ) {
+            backing.events.splice(currentIndex, 1);
             return true;
         }
 
         const event: GuitarEditorState.PatternEvent = {
             colIndex: backing.cursorX,
-            ...GuitarEditorState.createPlayActionFromTechnique(technique),
+            fromString: stringNumber,
+            toString: stringNumber,
+            velocity: GuitarEditorState.DEFAULT_ACTION_VELOCITY,
+            speed: GuitarEditorState.DEFAULT_STROKE_SPEED,
         };
         if (currentIndex === -1) backing.events.push(event);
         else backing.events[currentIndex] = event;
         return true;
     };
 
-    const shiftTechnique = (dir: -1 | 1) => {
-        const backing = getBacking();
-        if (backing.cursorX === -1) return false;
+    const extendPatternEventToCursor = (dir: -1 | 1) => {
+        const moved = movePatternCursor({ y: dir });
+        if (!moved) return false;
 
-        const current = backing.events.find((event) => {
+        const backing = getBacking();
+        const event = backing.events.find((event) => {
             return event.colIndex === backing.cursorX;
         });
-        const technique = current == undefined
-            ? "none"
-            : GuitarEditorState.getTechniqueSelection(current);
-        const index = GuitarEditorState.TECHNIQUES.indexOf(technique);
-        const next = GuitarEditorState.TECHNIQUES[index + dir];
-        if (next == undefined) return false;
+        if (event == undefined) return false;
 
-        return setTechnique(next);
+        event.toString = getCurrentPatternString();
+        return true;
     };
 
     const modifyPatternEvent = (
@@ -437,19 +477,21 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
         backFinderSelection,
         deleteBacking,
         deleteBackingCol,
+        extendPatternEventToCursor,
         insertBackingCol,
         moveCursor,
         moveFinder,
         moveBackingColCursor,
+        movePatternCursor,
         modifyPatternEvent,
         muteString,
+        removePatternEvent,
         setBackingColDiv,
-        setTechnique,
         shiftControl,
-        shiftTechnique,
         toggleBacking,
         toggleBackingColDot,
         toggleFret,
+        togglePatternEvent,
         useBacking,
     };
 };

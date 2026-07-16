@@ -29,26 +29,39 @@
   $: getEvent = (colIndex: number) => {
     return events.find((event) => event.colIndex === colIndex);
   };
-  $: getPickStringIndex = (event: GuitarEditorState.PatternEvent | undefined) => {
-    if (event?.kind !== "pick") return undefined;
-    const stringIndex = GuitarEditorState.STANDARD_TUNING.findIndex((string) => {
-      return string.number === event.stringNumber;
-    });
-    return stringIndex === -1 ? undefined : stringIndex;
+  $: displayStrings = GuitarEditorState.STANDARD_TUNING
+    .map((string, stringIndex) => ({ string, stringIndex }))
+    .reverse();
+  $: getDisplayRowIndex = (stringNumber: number) => {
+    return displayStrings.findIndex(({ string }) => string.number === stringNumber);
+  };
+  $: getStrokeRect = (event: GuitarEditorState.PatternEvent) => {
+    const fromRow = getDisplayRowIndex(event.fromString);
+    const toRow = getDisplayRowIndex(event.toString);
+    const topRow = Math.min(fromRow, toRow);
+    const bottomRow = Math.max(fromRow, toRow);
+    const markSize = 5;
+    return {
+      top: 1 + topRow * 6,
+      height: (bottomRow - topRow) * 6 + markSize,
+      width: markSize,
+    };
   };
 </script>
 
 <div class="wrap">
   <div class="content" style:width={`${contentWidth}px`}>
-    {#each GuitarEditorState.STANDARD_TUNING as _string, stringIndex}
+    {#each displayStrings as { string }}
       <div class="record">
         {#each colRanges as range}
           {@const event = getEvent(range.index)}
-          {@const pickStringIndex = getPickStringIndex(event)}
           <div class="cell-frame" style:width={`${range.width}px`}>
             <div class="cell">
-              {#if pickStringIndex === stringIndex}
+              {#if event != undefined && event.fromString === string.number}
                 <div class="pick-mark"></div>
+              {/if}
+              {#if event != undefined && event.fromString !== event.toString && event.toString === string.number}
+                <div class="to-mark"></div>
               {/if}
             </div>
           </div>
@@ -57,14 +70,15 @@
     {/each}
     {#each colRanges as range}
       {@const event = getEvent(range.index)}
-      {#if event?.kind === "stroke"}
+      {#if event != undefined && event.fromString !== event.toString}
+        {@const strokeRect = getStrokeRect(event)}
         <div
-          class="stroke-mark"
-          style:left={`${range.left}px`}
-          style:width={`${range.width}px`}
-        >
-          {@html event.direction === "down" ? "&darr;" : "&uarr;"}
-        </div>
+          class="stroke-range"
+          style:left={`${range.left + range.width / 2 - strokeRect.width / 2}px`}
+          style:width={`${strokeRect.width}px`}
+          style:top={`${strokeRect.top}px`}
+          style:height={`${strokeRect.height}px`}
+        ></div>
       {/if}
     {/each}
   </div>
@@ -116,6 +130,7 @@
     position: absolute;
     left: 50%;
     top: 50%;
+    z-index: 2;
     width: 5px;
     height: 5px;
     border-radius: 50%;
@@ -124,18 +139,26 @@
     transform: translate(-50%, -50%);
   }
 
-  .stroke-mark {
-    display: inline-flex;
+  .to-mark {
+    display: inline-block;
     position: absolute;
-    top: 1px;
-    height: 35px;
-    align-items: center;
-    justify-content: center;
-    color: rgba(92, 255, 101, 0.96);
-    font-size: 24px;
-    font-weight: 900;
-    line-height: 1;
+    left: 50%;
+    top: 50%;
+    z-index: 3;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: rgba(255, 69, 69, 0.96);
+    box-shadow: 0 0 3px rgba(255, 88, 88, 0.78);
+    transform: translate(-50%, -50%);
+  }
+
+  .stroke-range {
+    display: inline-block;
+    position: absolute;
+    z-index: 1;
+    border-radius: 3px;
+    background-color: rgba(126, 255, 117, 0.42);
     pointer-events: none;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.78);
   }
 </style>
