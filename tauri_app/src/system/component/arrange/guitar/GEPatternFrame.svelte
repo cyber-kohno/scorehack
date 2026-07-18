@@ -196,7 +196,7 @@
     position: absolute;
     z-index: 2;
     border-radius: 5px;
-    background-color: rgba(126, 255, 117, 0.42);
+    background-color: rgba(255, 82, 82, 0.38);
     pointer-events: none;
   }
 

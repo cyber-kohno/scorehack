@@ -156,6 +156,7 @@
             <div class="guitar-grid">
               {#each guitarFinder.voicings as item, index}
                 <div class={getGuitarItemClass("voicing", index)}>
+                  <div class="guitar-focus-frame"></div>
                   {#if item.voicingNo === -1}
                     None
                   {:else}
@@ -174,6 +175,7 @@
             <div class="guitar-grid">
               {#each guitarFinder.backings as item, index}
                 <div class={getGuitarItemClass("backing", index)}>
+                  <div class="guitar-focus-frame"></div>
                   {#if item.backingNo === -1}
                     None
                   {:else}
@@ -315,10 +317,21 @@
   }
 
   .guitar-item.focus {
-    border-color: #ff382e;
-    outline: 2px solid #ff382e;
-    outline-offset: -2px;
     background-color: rgba(143, 125, 88, 0.85);
+  }
+
+  .guitar-focus-frame {
+    display: inline-block;
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    border: 3px solid transparent;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .guitar-item.focus .guitar-focus-frame {
+    border-color: #ff382e;
   }
 
   .guitar-item.apply {

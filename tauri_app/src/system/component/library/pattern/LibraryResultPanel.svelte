@@ -283,6 +283,7 @@
                     class={getGuitarItemClass("voicing", index, isGuitarVoicingRegular(item.voicingNo))}
                     bind:this={recordRefs[index]}
                   >
+                    <div class="guitar-focus-frame"></div>
                     <ADFinderExistMark isRegular={isGuitarVoicingRegular(item.voicingNo)} />
                     {#if item.voicingNo === -1}
                       None
@@ -305,6 +306,7 @@
                     class={getGuitarItemClass("backing", index, isGuitarBackingRegular(item.backingNo))}
                     bind:this={recordRefs[guitarFinder.voicings.length + index]}
                   >
+                    <div class="guitar-focus-frame"></div>
                     <ADFinderExistMark isRegular={isGuitarBackingRegular(item.backingNo)} />
                     {#if item.backingNo === -1}
                       None
@@ -448,10 +450,21 @@
   }
 
   .guitar-item.focus {
-    border-color: #ff382e;
-    outline: 2px solid #ff382e;
-    outline-offset: -2px;
     background-color: rgba(143, 125, 88, 0.85);
+  }
+
+  .guitar-focus-frame {
+    display: inline-block;
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    border: 3px solid transparent;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .guitar-item.focus .guitar-focus-frame {
+    border-color: #ff382e;
   }
 
   .guitar-item-label {

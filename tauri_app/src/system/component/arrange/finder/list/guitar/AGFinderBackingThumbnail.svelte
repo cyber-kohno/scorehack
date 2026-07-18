@@ -6,6 +6,10 @@
   export let ts: RhythmTheory.TimeSignature;
 
   const BASE_THUMBNAIL_BEAT_WIDTH = 36;
+  const RECORD_HEIGHT = 5;
+  const RECORD_GAP = 1;
+  const RECORD_COUNT = 6;
+  const CONTENT_HEIGHT = RECORD_HEIGHT * RECORD_COUNT + RECORD_GAP * (RECORD_COUNT - 1);
 
   $: events = backing.items.map(GuitarEditorState.convPatternItem);
   $: beatWidth =
@@ -35,101 +39,122 @@
   $: getDisplayRowIndex = (stringNumber: number) => {
     return displayStrings.findIndex(({ string }) => string.number === stringNumber);
   };
+  $: getStringCenterTop = (stringNumber: number) => {
+    const rowIndex = getDisplayRowIndex(stringNumber);
+    return `${rowIndex * (RECORD_HEIGHT + RECORD_GAP) + RECORD_HEIGHT / 2}px`;
+  };
   $: getStrokeRect = (event: GuitarEditorState.PatternEvent) => {
     const fromRow = getDisplayRowIndex(event.fromString);
     const toRow = getDisplayRowIndex(event.toString);
     const topRow = Math.min(fromRow, toRow);
-    const bottomRow = Math.max(fromRow, toRow);
+    const diff = Math.abs(fromRow - toRow);
     const markSize = 5;
     return {
-      top: 1 + topRow * 6,
-      height: (bottomRow - topRow) * 6 + markSize,
+      top: `${topRow * (RECORD_HEIGHT + RECORD_GAP) + RECORD_HEIGHT / 2}px`,
+      height: `${diff * (RECORD_HEIGHT + RECORD_GAP)}px`,
       width: markSize,
     };
   };
 </script>
 
 <div class="wrap">
-  <div class="content" style:width={`${contentWidth}px`}>
-    {#each displayStrings as { string }}
-      <div class="record">
-        {#each colRanges as range}
-          {@const event = getEvent(range.index)}
-          <div class="cell-frame" style:width={`${range.width}px`}>
-            <div class="cell">
-              {#if event != undefined && event.fromString === string.number}
-                <div class="pick-mark"></div>
-              {/if}
-              {#if event != undefined && event.fromString !== event.toString && event.toString === string.number}
-                <div class="to-mark"></div>
-              {/if}
-            </div>
-          </div>
-        {/each}
-      </div>
-    {/each}
-    {#each colRanges as range}
-      {@const event = getEvent(range.index)}
-      {#if event != undefined && event.fromString !== event.toString}
-        {@const strokeRect = getStrokeRect(event)}
-        <div
-          class="stroke-range"
-          style:left={`${range.left + range.width / 2 - strokeRect.width / 2}px`}
-          style:width={`${strokeRect.width}px`}
-          style:top={`${strokeRect.top}px`}
-          style:height={`${strokeRect.height}px`}
-        ></div>
-      {/if}
-    {/each}
+  <div
+    class="content"
+    style:width={`${contentWidth}px`}
+    style:height={`${CONTENT_HEIGHT}px`}
+  >
+    <div class="grid-bg">
+      {#each displayStrings as _string}
+        <div class="record" style:width={`${contentWidth}px`}>
+          {#each colRanges as range}
+            <div class="cell" style:width={`${range.width}px`}></div>
+          {/each}
+        </div>
+      {/each}
+    </div>
+    <div class="overlay">
+      {#each colRanges as range}
+        {@const event = getEvent(range.index)}
+        {#if event != undefined}
+          {@const centerLeft = range.left + range.width / 2}
+          {#if event.fromString !== event.toString}
+            {@const strokeRect = getStrokeRect(event)}
+            <div
+              class="stroke-range"
+              style:left={`${centerLeft - strokeRect.width / 2}px`}
+              style:width={`${strokeRect.width}px`}
+              style:top={strokeRect.top}
+              style:height={strokeRect.height}
+            ></div>
+            <div
+              class="to-mark"
+              style:left={`${centerLeft}px`}
+              style:top={getStringCenterTop(event.toString)}
+            ></div>
+          {/if}
+          <div
+            class="pick-mark"
+            style:left={`${centerLeft}px`}
+            style:top={getStringCenterTop(event.fromString)}
+          ></div>
+        {/if}
+      {/each}
+    </div>
   </div>
 </div>
 
 <style>
   .wrap {
-    display: inline-block;
+    display: block;
     position: relative;
     width: 100%;
     height: 100%;
+    line-height: 0;
     overflow: hidden;
   }
 
   .content {
-    display: inline-block;
+    display: block;
     position: relative;
-    height: 100%;
+  }
+
+  .grid-bg {
+    display: grid;
+    grid-template-rows: repeat(6, 5px);
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    gap: 1px;
+    box-sizing: border-box;
   }
 
   .record {
-    display: block;
-    position: relative;
-    height: 5px;
-    margin: 1px 0 0 0;
-    white-space: nowrap;
-  }
-
-  .cell-frame {
-    display: inline-block;
-    position: relative;
-    height: 100%;
-    padding: 0 0 0 1px;
-    box-sizing: border-box;
-    vertical-align: top;
+    display: flex;
+    min-height: 0;
+    gap: 1px;
   }
 
   .cell {
-    display: inline-block;
+    display: block;
     position: relative;
-    width: 100%;
+    min-width: 0;
     height: 100%;
     border-radius: 1px;
-    background-color: rgba(225, 241, 243, 0.18);
+    box-sizing: border-box;
+    background-color: rgba(225, 241, 243, 0.2);
+  }
+
+  .overlay {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
   }
 
   .pick-mark {
     display: inline-block;
     position: absolute;
-    left: 50%;
-    top: 50%;
     z-index: 2;
     width: 5px;
     height: 5px;
@@ -142,8 +167,6 @@
   .to-mark {
     display: inline-block;
     position: absolute;
-    left: 50%;
-    top: 50%;
     z-index: 3;
     width: 5px;
     height: 5px;
@@ -158,7 +181,7 @@
     position: absolute;
     z-index: 1;
     border-radius: 3px;
-    background-color: rgba(126, 255, 117, 0.42);
+    background-color: rgba(255, 82, 82, 0.38);
     pointer-events: none;
   }
 </style>

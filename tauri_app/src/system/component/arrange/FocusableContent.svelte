@@ -3,6 +3,7 @@
 </script>
 
 <div class="wrap" data-focus={isFocus}>
+  <div class="focus-frame"></div>
   {#if !isFocus}
     <div class="blind"></div>
   {/if}
@@ -13,10 +14,17 @@
   .wrap {
     display: block;
     position: relative;
-    /* background-color: rgba(255, 255, 255, 0.195); */
-    /* padding: 4px; */
+    box-sizing: border-box;
+    padding: 4px;
+  }
+  .focus-frame {
+    display: inline-block;
+    position: absolute;
+    z-index: 2;
+    inset: 0;
     border: 4px solid rgba(255, 255, 255, 0.463);
     box-sizing: border-box;
+    pointer-events: none;
   }
   .blind {
     display: inline-block;
@@ -28,7 +36,7 @@
     height: 100%;
     background-color: rgba(0, 12, 83, 0.299);
   }
-  .wrap[data-focus="true"] {
-    border: 4px solid rgb(255, 0, 0);
+  .wrap[data-focus="true"] .focus-frame {
+    border-color: rgb(255, 0, 0);
   }
 </style>
