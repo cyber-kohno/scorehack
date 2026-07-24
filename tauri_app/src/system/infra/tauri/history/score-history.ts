@@ -1,13 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
 import { get } from "svelte/store";
 import recalculate from "../../../service/derived/recalculate-derived";
-import { controlStore, dataStore } from "../../../store/global-store";
+import { controlStore, dataStore, fileStore } from "../../../store/global-store";
 import type ControlState from "../../../store/state/control-state";
 import type DataState from "../../../store/state/data/data-state";
+import FileState from "../../../store/state/file-state";
 import { toHistoryStatus, type HistoryStatus, type SnapshotStackStatus } from "../../../../types/history-types";
 
 namespace ScoreHistory {
     const STACK_ID = "score";
+
+    export type AddOptions = {
+        updateDirty?: boolean;
+    };
 
     export type HistorySnapshot = {
         dataStore: DataState.Value;
@@ -55,18 +60,30 @@ namespace ScoreHistory {
         }
 
         await create();
-        return add();
+        return add({ updateDirty: false });
     };
 
-    export const add = async (): Promise<HistoryStatus> => {
+    export const add = async (options: AddOptions = {}): Promise<HistoryStatus> => {
+        const data = get(dataStore);
+        const control = get(controlStore);
+
+        if (options.updateDirty ?? true) {
+            updateDirty(data);
+        }
+
         const status = await invoke<SnapshotStackStatus>("push_snapshot", {
             id: STACK_ID,
             data: {
-                dataStore: get(dataStore),
-                controlStore: get(controlStore),
+                dataStore: data,
+                controlStore: control,
             },
         });
         return toHistoryStatus(status);
+    };
+
+    const updateDirty = (data: DataState.Value) => {
+        const fingerprint = FileState.createFingerprint(data);
+        fileStore.update((file) => FileState.updateDirtyByFingerprint(file, fingerprint));
     };
 
     const applySnapshot = (snapshot: HistorySnapshot | null) => {
@@ -74,6 +91,7 @@ namespace ScoreHistory {
 
         dataStore.set(snapshot.dataStore);
         controlStore.set(snapshot.controlStore);
+        updateDirty(snapshot.dataStore);
         recalculate();
     };
 

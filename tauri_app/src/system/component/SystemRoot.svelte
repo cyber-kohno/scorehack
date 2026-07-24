@@ -14,7 +14,8 @@
     const mainWindow = getCurrentWindow();
     const unsubscribeTitle = fileStore.subscribe((file) => {
       const scoreName = file.score?.name ?? "(Untitled)";
-      void mainWindow.setTitle(`${scoreName} - Scorehack`).catch((error) => {
+      const dirtyMark = file.isDirty ? "*" : "";
+      void mainWindow.setTitle(`${scoreName}${dirtyMark} - Scorehack`).catch((error) => {
         console.error("Failed to update window title:", error);
       });
     });

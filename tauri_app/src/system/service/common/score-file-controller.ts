@@ -2,7 +2,7 @@ import { get } from "svelte/store";
 import { openScoreFilePath, saveScoreFilePath } from "../../infra/tauri/dialog";
 import { dataStore, fileStore, refStore } from "../../store/global-store";
 import type DataState from "../../store/state/data/data-state";
-import type FileState from "../../store/state/file-state";
+import FileState from "../../store/state/file-state";
 import recalculate from "../derived/recalculate-derived";
 import CompressedJsonFile from "./compressed-json-file";
 
@@ -48,6 +48,8 @@ namespace ScoreFile {
             const storeFileHandle = fileHandle.score;
             (async () => {
                 await CompressedJsonFile.write(storeFileHandle.path, plainData);
+                const fingerprint = FileState.createFingerprint(plainData);
+                fileStore.update((file) => FileState.markSaved(file, storeFileHandle, fingerprint));
                 props.success(storeFileHandle);
             })().catch(() => {
                 props.cancel();
@@ -64,7 +66,8 @@ namespace ScoreFile {
 
             const handle = toHandle(path);
             await CompressedJsonFile.write(handle.path, plainData);
-            fileStore.set({ ...fileHandle, score: handle });
+            const fingerprint = FileState.createFingerprint(plainData);
+            fileStore.update((file) => FileState.markSaved(file, handle, fingerprint));
             props.success(handle);
         })().catch(() => {
             props.cancel();
@@ -101,7 +104,8 @@ namespace ScoreFile {
             const loadedData = readResult.value;
 
             try {
-                fileStore.set({ score: newFileHandle });
+                const fingerprint = FileState.createFingerprint(loadedData);
+                fileStore.set(FileState.markSaved(prevFile, newFileHandle, fingerprint));
                 dataStore.set(loadedData);
                 restoreRefTracks(loadedData);
                 recalculate();
