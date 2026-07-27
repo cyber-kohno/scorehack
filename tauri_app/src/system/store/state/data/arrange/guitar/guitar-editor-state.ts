@@ -42,6 +42,7 @@ namespace GuitarEditorState {
     cursorFret: number;
     frets: StringSelection[];
     backing: BackingEditorProps | null;
+    lastSource: string;
   };
 
   export interface VoicingPattern extends ArrangeState.Pattern {
@@ -103,6 +104,7 @@ namespace GuitarEditorState {
       cursorFret: 0,
       frets: createMutedFrets(),
       backing: null,
+      lastSource: "",
     };
   };
 
@@ -233,6 +235,17 @@ namespace GuitarEditorState {
         .sort((a, b) => a.colIndex - b.colIndex)
         .map(formatPatternItem),
     };
+  };
+
+  export const createPatternData = (editor: Value): Unit => {
+    return {
+      frets: clone(editor.frets),
+      backing: editor.backing == null ? null : createBackingData(editor.backing),
+    };
+  };
+
+  export const createSnapshot = (editor: Value) => {
+    return JSON.stringify(createPatternData(editor));
   };
 
   export const createBackingEditorProps = (backing: BackingData): BackingEditorProps => {

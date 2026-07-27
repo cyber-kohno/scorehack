@@ -6,6 +6,7 @@ import ArrangeState from "../../store/state/data/arrange/arrange-state";
 import FinderState from "../../store/state/data/arrange/finder-state";
 import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import type LibraryState from "../../store/state/library-state";
+import ArrangeEditorHistory from "../../infra/tauri/history/arrange-editor-history";
 
 const createContext = () => {
     const data = get(dataStore);
@@ -204,6 +205,7 @@ const createLibraryGuitarActions = () => {
         } else {
             editor.backing = null;
         }
+        editor.lastSource = GuitarEditorState.createSnapshot(editor);
 
         ctx.control.outline.arrange = {
             method: "guitar",
@@ -238,6 +240,7 @@ const createLibraryGuitarActions = () => {
             },
             editor,
         };
+        void ArrangeEditorHistory.reset(editor);
         controlStore.set({ ...ctx.control });
     };
 

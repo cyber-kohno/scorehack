@@ -1,11 +1,11 @@
-import { invoke } from "@tauri-apps/api/core";
 import { get } from "svelte/store";
 import recalculate from "../../../service/derived/recalculate-derived";
 import { controlStore, dataStore, fileStore } from "../../../store/global-store";
 import type ControlState from "../../../store/state/control-state";
 import type DataState from "../../../store/state/data/data-state";
 import FileState from "../../../store/state/file-state";
-import { toHistoryStatus, type HistoryStatus, type SnapshotStackStatus } from "../../../../types/history-types";
+import type { HistoryStatus } from "../../../../types/history-types";
+import SnapshotHistory from "./snapshot-history";
 
 namespace ScoreHistory {
     const STACK_ID = "score";
@@ -24,61 +24,39 @@ namespace ScoreHistory {
         status: HistoryStatus;
     };
 
-    export type SnapshotStackChangeResult = {
-        snapshot: HistorySnapshot | null;
-        status: SnapshotStackStatus;
-    };
-
     export const create = async (): Promise<void> => {
-        await invoke("create_snapshot_stack", {
-            id: STACK_ID,
-        });
+        await SnapshotHistory.create(STACK_ID);
     };
 
     export const dispose = async (): Promise<void> => {
-        await invoke("dispose_snapshot_stack", {
-            id: STACK_ID,
-        });
+        await SnapshotHistory.dispose(STACK_ID);
     };
 
     export const exists = async (): Promise<boolean> => {
-        return invoke<boolean>("exists_snapshot_stack", {
-            id: STACK_ID,
-        });
+        return SnapshotHistory.exists(STACK_ID);
     };
 
     export const clear = async (): Promise<HistoryStatus> => {
-        const status = await invoke<SnapshotStackStatus>("clear_snapshot_stack", {
-            id: STACK_ID,
-        });
-        return toHistoryStatus(status);
+        return SnapshotHistory.clear(STACK_ID);
     };
 
     export const reset = async (): Promise<HistoryStatus> => {
-        if (await exists()) {
-            await dispose();
-        }
-
-        await create();
-        return add({ updateDirty: false });
+        return SnapshotHistory.reset(STACK_ID, createSnapshot());
     };
 
+    const createSnapshot = (): HistorySnapshot => ({
+        dataStore: get(dataStore),
+        controlStore: get(controlStore),
+    });
+
     export const add = async (options: AddOptions = {}): Promise<HistoryStatus> => {
-        const data = get(dataStore);
-        const control = get(controlStore);
+        const snapshot = createSnapshot();
 
         if (options.updateDirty ?? true) {
-            updateDirty(data);
+            updateDirty(snapshot.dataStore);
         }
 
-        const status = await invoke<SnapshotStackStatus>("push_snapshot", {
-            id: STACK_ID,
-            data: {
-                dataStore: data,
-                controlStore: control,
-            },
-        });
-        return toHistoryStatus(status);
+        return SnapshotHistory.add(STACK_ID, snapshot);
     };
 
     const updateDirty = (data: DataState.Value) => {
@@ -96,25 +74,15 @@ namespace ScoreHistory {
     };
 
     export const undo = async (): Promise<HistoryChangeResult> => {
-        const result = await invoke<SnapshotStackChangeResult>("undo_snapshot", {
-            id: STACK_ID,
-        });
+        const result = await SnapshotHistory.undo<HistorySnapshot>(STACK_ID);
         applySnapshot(result.snapshot);
-        return {
-            snapshot: result.snapshot,
-            status: toHistoryStatus(result.status),
-        };
+        return result;
     };
 
     export const redo = async (): Promise<HistoryChangeResult> => {
-        const result = await invoke<SnapshotStackChangeResult>("redo_snapshot", {
-            id: STACK_ID,
-        });
+        const result = await SnapshotHistory.redo<HistorySnapshot>(STACK_ID);
         applySnapshot(result.snapshot);
-        return {
-            snapshot: result.snapshot,
-            status: toHistoryStatus(result.status),
-        };
+        return result;
     };
 }
 

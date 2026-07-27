@@ -7,6 +7,7 @@ import ArrangeState from "../../store/state/data/arrange/arrange-state";
 import DrumEditorState from "../../store/state/data/arrange/drum/drum-editor-state";
 import FinderState from "../../store/state/data/arrange/finder-state";
 import type LibraryState from "../../store/state/library-state";
+import ArrangeEditorHistory from "../../infra/tauri/history/arrange-editor-history";
 
 const PATTERN_ROW_HEIGHT = 71;
 const COLUMN_COUNT = FinderState.Drum.ColumnCount;
@@ -128,6 +129,9 @@ const createLibraryDrumActions = () => {
         if (selected != undefined && pattern == undefined) throw new Error("Drum pattern must exist.");
 
         const condition = library.condition;
+        const editor = createEditorFromPattern(mode === "add-pattern" && option.copySource !== true
+            ? undefined
+            : pattern);
         ctx.control.outline.arrange = {
             method: "drum",
             origin: {
@@ -154,10 +158,9 @@ const createLibraryDrumActions = () => {
                 },
                 chordSeq: -1,
             },
-            editor: createEditorFromPattern(mode === "add-pattern" && option.copySource !== true
-                ? undefined
-                : pattern),
+            editor,
         };
+        void ArrangeEditorHistory.reset(editor);
         controlStore.set({ ...ctx.control });
     };
 

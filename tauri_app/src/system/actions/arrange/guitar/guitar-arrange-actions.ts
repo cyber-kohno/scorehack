@@ -10,6 +10,8 @@ import { controlStore, dataStore } from "../../../store/global-store";
 import GuitarEditorState from "../../../store/state/data/arrange/guitar/guitar-editor-state";
 import ToastState from "../../../store/state/toast-state";
 import startEditorPreviewProgress from "../common/editor-preview-progress";
+import ArrangeEditorHistory from "../../../infra/tauri/history/arrange-editor-history";
+import ScoreHistory from "../../../infra/tauri/history/score-history";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -23,6 +25,16 @@ const createContext = () => {
 
     const commitControl = () => controlStore.set({ ...control });
     const commitData = () => dataStore.set({ ...data });
+    const commitEditorWithHistory = (baseEditor?: ArrangeEditorHistory.EditorSnapshot) => {
+        commitControl();
+        if (arrange.editor == undefined) return;
+
+        if (baseEditor == undefined) {
+            void ArrangeEditorHistory.add(arrange.editor);
+        } else {
+            void ArrangeEditorHistory.resetThenAdd(baseEditor, arrange.editor);
+        }
+    };
 
     return {
         arrange,
@@ -30,6 +42,7 @@ const createContext = () => {
         arrTrack,
         guitarUpdater: createGuitarArrangeUpdater({ arrange, arrTrack }),
         commitControl,
+        commitEditorWithHistory,
         commitDataAndRecalculate: createCommitDataAndRecalculate(commitData),
     };
 };
@@ -93,7 +106,13 @@ const createGuitarArrangeActions = () => {
 
         if (result.closeArrange) ctx.control.outline.arrange = null;
         if (result.data) ctx.commitDataAndRecalculate();
-        if (result.control) ctx.commitControl();
+        const historyBaseEditor = "historyBaseEditor" in result
+            ? result.historyBaseEditor
+            : undefined;
+
+        if (result.control) ctx.commitEditorWithHistory(historyBaseEditor);
+        if (result.data) void ScoreHistory.add();
+        if (result.closeArrange) void ArrangeEditorHistory.dispose();
     };
 
     const updateControlWithArg = <T>(
@@ -122,6 +141,32 @@ const createGuitarArrangeActions = () => {
         };
     };
 
+    const updateEditorWithHistory = (
+        update: (updater: ReturnType<typeof createGuitarArrangeUpdater>) => void | boolean,
+    ) => {
+        return () => {
+            const ctx = createContext();
+            const result = update(ctx.guitarUpdater);
+
+            if (result === false) return;
+
+            ctx.commitEditorWithHistory();
+        };
+    };
+
+    const updateEditorWithHistoryAndArg = <T>(
+        update: (updater: ReturnType<typeof createGuitarArrangeUpdater>, arg: T) => void | boolean,
+    ) => {
+        return (arg: T) => {
+            const ctx = createContext();
+            const result = update(ctx.guitarUpdater, arg);
+
+            if (result === false) return;
+
+            ctx.commitEditorWithHistory();
+        };
+    };
+
     const backFinderSelection = updateControl(updater => {
         return updater.backFinderSelection();
     });
@@ -135,14 +180,14 @@ const createGuitarArrangeActions = () => {
         const result = ctx.guitarUpdater.toggleFret();
         if (result === false) return;
 
-        ctx.commitControl();
+        ctx.commitEditorWithHistory();
 
         if (result.activated && result.pitch != undefined) {
             previewArrangeNote(ctx.arrTrack, result.pitch);
         }
     };
 
-    const muteString = updateControl(updater => {
+    const muteString = updateEditorWithHistory(updater => {
         updater.muteString();
     });
 
@@ -155,19 +200,19 @@ const createGuitarArrangeActions = () => {
         useScrollService().adjustGEBScrollCol();
     };
 
-    const insertBackingCol = updateControl(updater => {
+    const insertBackingCol = updateEditorWithHistory(updater => {
         return updater.insertBackingCol();
     });
 
-    const deleteBackingCol = updateControl(updater => {
+    const deleteBackingCol = updateEditorWithHistory(updater => {
         return updater.deleteBackingCol();
     });
 
-    const setBackingColDiv = updateControlWithArg<number>((updater, div) => {
+    const setBackingColDiv = updateEditorWithHistoryAndArg<number>((updater, div) => {
         return updater.setBackingColDiv(div);
     });
 
-    const toggleBackingColDot = updateControl(updater => {
+    const toggleBackingColDot = updateEditorWithHistory(updater => {
         return updater.toggleBackingColDot();
     });
 
@@ -180,33 +225,33 @@ const createGuitarArrangeActions = () => {
         if (dir.x != undefined) useScrollService().adjustGEBScrollCol();
     };
 
-    const extendPatternEventToCursor = updateControlWithArg<-1 | 1>((updater, dir) => {
+    const extendPatternEventToCursor = updateEditorWithHistoryAndArg<-1 | 1>((updater, dir) => {
         return updater.extendPatternEventToCursor(dir);
     });
 
-    const togglePatternEvent = updateControl(updater => {
+    const togglePatternEvent = updateEditorWithHistory(updater => {
         return updater.togglePatternEvent();
     });
 
-    const removePatternEvent = updateControl(updater => {
+    const removePatternEvent = updateEditorWithHistory(updater => {
         return updater.removePatternEvent();
     });
 
-    const increasePatternVelocity = updateControl(updater => {
+    const increasePatternVelocity = updateEditorWithHistory(updater => {
         return updater.modifyPatternEvent((event) => ({
             ...event,
             velocity: Math.min(20, event.velocity + 1),
         }));
     });
 
-    const decreasePatternVelocity = updateControl(updater => {
+    const decreasePatternVelocity = updateEditorWithHistory(updater => {
         return updater.modifyPatternEvent((event) => ({
             ...event,
             velocity: Math.max(1, event.velocity - 1),
         }));
     });
 
-    const increasePatternSpeed = updateControl(updater => {
+    const increasePatternSpeed = updateEditorWithHistory(updater => {
         return updater.modifyPatternEvent((event) => {
             if (event.fromString === event.toString) return event;
             return {
@@ -216,7 +261,7 @@ const createGuitarArrangeActions = () => {
         });
     });
 
-    const decreasePatternSpeed = updateControl(updater => {
+    const decreasePatternSpeed = updateEditorWithHistory(updater => {
         return updater.modifyPatternEvent((event) => {
             if (event.fromString === event.toString) return event;
             return {
@@ -230,7 +275,7 @@ const createGuitarArrangeActions = () => {
         return updater.shiftControl(next);
     });
 
-    const toggleBacking = updateControl(updater => {
+    const toggleBacking = updateEditorWithHistory(updater => {
         return updater.toggleBacking();
     });
 
@@ -245,6 +290,8 @@ const createGuitarArrangeActions = () => {
         ctx.control.outline.arrange = null;
         ctx.commitDataAndRecalculate();
         ctx.commitControl();
+        void ScoreHistory.add();
+        void ArrangeEditorHistory.dispose();
     };
 
     return {

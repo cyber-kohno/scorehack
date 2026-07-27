@@ -8,8 +8,27 @@ namespace FileState {
         isDirty: boolean;
     }
 
+    const stableStringify = (value: unknown): string | undefined => {
+        if (value == null || typeof value !== "object") {
+            return JSON.stringify(value);
+        }
+
+        if (Array.isArray(value)) {
+            return `[${value.map((item) => stableStringify(item) ?? "null").join(",")}]`;
+        }
+
+        const entries = Object.entries(value)
+            .map(([key, entryValue]) => [key, stableStringify(entryValue)] as const)
+            .filter(([, serialized]) => serialized != undefined);
+
+        return `{${entries
+            .sort(([left], [right]) => left.localeCompare(right))
+            .map(([key, serialized]) => `${JSON.stringify(key)}:${serialized}`)
+            .join(",")}}`;
+    };
+
     export const createFingerprint = (data: DataState.Value): string => {
-        return JSON.stringify(data);
+        return stableStringify(data) ?? "";
     };
 
     export const createInitial = (): Value => ({

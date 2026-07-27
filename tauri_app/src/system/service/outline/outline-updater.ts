@@ -1,6 +1,7 @@
 import PianoEditorState from "../../store/state/data/arrange/piano/piano-editor-state";
 import GuitarEditorState from "../../store/state/data/arrange/guitar/guitar-editor-state";
 import DrumEditorState from "../../store/state/data/arrange/drum/drum-editor-state";
+import ArrangeEditorHistory from "../../infra/tauri/history/arrange-editor-history";
 import type ArrangeState from "../../store/state/data/arrange/arrange-state";
 import type ControlState from "../../store/state/control-state";
 import type DataState from "../../store/state/data/data-state";
@@ -400,13 +401,18 @@ const createOutlineUpdater = (ctx: Context) => {
                         chordCache.chordSeq,
                         arrTrack,
                     );
+                    arrange.editor.lastSource = GuitarEditorState.createSnapshot(arrange.editor);
                     break;
                 case "drum":
                     arrange.editor = DrumEditorState.getEditorProps(
                         chordCache.chordSeq,
                         arrTrack,
                     );
+                    arrange.editor.lastSource = DrumEditorState.createSnapshot(arrange.editor);
                     break;
+            }
+            if (arrange.editor != undefined) {
+                void ArrangeEditorHistory.reset(arrange.editor);
             }
         });
     };

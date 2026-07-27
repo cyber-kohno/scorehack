@@ -6,6 +6,7 @@ import stopPlaybackTimeline from "../../service/playback/timeline/stop-playback-
 import useInputDrumEditor from "./input-drum-editor";
 import useInputGuitarEditor from "./input-guitar-editor";
 import useInputPianoEditor from "./input-piano-editor";
+import ArrangeEditorHistory from "../../infra/tauri/history/arrange-editor-history";
 
 const useInputArrange = () => {
     const arrangeActions = createArrangeActions();
@@ -42,17 +43,33 @@ const useInputArrange = () => {
     const getHoldCallbacks = (eventKey: string): InputState.Callbacks => {
         if (get(playbackStore).timerKeys != null) return {};
 
+        const callbacks: InputState.Callbacks = {
+            holdCtrl: () => {
+                switch (eventKey.toLowerCase()) {
+                    case "z":
+                        void ArrangeEditorHistory.undo();
+                        return;
+                    case "y":
+                        void ArrangeEditorHistory.redo();
+                        return;
+                }
+            },
+        };
         const inputPianoEditor = useInputPianoEditor();
         const inputGuitarEditor = useInputGuitarEditor();
         const inputDrumEditor = useInputDrumEditor();
         const arrange = get(controlStore).outline.arrange;
         if (arrange == null) throw new Error();
 
-        switch (arrange.method) {
-            case 'piano': return inputPianoEditor.getHoldCallbacks(eventKey);
-            case 'guitar': return inputGuitarEditor.getHoldCallbacks(eventKey);
-            case 'drum': return inputDrumEditor.getHoldCallbacks(eventKey);
-        }
+        const methodCallbacks = (() => {
+            switch (arrange.method) {
+                case 'piano': return inputPianoEditor.getHoldCallbacks(eventKey);
+                case 'guitar': return inputGuitarEditor.getHoldCallbacks(eventKey);
+                case 'drum': return inputDrumEditor.getHoldCallbacks(eventKey);
+            }
+        })();
+
+        return { ...methodCallbacks, ...callbacks };
     }
 
     return {

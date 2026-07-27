@@ -11,6 +11,7 @@ import ActionMenuState from "../../store/state/action-menu-state";
 import Toast from "../../service/common/toast-controller";
 import ToastState from "../../store/state/toast-state";
 import ConfirmDialog from "../../service/common/confirm-dialog-controller";
+import ArrangeEditorHistory from "../../infra/tauri/history/arrange-editor-history";
 
 const FINDER_BACKING_RECORD_HEIGHT = 71;
 const FINDER_VOICING_CELL_WIDTH = 109;
@@ -261,6 +262,7 @@ const createLibraryPianoActions = () => {
             },
             editor,
         };
+        void ArrangeEditorHistory.reset(editor);
         controlStore.set({ ...ctx.control });
     };
 

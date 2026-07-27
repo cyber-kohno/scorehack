@@ -11,6 +11,8 @@ import DrumEditorState from "../../../store/state/data/arrange/drum/drum-editor-
 import type FloatingSelectState from "../../../store/state/floating-select-state";
 import ToastState from "../../../store/state/toast-state";
 import startEditorPreviewProgress from "../common/editor-preview-progress";
+import ArrangeEditorHistory from "../../../infra/tauri/history/arrange-editor-history";
+import ScoreHistory from "../../../infra/tauri/history/score-history";
 
 const createContext = () => {
     const control = get(controlStore);
@@ -24,6 +26,11 @@ const createContext = () => {
     if (arrTrack.method !== "drum") throw new Error("Drum arrange action requires drum track.");
 
     const commitData = () => dataStore.set({ ...data });
+    const commitControl = () => controlStore.set({ ...control });
+    const commitEditorWithHistory = () => {
+        commitControl();
+        if (arrange.editor != undefined) void ArrangeEditorHistory.add(arrange.editor);
+    };
 
     return {
         control,
@@ -32,7 +39,8 @@ const createContext = () => {
         getEditor: arrangeSelector.getDrumEditor,
         ref,
         drumUpdater: createDrumArrangeUpdater({ arrange, track: arrTrack }),
-        commitControl: () => controlStore.set({ ...control }),
+        commitControl,
+        commitEditorWithHistory,
         commitData,
         commitDataAndRecalculate: createCommitDataAndRecalculate(commitData),
     };
@@ -84,6 +92,30 @@ const createDrumArrangeActions = () => {
         };
     };
 
+    const updateEditorWithHistory = (
+        update: (updater: ReturnType<typeof createDrumArrangeUpdater>) => void | boolean,
+    ) => {
+        return () => {
+            const ctx = createContext();
+            const result = update(ctx.drumUpdater);
+            if (result === false) return;
+
+            ctx.commitEditorWithHistory();
+        };
+    };
+
+    const updateEditorWithHistoryAndArg = <T>(
+        update: (updater: ReturnType<typeof createDrumArrangeUpdater>, arg: T) => void | boolean,
+    ) => {
+        return (arg: T) => {
+            const ctx = createContext();
+            const result = update(ctx.drumUpdater, arg);
+            if (result === false) return;
+
+            ctx.commitEditorWithHistory();
+        };
+    };
+
     const shiftControl = updateControlWithArg<DrumEditorState.Control>((updater, next) => {
         updater.shiftControl(next);
     });
@@ -95,7 +127,7 @@ const createDrumArrangeActions = () => {
     const applyCriteriaDiv = (div: DrumEditorState.CriteriaDiv) => {
         const ctx = createContext();
         ctx.drumUpdater.applyCriteriaDiv(div);
-        ctx.commitControl();
+        ctx.commitEditorWithHistory();
     };
 
     const setCriteriaDiv = (div: DrumEditorState.CriteriaDiv) => {
@@ -223,11 +255,11 @@ const createDrumArrangeActions = () => {
         ctx.commitControl();
     };
 
-    const toggleHit = updateControl(updater => {
+    const toggleHit = updateEditorWithHistory(updater => {
         return updater.toggleHit();
     });
 
-    const modifyHitVelocity = updateControlWithArg<-1 | 1>((updater, dir) => {
+    const modifyHitVelocity = updateEditorWithHistoryAndArg<-1 | 1>((updater, dir) => {
         return updater.modifyHitVelocity(dir);
     });
 
@@ -239,7 +271,7 @@ const createDrumArrangeActions = () => {
         const result = ctx.drumUpdater.setColDiv(colIndex, div);
         if (result === false) return;
 
-        ctx.commitControl();
+        ctx.commitEditorWithHistory();
     };
 
     const openColDivSelect = () => {
@@ -294,15 +326,15 @@ const createDrumArrangeActions = () => {
         });
     };
 
-    const insertRecord = updateControl(updater => {
+    const insertRecord = updateEditorWithHistory(updater => {
         return updater.insertRecord();
     });
 
-    const deleteRecord = updateControl(updater => {
+    const deleteRecord = updateEditorWithHistory(updater => {
         return updater.deleteRecord();
     });
 
-    const swapRecord = updateControlWithArg<-1 | 1>((updater, dir) => {
+    const swapRecord = updateEditorWithHistoryAndArg<-1 | 1>((updater, dir) => {
         return updater.swapRecord(dir);
     });
 
@@ -311,13 +343,14 @@ const createDrumArrangeActions = () => {
         const result = ctx.drumUpdater.setRecordKey(recordIndex, key);
         if (result === false) return;
 
-        ctx.commitControl();
+        ctx.commitEditorWithHistory();
     };
 
     const registerCurrentPattern = () => {
         const ctx = createContext();
         const result = ctx.drumUpdater.registerCurrentPattern();
         ctx.commitData();
+        void ScoreHistory.add();
         return result;
     };
 
@@ -348,6 +381,8 @@ const createDrumArrangeActions = () => {
         ctx.control.outline.arrange = null;
         ctx.commitDataAndRecalculate();
         ctx.commitControl();
+        void ScoreHistory.add();
+        void ArrangeEditorHistory.dispose();
         return result;
     };
 
@@ -357,7 +392,9 @@ const createDrumArrangeActions = () => {
 
         if (result.closeArrange) ctx.control.outline.arrange = null;
         if (result.data) ctx.commitDataAndRecalculate();
-        if (result.control) ctx.commitControl();
+        if (result.control) ctx.commitEditorWithHistory();
+        if (result.data) void ScoreHistory.add();
+        if (result.closeArrange) void ArrangeEditorHistory.dispose();
     };
 
     const createRecordKeyItems = (

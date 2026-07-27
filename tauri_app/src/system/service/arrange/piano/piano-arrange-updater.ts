@@ -492,8 +492,10 @@ const createPianoArrangeUpdater = (ctx: Context) => {
             // ボイシングが選択されていない場合、エディタを開いて適用する
             if (sndsPatt == undefined) {
                 arrange.editor = PianoEditorState.getEditorProps(chordSeq, track);
+                arrange.editor.lastSource = PianoEditorState.createSnapshot(arrange.editor);
+                const historyBaseEditor = JSON.parse(JSON.stringify(arrange.editor)) as PianoEditorState.Value;
                 applyToEditor();
-                return { control: true, data: false, closeArrange: false };
+                return { control: true, data: false, closeArrange: false, historyBaseEditor };
             }
             // コード連番と参照先ライブラリの紐付け
             const relations = track.relations;

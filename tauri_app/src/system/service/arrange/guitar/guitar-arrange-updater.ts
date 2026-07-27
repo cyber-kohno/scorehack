@@ -429,6 +429,8 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
 
         const openEditor = () => {
             const editor = GuitarEditorState.createInitialProps();
+            editor.lastSource = GuitarEditorState.createSnapshot(editor);
+            const historyBaseEditor = JSON.parse(JSON.stringify(editor)) as GuitarEditorState.Value;
             if (voicingNo !== -1) {
                 const voicing = FinderState.Guitar.getVoicingFromNo(voicingNo, arrTrack.bank);
                 editor.frets = JSON.parse(JSON.stringify(voicing.frets)) as GuitarEditorState.StringSelection[];
@@ -440,7 +442,7 @@ const createGuitarArrangeUpdater = (ctx: Context) => {
             }
             arrange.editor = editor;
             delete arrange.finder;
-            return { control: true, data: false, closeArrange: false };
+            return { control: true, data: false, closeArrange: false, historyBaseEditor };
         };
 
         if (voicingNo === -1) return openEditor();

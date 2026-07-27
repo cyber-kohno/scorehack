@@ -12,6 +12,8 @@ import PianoBackingState from "../../../store/state/data/arrange/piano/piano-bac
 import type PianoEditorState from "../../../store/state/data/arrange/piano/piano-editor-state";
 import ToastState from "../../../store/state/toast-state";
 import startEditorPreviewProgress from "../common/editor-preview-progress";
+import ArrangeEditorHistory from "../../../infra/tauri/history/arrange-editor-history";
+import ScoreHistory from "../../../infra/tauri/history/score-history";
 
 const FINDER_BACKING_RECORD_HEIGHT = 71;
 const FINDER_VOICING_CELL_WIDTH = 109;
@@ -38,6 +40,16 @@ const createContext = () => {
 
     const commitControl = () => controlStore.set({ ...control });
     const commitData = () => dataStore.set({ ...data });
+    const commitEditorWithHistory = (baseEditor?: ArrangeEditorHistory.EditorSnapshot) => {
+        commitControl();
+        if (arrange.editor == undefined) return;
+
+        if (baseEditor == undefined) {
+            void ArrangeEditorHistory.add(arrange.editor);
+        } else {
+            void ArrangeEditorHistory.resetThenAdd(baseEditor, arrange.editor);
+        }
+    };
 
     return {
         arrange,
@@ -55,6 +67,7 @@ const createContext = () => {
             commitRef: () => refStore.set({ ...ref }),
         }),
         commitControl,
+        commitEditorWithHistory,
         commitDataAndRecalculate: createCommitDataAndRecalculate(commitData),
     };
 };
@@ -139,6 +152,32 @@ const createPianoArrangeActions = () => {
         };
     };
 
+    const updateEditorWithHistory = (
+        update: (updater: ReturnType<typeof createPianoArrangeUpdater>) => void | boolean,
+    ) => {
+        return () => {
+            const ctx = createContext();
+            const result = update(ctx.pianoUpdater);
+
+            if (result === false) return;
+
+            ctx.commitEditorWithHistory();
+        };
+    };
+
+    const updateEditorWithHistoryAndArg = <T>(
+        update: (updater: ReturnType<typeof createPianoArrangeUpdater>, arg: T) => void | boolean,
+    ) => {
+        return (arg: T) => {
+            const ctx = createContext();
+            const result = update(ctx.pianoUpdater, arg);
+
+            if (result === false) return;
+
+            ctx.commitEditorWithHistory();
+        };
+    };
+
     const moveFinderBacking = (dir: -1 | 1) => {
         const ctx = createContext();
         const finder = ctx.arrange.finder;
@@ -177,7 +216,7 @@ const createPianoArrangeActions = () => {
         const ctx = createContext();
         const result = ctx.pianoUpdater.toggleVoicing();
 
-        ctx.commitControl();
+        ctx.commitEditorWithHistory();
 
         if (result.activated && result.pitch != undefined) {
             previewArrangeNote(ctx.arrTrack, result.pitch);
@@ -191,13 +230,13 @@ const createPianoArrangeActions = () => {
 
         if (backing == null) {
             ctx.pianoUpdater.useBacking();
-            ctx.commitControl();
+            ctx.commitEditorWithHistory();
             return;
         }
 
         const deleteBacking = () => {
             ctx.pianoUpdater.deleteBacking();
-            ctx.commitControl();
+            ctx.commitEditorWithHistory();
         };
 
         if (PianoBackingState.isEmpty(backing)) {
@@ -232,7 +271,13 @@ const createPianoArrangeActions = () => {
 
         if (result.closeArrange) ctx.control.outline.arrange = null;
         if (result.data) ctx.commitDataAndRecalculate();
-        if (result.control) ctx.commitControl();
+        const historyBaseEditor = "historyBaseEditor" in result
+            ? result.historyBaseEditor
+            : undefined;
+
+        if (result.control) ctx.commitEditorWithHistory(historyBaseEditor);
+        if (result.data) void ScoreHistory.add();
+        if (result.closeArrange) void ArrangeEditorHistory.dispose();
     };
 
     const applyArrange = () => {
@@ -273,6 +318,8 @@ const createPianoArrangeActions = () => {
         }
         ctx.control.outline.arrange = null;
         ctx.commitControl();
+        void ScoreHistory.add();
+        void ArrangeEditorHistory.dispose();
     };
 
     const shiftLayer = () => {
@@ -292,23 +339,23 @@ const createPianoArrangeActions = () => {
         ctx.refUpdater.adjustPEBScrollCol();
     };
 
-    const insertBackingCol = updateControl(updater => {
+    const insertBackingCol = updateEditorWithHistory(updater => {
         return updater.insertBackingCol();
     });
 
-    const deleteBackingCol = updateControl(updater => {
+    const deleteBackingCol = updateEditorWithHistory(updater => {
         return updater.deleteBackingCol();
     });
 
-    const setBackingColDiv = updateControlWithArg<number>((updater, div) => {
+    const setBackingColDiv = updateEditorWithHistoryAndArg<number>((updater, div) => {
         return updater.setBackingColDiv(div);
     });
 
-    const toggleBackingColDot = updateControl(updater => {
+    const toggleBackingColDot = updateEditorWithHistory(updater => {
         return updater.toggleBackingColDot();
     });
 
-    const toggleBackingPedal = updateControl(updater => {
+    const toggleBackingPedal = updateEditorWithHistory(updater => {
         return updater.toggleBackingPedal();
     });
 
@@ -316,11 +363,11 @@ const createPianoArrangeActions = () => {
         return updater.moveBackingRecordCursor(dir);
     });
 
-    const insertBackingRecord = updateControl(updater => {
+    const insertBackingRecord = updateEditorWithHistory(updater => {
         return updater.insertBackingRecord();
     });
 
-    const deleteBackingRecord = updateControl(updater => {
+    const deleteBackingRecord = updateEditorWithHistory(updater => {
         return updater.deleteBackingRecord();
     });
 
@@ -331,32 +378,32 @@ const createPianoArrangeActions = () => {
         if (dir.x != undefined) ctx.refUpdater.adjustPEBScrollCol();
     };
 
-    const toggleBackingNote = updateControl(updater => {
+    const toggleBackingNote = updateEditorWithHistory(updater => {
         return updater.toggleBackingNote();
     });
 
-    const increaseBackingNoteVelocity = updateControl(updater => {
+    const increaseBackingNoteVelocity = updateEditorWithHistory(updater => {
         return updater.modifyBackingNote((note) => ({
             ...note,
             velocity: Math.min(20, note.velocity + 1),
         }));
     });
 
-    const decreaseBackingNoteVelocity = updateControl(updater => {
+    const decreaseBackingNoteVelocity = updateEditorWithHistory(updater => {
         return updater.modifyBackingNote((note) => ({
             ...note,
             velocity: Math.max(1, note.velocity - 1),
         }));
     });
 
-    const decreaseBackingNoteDelay = updateControl(updater => {
+    const decreaseBackingNoteDelay = updateEditorWithHistory(updater => {
         return updater.modifyBackingNote((note) => ({
             ...note,
             delay: Math.max(-3, note.delay - 1),
         }));
     });
 
-    const increaseBackingNoteDelay = updateControl(updater => {
+    const increaseBackingNoteDelay = updateEditorWithHistory(updater => {
         return updater.modifyBackingNote((note) => ({
             ...note,
             delay: Math.min(3, note.delay + 1),

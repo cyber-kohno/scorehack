@@ -444,7 +444,6 @@ const createDrumArrangeUpdater = (ctx: Context) => {
             const editor = getEditor();
             Object.assign(editor, DrumEditorState.createPatternDataEditorProps(pattern.pattern));
             editor.cursorY = editor.records.length > 0 ? 0 : -1;
-            editor.lastSource = DrumEditorState.createSnapshot(editor);
             delete arrange.finder;
         };
 
