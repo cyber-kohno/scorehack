@@ -1,5 +1,5 @@
-import { invoke } from "@tauri-apps/api/core";
-import { toHistoryStatus, type HistoryStatus, type SnapshotStackStatus } from "../../../../types/history-types";
+import { toHistoryStatus, type HistoryStatus } from "../../../../types/history-types";
+import TauriCommands from "../tauri-commands";
 
 namespace SnapshotHistory {
     export type ChangeResult<T> = {
@@ -7,25 +7,27 @@ namespace SnapshotHistory {
         status: HistoryStatus;
     };
 
-    export type SnapshotStackChangeResult<T> = {
-        snapshot: T | null;
-        status: SnapshotStackStatus;
-    };
-
     export const create = async (id: string): Promise<void> => {
-        await invoke("create_snapshot_stack", { id });
+        await TauriCommands.createSnapshotStack(id);
     };
 
     export const dispose = async (id: string): Promise<void> => {
-        await invoke("dispose_snapshot_stack", { id });
+        try {
+            await TauriCommands.disposeSnapshotStack(id);
+        } catch (error) {
+            if (typeof error === "string" && error.includes(`snapshot stack does not exist: ${id}`)) {
+                return;
+            }
+            throw error;
+        }
     };
 
     export const exists = async (id: string): Promise<boolean> => {
-        return invoke<boolean>("exists_snapshot_stack", { id });
+        return TauriCommands.existsSnapshotStack(id);
     };
 
     export const clear = async (id: string): Promise<HistoryStatus> => {
-        const status = await invoke<SnapshotStackStatus>("clear_snapshot_stack", { id });
+        const status = await TauriCommands.clearSnapshotStack(id);
         return toHistoryStatus(status);
     };
 
@@ -39,15 +41,12 @@ namespace SnapshotHistory {
     };
 
     export const add = async <T>(id: string, snapshot: T): Promise<HistoryStatus> => {
-        const status = await invoke<SnapshotStackStatus>("push_snapshot", {
-            id,
-            data: snapshot,
-        });
+        const status = await TauriCommands.pushSnapshot(id, snapshot);
         return toHistoryStatus(status);
     };
 
     export const undo = async <T>(id: string): Promise<ChangeResult<T>> => {
-        const result = await invoke<SnapshotStackChangeResult<T>>("undo_snapshot", { id });
+        const result = await TauriCommands.undoSnapshot<T>(id);
         return {
             snapshot: result.snapshot,
             status: toHistoryStatus(result.status),
@@ -55,7 +54,7 @@ namespace SnapshotHistory {
     };
 
     export const redo = async <T>(id: string): Promise<ChangeResult<T>> => {
-        const result = await invoke<SnapshotStackChangeResult<T>>("redo_snapshot", { id });
+        const result = await TauriCommands.redoSnapshot<T>(id);
         return {
             snapshot: result.snapshot,
             status: toHistoryStatus(result.status),

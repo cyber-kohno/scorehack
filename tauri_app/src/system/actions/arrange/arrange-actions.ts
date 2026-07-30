@@ -46,7 +46,6 @@ const createArrangeActions = () => {
                 createDrumArrangeActions().applyArrange();
                 break;
         }
-        void ArrangeEditorHistory.dispose();
     };
 
     const hasUnsavedArrangeEditorChanges = () => {

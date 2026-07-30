@@ -1,5 +1,5 @@
 import { openDirectoryPath } from "../../../../infra/tauri/dialog";
-import { invoke } from "@tauri-apps/api/core";
+import TauriCommands from "../../../../infra/tauri/tauri-commands";
 import SettingsState from "../../../../store/state/settings-state";
 import TerminalCommand from "../../terminal-command";
 import createAudioCatalog from "../catalog/audio-catalog";
@@ -102,7 +102,7 @@ const createGlobalProvider = (ctx: TerminalCommand.Context) => {
 
           logger.outputInfo("Restarting application.");
           ctx.commit.terminal();
-          void invoke("restart_app").catch((error) => {
+          void TauriCommands.restartApp().catch((error) => {
             logger.outputError(`${error}`);
             ctx.commit.terminal();
           });

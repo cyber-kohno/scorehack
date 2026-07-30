@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { invoke } from "@tauri-apps/api/core";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import FatalErrorFrame from "./FatalErrorFrame.svelte";
   import MainFrame from "./MainFrame.svelte";
@@ -9,6 +8,7 @@
   import { appErrorStore, derivedStore, fileStore } from "../store/global-store";
   import initializeApp from "../service/app/app-initializer";
   import AppErrorState from "../store/state/app-error-state";
+  import TauriCommands from "../infra/tauri/tauri-commands";
 
   onMount(() => {
     const mainWindow = getCurrentWindow();
@@ -40,7 +40,7 @@
       try {
         await initializeApp();
       } finally {
-        await invoke("show_main_window");
+        await TauriCommands.showMainWindow();
       }
     })();
 
