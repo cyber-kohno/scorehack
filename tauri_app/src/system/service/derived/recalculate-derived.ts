@@ -89,33 +89,10 @@ export const recalculate = () => {
                 if (data.degree != undefined) {
                     const tonality = baseCache.scoreBase.tonality;
                     const chord = ChordTheory.getKeyChordFromDegree(tonality, data.degree);
-                    const symbol = ChordTheory.getSymbolProps(chord.symbol);
-                    const structs: ChordTheory.ChordStruct[] = symbol.structs.map(s => {
-                        if (chord == undefined) throw new Error('chordはundefinedであってはならない。');
-                        const interval = ChordTheory.getIntervalFromRelation(s);
-
-                        return {
-                            key12: (chord.key12 + interval) % 12,
-                            relation: s,
-                        }
-                    });
-
-                    const on = chord.on;
-                    if (on != undefined) {
-                        const same = structs.find(s => {
-                            return on.key12 === s.key12;
-                        });
-                        if (same == undefined) {
-                            structs.push({
-                                key12: on.key12,
-                                relation: 'on'
-                            });
-                        } else {
-                            same.relation = 'on';
-                        }
-                    }
-
-                    compiledChord = { chord, structs };
+                    compiledChord = {
+                        chord,
+                        structs: ChordTheory.getStructsFromKeyChord(chord),
+                    };
                 }
 
                 /**

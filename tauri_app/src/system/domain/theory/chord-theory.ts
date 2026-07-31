@@ -361,7 +361,8 @@ namespace ChordTheory {
         const on = keyChord.on;
         if (on != undefined) {
             /** オンコードと同じ構成音 */
-            const onSameItem = structs.find(s => s.key12 === on.key12);
+            const onKey12 = ((on.key12 % 12) + 12) % 12;
+            const onSameItem = structs.find(s => ((s.key12 % 12) + 12) % 12 === onKey12);
             if (onSameItem == undefined) {
                 const index = on.key12;
                 const list = on.isFlat ? TonalityTheory.KEY12_FLAT_LIST : TonalityTheory.KEY12_SHARP_LIST;
@@ -371,6 +372,7 @@ namespace ChordTheory {
                     relation: 'on'
                 });
             } else {
+                onSameItem.key12 = on.key12;
                 onSameItem.relation = 'on';
             }
         }

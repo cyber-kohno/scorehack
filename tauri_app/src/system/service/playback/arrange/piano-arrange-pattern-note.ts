@@ -160,33 +160,17 @@ namespace PianoArrangePatternNote {
   };
 
   const calcRelationStructs = (chord: ChordTheory.KeyChordProps) => {
-    const symbolProps = ChordTheory.getSymbolProps(chord.symbol);
     const relationStructs: {
       /** オクターブ繰り上げ */
       carryForwardOctave: number;
       key12: number;
-    }[] = symbolProps.structs.map((s) => {
-      const tempPitchIndex =
-        chord.key12 + ChordTheory.getIntervalFromRelation(s);
+    }[] = ChordTheory.getStructsFromKeyChord(chord).map((struct) => {
+      const tempPitchIndex = struct.key12;
       return {
         carryForwardOctave: Math.floor(tempPitchIndex / 12),
         key12: tempPitchIndex % 12,
       };
     });
-    // console.log(chord);
-    // オンコードを構成音に足す
-    if (chord.on != undefined) {
-      const on = chord.on;
-      if (!relationStructs.map((r) => r.key12).includes(on.key12)) {
-        relationStructs.push({
-          key12: on.key12,
-          carryForwardOctave: 0,
-        });
-        // console.log(relationStructs);
-        relationStructs.sort((a, b) => a.key12 - b.key12);
-        // console.log(relationStructs);
-      }
-    }
     return relationStructs;
   };
 }
