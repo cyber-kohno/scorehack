@@ -2,11 +2,15 @@ import McpSessionController from "../../../mcp/mcp-session-controller";
 import type TerminalCommand from "../../terminal-command";
 
 const createMcpCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Props => {
-    const run = (action: () => Promise<string>) => {
+    const run = (action: () => Promise<string | string[]>) => {
         ctx.terminal.wait = true;
         ctx.commit.terminal();
         void action()
-            .then((message) => ctx.logger.outputInfo(message))
+            .then((messages) => {
+                for (const message of Array.isArray(messages) ? messages : [messages]) {
+                    ctx.logger.outputInfo(message);
+                }
+            })
             .catch((error) => ctx.logger.outputError(`MCP operation failed: ${String(error)}`))
             .finally(() => {
                 ctx.terminal.wait = false;

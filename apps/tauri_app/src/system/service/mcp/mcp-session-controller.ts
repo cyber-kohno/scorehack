@@ -27,7 +27,7 @@ namespace McpSessionController {
         });
     };
 
-    export const start = async (): Promise<string> => {
+    export const start = async (): Promise<string | string[]> => {
         const current = get(mcpStore);
         if (current.status === "available") return "MCP session is already available.";
         if (current.status !== "stopped" && current.status !== "error") return "MCP session is busy.";
@@ -44,7 +44,12 @@ namespace McpSessionController {
             if (get(fileStore).isDirty !== file.isDirty) {
                 await TauriMcp.updateSessionDirty(get(fileStore).isDirty);
             }
-            return `MCP session started. Session ID: ${details.sessionId}; endpoint: ${details.endpoint}; PID: ${details.pid}`;
+            return [
+                "MCP session started.",
+                `Session ID: ${details.sessionId}`,
+                `Endpoint: ${details.endpoint}`,
+                `PID: ${details.pid}`,
+            ];
         } catch (error) {
             await TauriMcp.stopSession().catch(() => undefined);
             mcpStore.set({ status: "error", details: null });

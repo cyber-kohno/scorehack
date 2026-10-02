@@ -17,6 +17,8 @@
     position: relative;
     width: 100%;
     height: 24px;
+    overflow: hidden;
+    white-space: nowrap;
     /* background-color: #ffda062c; */
 
     font-size: 18px;

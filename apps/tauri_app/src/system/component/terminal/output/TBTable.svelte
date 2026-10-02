@@ -61,6 +61,7 @@
     box-sizing: border-box;
     vertical-align: top;
     overflow: hidden;
+    white-space: nowrap;
   }
   .inner {
     display: inline-block;
@@ -71,6 +72,8 @@
     padding: 0 0 0 4px;
     box-sizing: border-box;
     border-radius: 4px;
+    overflow: hidden;
+    white-space: nowrap;
   }
   .inner[data-isNumber="true"] {
     text-align: right;
