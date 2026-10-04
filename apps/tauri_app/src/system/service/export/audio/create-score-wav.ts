@@ -1,5 +1,6 @@
 import SoundFont, { type InstrumentName } from "soundfont-player";
 import RhythmTheory from "../../../domain/theory/rhythm-theory";
+import NoteName from "../../../infra/audio/note-name";
 import FilePathRef from "../../../infra/file/file-path-ref";
 import { readBinaryFile } from "../../../infra/tauri/fs";
 import type DataState from "../../../store/state/data/data-state";
@@ -593,7 +594,10 @@ const createScoreWav = async (props: CreateScoreWavProps) => {
   }
 
   for (const track of builtinTracks) {
-    const preloadNotes = [...new Set(track.notes.map((note) => note.pitchName))];
+    // The loader filters exact sample keys before resolving enharmonic pitches.
+    const preloadNotes = [...new Set(track.notes.map((note) =>
+      NoteName.toMidiJsSoundFontKey(note.pitchName),
+    ))];
     const player = await SoundFont.instrument(
       context as unknown as AudioContext,
       track.instrumentName,

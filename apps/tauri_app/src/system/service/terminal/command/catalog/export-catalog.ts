@@ -74,6 +74,8 @@ const createExportCatalog = (ctx: TerminalCommand.Context): TerminalCommand.Prop
       const exportPath = path.toLowerCase().endsWith(".wav")
         ? path
         : `${path}.wav`;
+      logger.outputInfo("Generating WAV audio... Please wait.");
+      ctx.commit.terminal();
       const bytes = await createScoreWav({
         data: ctx.data,
         derived: get(derivedStore),

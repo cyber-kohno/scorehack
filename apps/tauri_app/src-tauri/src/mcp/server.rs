@@ -205,7 +205,7 @@ fn handle_connection(
         write_json(
             &mut stream,
             "503 Service Unavailable",
-            error_value("WEBVIEW_UNAVAILABLE", "The Studio WebView is unavailable."),
+            error_value("WEBVIEW_UNAVAILABLE", "The Scorehack WebView is unavailable."),
         );
         return;
     }
@@ -227,7 +227,7 @@ fn handle_connection(
             write_json(
                 &mut stream,
                 "504 Gateway Timeout",
-                error_value("BRIDGE_TIMEOUT", "Studio did not answer within 5 seconds."),
+                error_value("BRIDGE_TIMEOUT", "Scorehack did not answer within 5 seconds."),
             );
         }
     }

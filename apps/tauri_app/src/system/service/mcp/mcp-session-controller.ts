@@ -1,7 +1,8 @@
 import { get } from "svelte/store";
 import TauriMcp from "../../infra/tauri/mcp";
 import { fileStore, mcpStore } from "../../store/global-store";
-import handleMcpRequest from "./mcp-tool-handler";
+import handleMcpRequest, { resetMcpQueries } from "./mcp-tool-handler";
+import { getMcpDisplayId } from "./mcp-session-id";
 
 namespace McpSessionController {
     let unlisten: (() => void) | null = null;
@@ -11,6 +12,7 @@ namespace McpSessionController {
     export const initialize = async (): Promise<void> => {
         // A WebView reload must not leave the previous session advertised.
         await TauriMcp.stopSession();
+        resetMcpQueries();
         mcpStore.set({ status: "stopped", details: null });
         unlisten?.();
         unlisten = await TauriMcp.onRequest((request) => {
@@ -32,6 +34,7 @@ namespace McpSessionController {
         if (current.status === "available") return "MCP session is already available.";
         if (current.status !== "stopped" && current.status !== "error") return "MCP session is busy.";
         mcpStore.set({ status: "starting", details: null });
+        resetMcpQueries();
         try {
             if (current.status === "error") await TauriMcp.stopSession();
             const file = get(fileStore);
@@ -46,6 +49,7 @@ namespace McpSessionController {
             }
             return [
                 "MCP session started.",
+                `Display ID: ${getMcpDisplayId(details.sessionId)}`,
                 `Session ID: ${details.sessionId}`,
                 `Endpoint: ${details.endpoint}`,
                 `PID: ${details.pid}`,
@@ -62,6 +66,7 @@ namespace McpSessionController {
         mcpStore.update((state) => ({ ...state, status: "stopping" }));
         try {
             await TauriMcp.stopSession();
+            resetMcpQueries();
             mcpStore.set({ status: "stopped", details: null });
             return "MCP session stopped.";
         } catch (error) {
@@ -81,10 +86,11 @@ namespace McpSessionController {
             }
         }
         if (state.details == null) return `MCP status: ${state.status}.`;
-        return `MCP status: ${state.status}; session ID: ${state.details.sessionId}; endpoint: ${state.details.endpoint}; PID: ${state.details.pid}`;
+        return `MCP status: ${state.status}; display ID: ${getMcpDisplayId(state.details.sessionId)}; session ID: ${state.details.sessionId}; endpoint: ${state.details.endpoint}; PID: ${state.details.pid}`;
     };
 
     export const dispose = (): void => {
+        resetMcpQueries();
         unsubscribeDirty?.();
         unsubscribeDirty = null;
         unlisten?.();

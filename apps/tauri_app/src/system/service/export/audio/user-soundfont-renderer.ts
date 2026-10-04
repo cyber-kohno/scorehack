@@ -194,7 +194,9 @@ namespace UserSoundFontRenderer {
           soundBankBuffer: toArrayBuffer(bytes),
         },
       ],
-      sequencerOptions: {},
+      // Each track is rendered separately on the same score-origin timeline.
+      // The default skips leading rests, which desynchronizes it from other tracks.
+      sequencerOptions: { skipToFirstNoteOn: false },
     });
 
     return synth;

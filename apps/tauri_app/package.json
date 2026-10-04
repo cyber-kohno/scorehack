@@ -8,6 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.node.json",
+    "test:score-query": "node --import ./tests/typescript-loader.mjs --test ./tests/score-query.test.mjs",
+    "test:mcp": "node --import ./tests/typescript-loader.mjs --test ./tests/mcp-adapter.test.mjs",
+    "test:wav-export": "node --import ./tests/typescript-loader.mjs --test ./tests/wav-export.test.mjs",
     "tauri": "tauri"
   },
   "devDependencies": {

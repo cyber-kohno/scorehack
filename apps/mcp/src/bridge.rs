@@ -25,6 +25,7 @@ struct SessionDescriptor {
 #[serde(rename_all = "camelCase")]
 pub struct SessionSummary {
     session_id: String,
+    display_id: String,
     pid: u32,
     dirty: bool,
     created_at_epoch_ms: u128,
@@ -32,14 +33,14 @@ pub struct SessionSummary {
 
 #[derive(Debug)]
 pub struct BridgeError {
-    pub code: &'static str,
+    pub code: String,
     pub message: String,
 }
 
 impl BridgeError {
-    fn new(code: &'static str, message: impl Into<String>) -> Self {
+    fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
-            code,
+            code: code.into(),
             message: message.into(),
         }
     }
@@ -177,6 +178,7 @@ pub fn list_sessions() -> Vec<SessionSummary> {
         .filter(|entry| entry.path().extension().and_then(|value| value.to_str()) == Some("json"))
         .filter_map(|entry| {
             read_valid_descriptor(&entry.path()).map(|(descriptor, _)| SessionSummary {
+                display_id: descriptor.session_id[..8].to_string(),
                 session_id: descriptor.session_id,
                 pid: descriptor.pid,
                 dirty: descriptor.dirty,
@@ -214,7 +216,10 @@ pub fn call_session(session_id: &str, method: &str, params: Value) -> Result<Val
     }
     let error = response.get("error");
     Err(BridgeError::new(
-        "BRIDGE_ERROR",
+        error
+            .and_then(|value| value.get("code"))
+            .and_then(Value::as_str)
+            .unwrap_or("BRIDGE_ERROR"),
         error
             .and_then(|value| value.get("message"))
             .and_then(Value::as_str)

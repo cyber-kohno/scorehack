@@ -1,4 +1,7 @@
 namespace NoteName {
+    // MIDI.js SoundFont sample keys use flats, unlike Scorehack's sharp names.
+    const MIDI_JS_PITCH_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+
     const NOTE_INDEXES: Record<string, number> = {
         C: 0,
         "C#": 1,
@@ -31,6 +34,13 @@ namespace NoteName {
 
         const octave = Number(match[3]);
         return (octave + 1) * 12 + pitchIndex;
+    };
+
+    export const toMidiJsSoundFontKey = (note: string) => {
+        const midi = toMidiNumber(note);
+        const pitchIndex = ((midi % 12) + 12) % 12;
+        const octave = Math.floor(midi / 12) - 1;
+        return `${MIDI_JS_PITCH_NAMES[pitchIndex]}${octave}`;
     };
 }
 
